@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legend of Bahamut Strategy - Battle & Move Fixed</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+
+        body {
+            font-family: 'DotGothic16', sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            overflow: hidden;
+            margin: 0;
+            touch-action: manipulation;
+        }
+
+        .hex {
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            transition: all 0.2s;
+        }
+
+        .hex-active:hover {
+            filter: brightness(1.5);
+            cursor: pointer;
+        }
+
+        .scanline {
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .pixel-border {
+            border: 4px double #4a5568;
+            background: rgba(0, 0, 0, 0.85);
+        }
+
+        @keyframes select-pulse {
+            0% {
+                filter: drop-shadow(0 0 5px cyan);
+            }
+
+            50% {
+                filter: drop-shadow(0 0 20px cyan);
+            }
+
+            100% {
+                filter: drop-shadow(0 0 5px cyan);
+            }
+        }
+
+        .recruit-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="scanline"></div>
+
+    <!-- VIEW: UI Elements -->
+    <div id="ui-layer" class="fixed inset-0 z-50 pointer-events-none">
+
+        <!-- ステータスバー -->
+        <div id="status-bar"
+            class="absolute top-4 left-4 right-4 flex justify-between items-start hidden pointer-events-none">
+            <div class="bg-black/70 p-4 border-2 border-gray-600 pointer-events-auto shadow-lg">
+                <div class="text-xs text-gray-400 text-center uppercase mb-1 font-bold tracking-widest">Commander</div>
+                <div id="master-name" class="text-2xl text-yellow-500 text-center font-bold"></div>
+                <div id="master-alignment" class="text-sm text-center opacity-70 mt-1 text-white"></div>
+            </div>
+
+            <div class="flex flex-col gap-2 items-end">
+                <div class="bg-black/70 p-4 border-2 border-gray-600 text-right pointer-events-auto shadow-lg">
+                    <div class="flex gap-8 items-center">
+                        <div class="text-right">
+                            <div class="text-xs text-gray-400 uppercase font-bold text-blue-400">P-Castles</div>
+                            <div id="castle-count-display" class="text-2xl text-blue-400 font-bold">1 / 7</div>
+                        </div>
+                        <div class="text-right border-l border-gray-600 pl-6">
+                            <div class="text-xs text-gray-400 uppercase font-bold text-green-400">P-Armies</div>
+                            <div id="army-total-display" class="text-2xl text-green-400 font-bold">1 / 8</div>
+                        </div>
+                        <div class="text-right border-l border-gray-600 pl-6">
+                            <div class="text-xs text-gray-400 uppercase font-bold text-yellow-400">P-Gold</div>
+                            <div id="gold-amount" class="text-4xl text-yellow-400 font-bold font-mono text-white">500
+                            </div>
+                        </div>
+                        <div class="text-right border-l border-gray-600 pl-4 opacity-40">
+                            <div class="text-[10px] text-red-400 uppercase font-bold">E-Gold</div>
+                            <div id="enemy-gold-amount" class="text-xl text-red-400 font-bold font-mono text-white">500
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <div id="save-load-group" class="flex gap-3">
+                        <button onclick="Controller.saveGame()"
+                            class="px-6 py-2 bg-green-900 hover:bg-green-700 border-2 border-white text-lg font-bold pointer-events-auto transition-all shadow-xl text-white">セーブ</button>
+                        <button onclick="Controller.loadGame()"
+                            class="px-6 py-2 bg-blue-900 hover:bg-blue-700 border-2 border-white text-lg font-bold pointer-events-auto transition-all shadow-xl text-white">ロード</button>
+                    </div>
+                    <button id="btn-end-strategic-turn" onclick="Controller.endStrategicTurn()"
+                        class="px-10 py-3 bg-red-900 hover:bg-red-700 border-2 border-white text-2xl font-bold pointer-events-auto transition-all shadow-xl hidden">ターン終了</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 城メニュー -->
+        <div id="base-menu"
+            class="absolute inset-0 bg-black/95 flex items-center justify-center hidden pointer-events-auto p-4 text-white">
+            <div class="pixel-border p-8 w-full max-w-6xl max-h-[95vh] overflow-y-auto shadow-[0_0_50px_rgba(0,0,0,1)]">
+                <div class="flex justify-between items-start mb-6 border-b border-gray-700 pb-6">
+                    <div>
+                        <h2 class="text-5xl text-yellow-500 font-bold mb-2" id="base-menu-title">城の名前</h2>
+                        <div id="castle-stat-panel" class="flex gap-8 text-xl font-bold"></div>
+                    </div>
+                    <div class="flex flex-col items-end gap-4">
+                        <div
+                            class="flex items-center gap-4 bg-black/50 p-3 rounded border border-gray-700 shadow-inner">
+                            <span class="text-gray-400 text-sm font-bold uppercase">Funds:</span>
+                            <span class="text-3xl text-yellow-400 font-bold font-mono"
+                                id="menu-gold-display">500G</span>
+                        </div>
+                        <div class="flex gap-3">
+                            <button id="btn-create-army"
+                                class="px-8 py-3 bg-purple-900 hover:bg-purple-700 border-2 border-purple-400 text-xl transition-colors disabled:opacity-30 disabled:grayscale font-bold shadow-xl">新規部隊を編成
+                                (500G)</button>
+                            <button onclick="View.toggleBaseMenu()"
+                                class="text-gray-400 hover:text-white transition-colors text-5xl p-2">✕</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="unique-unit-info-panel"
+                    class="mb-8 p-6 bg-yellow-900/30 border-2 border-yellow-700/50 rounded-xl flex items-center gap-8 hidden text-white">
+                </div>
+                <div id="base-menu-content" class="grid grid-cols-1 lg:grid-cols-2 gap-8 text-white"></div>
+                <div id="no-unit-message"
+                    class="hidden py-24 text-center border-4 border-dashed border-gray-800 rounded-xl text-gray-500 text-2xl font-bold">
+                    駐留部隊なし</div>
+            </div>
+        </div>
+
+        <!-- 結果モーダル -->
+        <div id="modal-layer"
+            class="absolute inset-0 bg-black/80 flex items-center justify-center hidden pointer-events-auto text-white">
+            <div class="bg-gray-900 border-4 border-double border-white p-12 max-w-lg w-full text-center shadow-2xl">
+                <h2 id="modal-title" class="text-5xl font-bold mb-8 text-yellow-500 uppercase">Result</h2>
+                <p id="modal-body" class="mb-12 text-2xl leading-relaxed text-gray-200 font-bold"></p>
+                <div id="modal-footer" class="flex justify-center gap-8"></div>
+            </div>
+        </div>
+
+        <!-- 最前面に表示すべき要素 -->
+        <div id="top-elements" class="absolute inset-0 pointer-events-none">
+            <!-- ターン表示 -->
+            <div id="turn-indicator"
+                class="absolute top-4 left-1/2 -translate-x-1/2 px-12 py-2 bg-black/80 border-2 border-white hidden pointer-events-auto shadow-2xl flex flex-col items-center">
+                <div id="turn-display" class="text-sm text-yellow-500 font-bold mb-1">TURN 1</div>
+                <p id="turn-text" class="text-3xl font-bold tracking-widest text-center uppercase">Player Turn</p>
+            </div>
+
+            <!-- メッセージボックス -->
+            <div id="message-box"
+                class="absolute bottom-10 left-1/2 -translate-x-1/2 w-4/5 max-w-2xl bg-black/95 border-4 border-double border-gray-500 p-6 opacity-0 transition-opacity pointer-events-auto shadow-2xl">
+                <p id="message-text"
+                    class="text-xl md:text-2xl leading-relaxed whitespace-pre-wrap text-white font-bold text-center">
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- エンディング画面 -->
+    <div id="screen-ending"
+        class="hidden flex flex-col items-center justify-center h-screen bg-black text-white p-8 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-blue-900/20 to-black pointer-events-none"></div>
+        <div id="ending-vfx" class="absolute inset-0 pointer-events-none opacity-50"></div>
+
+        <div class="relative z-10 text-center scale-110">
+            <h2 id="ending-title"
+                class="text-8xl font-bold mb-12 text-yellow-500 uppercase tracking-tighter drop-shadow-[0_0_30px_rgba(234,179,8,0.5)]">
+                VICTORY</h2>
+            <div class="pixel-border p-12 mb-16 max-w-3xl bg-black/60 shadow-2xl">
+                <p id="ending-body" class="text-3xl leading-relaxed text-gray-200 font-bold"></p>
+            </div>
+            <button onclick="location.reload()"
+                class="px-20 py-8 bg-gradient-to-r from-blue-900 to-blue-700 hover:from-blue-700 hover:to-blue-500 border-4 border-white transition-all text-4xl font-bold shadow-[0_0_50px_rgba(0,0,0,0.5)] hover:scale-105 active:translate-y-1">
+                タイトル画面へ戻る
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN SCREENS -->
+    <div id="screen-title" class="flex flex-col items-center justify-center h-screen relative">
+        <h1
+            class="text-8xl mb-8 font-bold text-transparent bg-clip-text bg-gradient-to-b from-gray-200 to-gray-600 uppercase tracking-tighter text-center">
+            Bahamut Strategy</h1>
+        <p class="mb-16 text-3xl text-gray-400 italic font-bold text-center">〜 大陸統一：本格シミュレーション 〜</p>
+        <div class="flex gap-4">
+            <button onclick="Controller.showMasterSelection()"
+                class="px-16 py-6 bg-red-900 hover:bg-red-700 border-2 border-white transition-all text-4xl font-bold shadow-2xl hover:scale-105 text-white">START
+                GAME</button>
+            <button onclick="Controller.loadGame()"
+                class="px-16 py-6 bg-blue-900 hover:bg-blue-700 border-2 border-white transition-all text-4xl font-bold shadow-2xl hover:scale-105 text-white">LOAD
+                GAME</button>
+        </div>
+        <button onclick="TestSuite.runAll()"
+            class="absolute bottom-4 right-4 px-4 py-2 bg-gray-800 text-gray-500 text-xs hover:text-white border border-gray-700 pointer-events-auto transition-colors">Run
+            System Tests</button>
+    </div>
+
+    <div id="screen-select" class="hidden flex-col items-center justify-center h-screen p-4 overflow-y-auto">
+        <h2 class="text-5xl mb-16 font-bold text-center text-white">マスターを選択せよ</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-7xl w-full"></div>
+    </div>
+
+    <div id="screen-map" class="hidden relative h-screen bg-green-900/20">
+        <canvas id="map-canvas" class="w-full h-full"></canvas>
+    </div>
+
+    <div id="screen-battle" class="hidden flex flex-col items-center justify-center h-screen bg-slate-900">
+        <div class="mb-8 flex gap-16">
+            <div id="p1-stats" class="text-4xl text-blue-400 font-bold uppercase tracking-wider">PLAYER</div>
+            <div class="text-white text-2xl font-bold opacity-30 italic self-center">VS</div>
+            <div id="p2-stats" class="text-4xl text-red-400 font-bold uppercase tracking-wider">ENEMY</div>
+        </div>
+        <div id="battle-grid" class="relative scale-110"></div>
+        <div class="mt-16 flex gap-10">
+            <button id="battle-end-turn-btn" onclick="Controller.battleEndTurnOrder()"
+                class="px-12 py-4 bg-blue-800 hover:bg-blue-600 border-2 border-white transition-colors text-2xl font-bold rounded-lg shadow-xl pointer-events-auto text-white">ターン終了</button>
+            <button onclick="Controller.showEscapeConfirm()"
+                class="px-12 py-4 bg-gray-800 hover:bg-gray-600 border-2 border-white transition-colors text-2xl font-bold rounded-lg shadow-xl pointer-events-auto text-white">撤退</button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * MODEL: 定義と状態管理
+         */
+        const Model = {
+            MAX_UNITS: 5,
+            MAX_ARMIES: 8,
+            ARMY_COST: 500,
+            UNIT_SPEED: 10.0, // 進軍スピードアップ
+            RANK_UP_XP: 50, // ランクアップに必要な経験値
+            RANKS: ['E', 'D', 'C', 'B', 'A', 'S'],
+
+            MASTERS: [
+                { id: 'knight', name: 'ジーク', alignment: 'LAW', color: '#4466ff', emoji: '🏰', desc: '聖騎士。防御と近接戦闘に優れるバランス型。' },
+                { id: 'mage', name: 'アーシェ', alignment: 'NEUTRAL', color: '#44ff66', emoji: '🧝', desc: '女王。遠距離魔法と機動力を持つエルフ軍。' },
+                { id: 'demon', name: 'クリムゾン', alignment: 'CHAOS', color: '#ff4444', emoji: '👹', desc: '魔王。圧倒的な攻撃力で敵を粉砕する。' }
+            ],
+
+            FACTION_UNITS: {
+                'knight': [
+                    { id: 'soldier', name: '兵士', emoji: '🛡️', hp: 40, atk: 14, range: 1, move: 3, cost: 200 },
+                    { id: 'paladin', name: '騎士', emoji: '🏇', hp: 60, atk: 20, range: 1, move: 5, cost: 500 }
+                ],
+                'mage': [
+                    { id: 'elf', name: 'エルフ', emoji: '🏹', hp: 30, atk: 18, range: 3, move: 3, cost: 300 },
+                    { id: 'fairy', name: '妖精', emoji: '🧚', hp: 25, atk: 12, range: 2, move: 4, cost: 250 }
+                ],
+                'demon': [
+                    { id: 'imp', name: '小悪魔', emoji: '👿', hp: 28, atk: 18, range: 1, move: 4, cost: 150 },
+                    { id: 'dragon', name: '竜', emoji: '🐉', hp: 95, atk: 32, range: 1, move: 6, cost: 1000 }
+                ]
+            },
+
+            SPECIAL_UNITS: {
+                'hell-hound': { id: 'hell-hound', name: 'ケルベロス', emoji: '🐕', hp: 45, atk: 22, range: 1, move: 5, cost: 600, origin: '暗黒城' },
+                'guard': { id: 'guard', name: '重装衛兵', emoji: '💂', hp: 80, atk: 18, range: 1, move: 2, cost: 400, origin: '自由都市' },
+                'crossbow': { id: 'crossbow', name: '弩兵', emoji: '🏹', hp: 35, atk: 22, range: 4, move: 2, cost: 550, origin: '北の砦' },
+                'militia': { id: 'militia', name: '義勇兵', emoji: '🧑‍🌾', hp: 25, atk: 12, range: 1, move: 3, cost: 100, origin: '南の村' },
+                'sorcerer': { id: 'sorcerer', name: '魔導師', emoji: '🧙', hp: 40, atk: 28, range: 3, move: 2, cost: 800, origin: '東の塔' },
+                'ghost': { id: 'ghost', name: '亡霊', emoji: '👻', hp: 25, atk: 22, range: 1, move: 6, cost: 350, origin: '西の廃墟' }
+            },
+
+            state: {
+                currentScreen: 'title',
+                playerMaster: null, gold: 500, enemyGold: 500,
+                mapUnits: [], castles: [], selectedMapUnit: null,
+                strategicTurn: 'player', encounterEnemy: null, encounterPlayer: null,
+                encounterCooldown: 0, gameCleared: false, turnCount: 0, enemyTurnStarted: false,
+                battle: { active: false, grid: [], units: [], turn: 'player', selectedUnit: null, movedUnits: new Set(), tempMoved: false }
+            },
+
+            getCubeCoords(r, c) {
+                const x = c - Math.floor(r / 2); const z = r; const y = -x - z;
+                return { x, y, z };
+            },
+
+            getHexDist(r1, c1, r2, c2) {
+                const a = this.getCubeCoords(r1, c1); const b = this.getCubeCoords(r2, c2);
+                return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y), Math.abs(a.z - b.z));
+            }
+        };
+
+        /**
+         * VIEW: 表示制御
+         */
+        const View = {
+            canvas: null, ctx: null,
+
+            changeScreen(screenId) {
+                document.querySelectorAll('div[id^="screen-"]').forEach(el => el.classList.add('hidden'));
+                const target = document.getElementById(`screen-${screenId}`);
+                if (target) target.classList.remove('hidden');
+                Model.state.currentScreen = screenId;
+
+                const status = document.getElementById('status-bar');
+                const turn = document.getElementById('turn-indicator');
+                const btn = document.getElementById('btn-end-strategic-turn');
+
+                if (screenId === 'map') {
+                    status.classList.remove('hidden'); turn.classList.remove('hidden'); btn.classList.remove('hidden');
+                    this.initCanvas();
+                } else {
+                    status.classList.add('hidden'); turn.classList.add('hidden'); btn.classList.add('hidden');
+                }
+            },
+
+            showMessage(text) {
+                const box = document.getElementById('message-box');
+                const txt = document.getElementById('message-text');
+                txt.innerText = text;
+                box.style.opacity = '1';
+                if (window.msgTimer) clearTimeout(window.msgTimer);
+                window.msgTimer = setTimeout(() => { box.style.opacity = '0'; }, 3500);
+            },
+
+            openModal(title, body, buttons) {
+                const modal = document.getElementById('modal-layer');
+                document.getElementById('modal-title').innerText = title;
+                document.getElementById('modal-body').innerText = body;
+                const footer = document.getElementById('modal-footer');
+                footer.innerHTML = '';
+                buttons.forEach(btn => {
+                    const b = document.createElement('button');
+                    b.className = "px-10 py-4 bg-blue-700 hover:bg-blue-600 border-2 border-white text-2xl transition-colors font-bold rounded-lg shadow-lg text-white";
+                    b.innerText = btn.label;
+                    b.onclick = () => { modal.classList.add('hidden'); btn.action(); };
+                    footer.appendChild(b);
+                });
+                modal.classList.remove('hidden');
+            },
+
+            showEnding(isWin) {
+                const screen = document.getElementById('screen-ending');
+                const title = document.getElementById('ending-title');
+                const body = document.getElementById('ending-body');
+
+                if (isWin) {
+                    title.innerText = "VICTORY";
+                    title.className = "text-8xl font-bold mb-12 text-yellow-500 uppercase tracking-tighter drop-shadow-[0_0_30px_rgba(234,179,8,0.5)]";
+                    body.innerText = "敵勢力の拠点をすべて制圧し、バハムート大陸に真の平和が訪れた。あなたの名は伝説となり、永く語り継がれるだろう。";
+                } else {
+                    title.innerText = "DEFEAT";
+                    title.className = "text-8xl font-bold mb-12 text-red-600 uppercase tracking-tighter drop-shadow-[0_0_30px_rgba(220,38,38,0.5)]";
+                    body.innerText = "全ての拠点を失い、野望は潰えた。大陸の歴史は勝者によって書き換えられ、あなたの名は闇へと消えていった...";
+                }
+
+                this.changeScreen('ending');
+            },
+
+            initCanvas() {
+                const canvas = document.getElementById('map-canvas');
+                if (!canvas) return;
+                const newCanvas = canvas.cloneNode(true);
+                canvas.parentNode.replaceChild(newCanvas, canvas);
+                newCanvas.width = window.innerWidth;
+                newCanvas.height = window.innerHeight;
+                this.ctx = newCanvas.getContext('2d');
+                this.canvas = newCanvas;
+
+                newCanvas.addEventListener('mousedown', Controller.handleMapClick);
+                newCanvas.addEventListener('contextmenu', Controller.handleMapRightClick);
+                requestAnimationFrame(() => this.renderMapLoop());
+            },
+
+            renderMapLoop() {
+                if (Model.state.currentScreen !== 'map' || !this.ctx) return;
+                const ctx = this.ctx;
+                ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+                document.getElementById('castle-count-display').innerText = `${Model.state.castles.filter(c => c.owner === 'player').length} / ${Model.state.castles.length}`;
+                document.getElementById('army-total-display').innerText = `${Model.state.mapUnits.filter(u => u.owner === 'player').length} / ${Model.MAX_ARMIES}`;
+                document.getElementById('gold-amount').innerText = Math.floor(Model.state.gold);
+                document.getElementById('enemy-gold-amount').innerText = Math.floor(Model.state.enemyGold);
+                document.getElementById('turn-display').innerText = `TURN ${Model.state.turnCount}`;
+
+                ctx.setLineDash([10, 5]); ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 4;
+                Model.state.castles.forEach(c => {
+                    c.neighbors.forEach(nId => {
+                        const n = Model.state.castles.find(nc => nc.id === nId);
+                        if (n) { ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(n.x, n.y); ctx.stroke(); }
+                    });
+                });
+                ctx.setLineDash([]);
+
+                Model.state.castles.forEach(c => {
+                    ctx.font = '50px serif'; ctx.textAlign = 'center'; ctx.fillText('🏰', c.x, c.y);
+                    ctx.font = '24px DotGothic16';
+                    ctx.fillStyle = c.owner === 'player' ? '#44aaff' : (c.owner === 'enemy' ? '#ff4444' : '#aaaaaa');
+                    ctx.fillText(c.name, c.x, c.y + 45);
+
+                    // 戦力表示
+                    const unitsAtCastle = Model.state.mapUnits.filter(u => Math.hypot(u.x - c.x, u.y - c.y) < 45);
+                    const totalAtk = unitsAtCastle.reduce((sum, u) => sum + u.army.reduce((aSum, unit) => aSum + unit.atk, 0), 0);
+                    const totalHp = unitsAtCastle.reduce((sum, u) => sum + u.army.reduce((aSum, unit) => aSum + unit.currentHp, 0), 0);
+                    if (totalAtk > 0 || totalHp > 0) {
+                        ctx.font = 'bold 16px DotGothic16';
+                        ctx.fillStyle = '#ffffff';
+                        ctx.shadowBlur = 4; ctx.shadowColor = 'black';
+                        ctx.fillText(`⚒${totalAtk} ❤${totalHp}`, c.x, c.y - 45);
+                        ctx.shadowBlur = 0;
+                    }
+                });
+
+                Model.state.mapUnits.forEach(u => {
+                    const isStationed = Model.state.castles.some(c => Math.hypot(u.x - c.x, u.y - c.y) < 30) && !u.isMoving;
+                    if (isStationed && u !== Model.state.selectedMapUnit) return;
+
+                    ctx.font = '40px serif';
+                    if (u === Model.state.selectedMapUnit) { ctx.shadowBlur = 30; ctx.shadowColor = 'cyan'; }
+                    ctx.globalAlpha = (u.owner === 'player' && u.hasActed) ? 0.4 : 1.0;
+                    ctx.fillText(u.emoji, u.x, u.y);
+                    ctx.globalAlpha = 1.0; ctx.shadowBlur = 0;
+                });
+
+                requestAnimationFrame(() => this.renderMapLoop());
+            },
+
+            toggleBaseMenu(castle = null) {
+                const el = document.getElementById('base-menu');
+                if (el.classList.contains('hidden')) {
+                    if (castle) this.renderBaseMenu(castle);
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            },
+
+            renderBaseMenu(castle) {
+                const sP = Model.state.mapUnits.filter(u => u.owner === 'player' && Math.hypot(u.x - castle.x, u.y - castle.y) < 45);
+                const sE = Model.state.mapUnits.filter(u => u.owner === 'enemy' && Math.hypot(u.x - castle.x, u.y - castle.y) < 45);
+
+                document.getElementById('base-menu-title').innerText = castle.name;
+                document.getElementById('menu-gold-display').innerText = `${Math.floor(Model.state.gold)}G`;
+
+                const ownerColor = castle.owner === 'player' ? 'text-blue-400' : 'text-red-400';
+                const ownerText = castle.owner === 'player' ? '自軍領' : '敵領・中立';
+                const count = castle.owner === 'player' ? sP.length : sE.length;
+
+                document.getElementById('castle-stat-panel').innerHTML = `
+                    <div>支配勢力: <span class="${ownerColor}">${ownerText}</span></div>
+                    <div>駐留部隊数: <span class="text-white">${count}</span></div>
+                `;
+
+                const uniquePanel = document.getElementById('unique-unit-info-panel');
+                if (castle.uniqueUnit) {
+                    const u = Model.SPECIAL_UNITS[castle.uniqueUnit];
+                    uniquePanel.classList.remove('hidden');
+                    uniquePanel.innerHTML = `<div class="text-7xl">${u.emoji}</div><div><div class="text-yellow-500 font-bold text-3xl">拠点固有兵: ${u.name}</div><div class="text-xl text-gray-200 mt-2 uppercase font-bold text-white">HP:${u.hp} / ATK:${u.atk} / MOVE:${u.move} / RNG:${u.range} / COST:${u.cost}G</div></div>`;
+                } else { uniquePanel.classList.add('hidden'); }
+
+                const createBtn = document.getElementById('btn-create-army');
+                createBtn.disabled = castle.owner !== 'player' || Model.state.gold < Model.ARMY_COST || Model.state.mapUnits.filter(u => u.owner === 'player').length >= Model.MAX_ARMIES;
+                createBtn.onclick = () => Controller.createNewArmy(castle);
+
+                const menuContent = document.getElementById('base-menu-content');
+                const noMsg = document.getElementById('no-unit-message');
+                menuContent.innerHTML = '';
+
+                if (castle.owner === 'player' && sP.length > 0) {
+                    noMsg.classList.add('hidden');
+                    sP.forEach(unit => {
+                        const card = document.createElement('div');
+                        card.className = "bg-gray-800/80 border-2 border-gray-700 p-8 rounded-2xl shadow-2xl mb-4 text-white";
+                        card.innerHTML = `
+                            <div class="flex justify-between items-center mb-8 border-b border-gray-600 pb-4">
+                                <div class="flex items-center gap-6"><span class="text-6xl">${unit.emoji}</span><span class="text-3xl font-bold text-blue-300">${unit.isMaster ? '主軍' : '別働隊'}</span></div>
+                                <span class="text-xl font-bold font-mono">構成: ${unit.army.length} / ${Model.MAX_UNITS}</span>
+                            </div>
+                            <div class="grid grid-cols-1 gap-10">
+                                <div class="bg-black/50 p-6 rounded-xl border border-blue-900/30">
+                                    <p class="text-2xl text-blue-400 mb-6 font-bold border-b border-blue-900/50 pb-2 uppercase tracking-widest text-center">ユニット雇用・編成</p>
+                                    <div class="flex flex-col gap-6">
+                                        <!-- 補充ユニット（新規雇用）を上部に配置 -->
+                                        <div>
+                                            <p class="text-sm text-gray-400 mb-4 font-bold uppercase tracking-widest">補充ユニット（新規雇用）</p>
+                                            <div class="grid grid-cols-1 gap-4 mb-8">
+                                                ${(() => {
+                                const factionUnits = Model.FACTION_UNITS[Model.state.playerMaster.id];
+                                let options = [...factionUnits];
+                                if (castle.uniqueUnit) {
+                                    const spec = Model.SPECIAL_UNITS[castle.uniqueUnit];
+                                    if (spec) options.push(spec);
+                                }
+                                return options.map(ut => this.recruitItemHTML(ut, unit, castle)).join('');
+                            })()}
+                                            </div>
+                                        </div>
+
+                                        <!-- 既存ユニット（編成済み）を下部に配置 -->
+                                        <div class="pt-8 border-t border-gray-700">
+                                            <p class="text-sm text-gray-400 mb-4 font-bold uppercase tracking-widest">編成済みユニット（詳細・強化）</p>
+                                            <div class="flex flex-col gap-6">
+                                                ${unit.army.map((u, i) => `
+                                                    <div class="bg-gray-900 p-4 border border-gray-700 rounded-lg">
+                                                        <div class="flex justify-between items-center mb-4">
+                                                            <div class="flex items-center gap-4">
+                                                                <span class="text-5xl">${u.emoji}</span>
+                                                                <div>
+                                                                    <div class="text-2xl font-bold">${u.name} <span class="text-yellow-500 ml-2 text-xl">RANK ${Model.RANKS[u.rank || 0]}</span></div>
+                                                                    <div class="text-sm text-gray-400">練度: ${u.rank === 5 ? 'MAX' : (u.xp || 0) + ' / ' + Model.RANK_UP_XP}</div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="text-right">
+                                                                <div class="text-green-400 font-bold">HP: ${u.currentHp}/${u.hp}</div>
+                                                                <div class="text-red-400 font-bold">ATK: ${u.atk}</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="w-full h-2 bg-gray-800 rounded-full overflow-hidden mb-4">
+                                                            <div class="h-full bg-yellow-500" style="width:${u.rank === 5 ? 100 : ((u.xp || 0) / Model.RANK_UP_XP) * 100}%"></div>
+                                                        </div>
+                                                        <div class="flex gap-4">
+                                                            <button onclick="Controller.enhanceUnit('${unit.id}', ${i}, 'hp', '${castle.id}')" class="flex-1 py-2 bg-green-900/50 border border-green-700 hover:bg-green-700 text-sm font-bold uppercase transition-colors text-white">HP+10(100G)</button>
+                                                            <button onclick="Controller.enhanceUnit('${unit.id}', ${i}, 'atk', '${castle.id}')" class="flex-1 py-2 bg-red-900/50 border border-red-700 hover:bg-red-700 text-sm font-bold uppercase transition-colors text-white">ATK+3(150G)</button>
+                                                        </div>
+                                                    </div>`).join('')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        menuContent.appendChild(card);
+                    });
+                } else {
+                    noMsg.classList.remove('hidden');
+                    if (castle.owner !== 'player') noMsg.innerText = sE.length > 0 ? "敵部隊が守備しています" : "防衛部隊はいません";
+                }
+            },
+
+            recruitItemHTML(ut, unit, castle) {
+                const can = Model.state.gold >= ut.cost;
+                const isFull = unit.army.length >= Model.MAX_UNITS;
+                const dis = isFull || !can || castle.owner !== 'player';
+                const lbl = isFull ? "満員" : `${ut.cost}G`;
+                return `<div class="recruit-item flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/10 cursor-pointer transition-colors" 
+                    onclick="View.showMessage('【${ut.name}】 HP:${ut.hp} / ATK:${ut.atk} / RNG:${ut.range} / MOVE:${ut.move}')">
+                    <div class="flex items-center gap-6">
+                        <span class="text-6xl">${ut.emoji}</span>
+                        <div>
+                            <div class="text-3xl font-bold text-white">${ut.name}</div>
+                            <div class="text-sm text-blue-400 font-bold uppercase font-mono">スペックを表示 (Click)</div>
+                        </div>
+                    </div>
+                    <button onclick="event.stopPropagation(); Controller.recruitUnit('${unit.id}', '${ut.id}', '${castle.id}')" 
+                        class="px-10 py-4 bg-blue-900 border-2 border-blue-400 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-2xl font-bold shadow-2xl active:translate-y-1 text-white" 
+                        ${dis ? 'disabled' : ''}>${lbl}</button>
+                </div>`;
+            },
+
+            updateBattleUI() {
+                const b = Model.state.battle;
+                b.grid.forEach(cell => { cell.el.innerHTML = ''; cell.el.classList.remove('bg-blue-900/40', 'bg-red-900/40', 'ring-4', 'ring-white'); });
+                b.units.forEach(u => {
+                    const cell = b.grid.find(g => g.r === u.r && g.c === u.c);
+                    if (cell) {
+                        const div = document.createElement('div'); div.className = "relative flex flex-col items-center justify-center pointer-events-none w-full h-full";
+                        div.innerHTML = `
+                            <div class="flex items-center gap-1 mb-1">
+                                <span class="text-4xl shadow-black drop-shadow-md">${u.emoji}</span>
+                                <span class="text-[10px] text-yellow-500 font-bold bg-black/50 px-1 rounded">${Model.RANKS[u.rank || 0]}</span>
+                            </div>
+                            <div class="w-12 h-1.5 bg-gray-900 border border-gray-600 rounded-full overflow-hidden shadow-sm">
+                                <div class="h-full bg-gradient-to-r from-green-600 to-green-400 transition-all duration-300" style="width:${Math.max(0, (u.currentHp / u.hp) * 100)}%"></div>
+                            </div>`;
+                        if (b.movedUnits.has(u)) div.style.opacity = "0.4";
+                        cell.el.appendChild(div);
+                    }
+                });
+                if (b.selectedUnit) {
+                    const s = b.selectedUnit;
+                    const sc = b.grid.find(g => g.r === s.r && g.c === s.c);
+                    if (sc) sc.el.classList.add('ring-4', 'ring-white');
+                    b.grid.forEach(cell => {
+                        const d = Model.getHexDist(s.r, s.c, cell.r, cell.c);
+                        if (!b.tempMoved && d > 0 && d <= s.move && !b.units.some(u => u.r === cell.r && u.c === cell.c)) cell.el.classList.add('bg-blue-900/40');
+                        if (!(s.range > 1 && b.tempMoved) && d > 0 && d <= s.range) cell.el.classList.add('bg-red-900/40');
+                    });
+                }
+                const btn = document.getElementById('battle-end-turn-btn');
+                if (btn) btn.disabled = (b.turn !== 'player');
+            }
+        };
+
+        /**
+         * CONTROLLER: 制御ロジック
+         */
+        const Controller = {
+            init() { setInterval(() => this.updateLogic(), 50); },
+
+            showMasterSelection() {
+                View.changeScreen('select');
+                const container = document.querySelector('#screen-select div');
+                container.innerHTML = Model.MASTERS.map(m => `
+                    <div class="bg-gray-800 border-2 border-gray-600 p-10 hover:border-white cursor-pointer flex flex-col items-center transition-transform hover:scale-105 shadow-2xl text-white text-white" 
+                         onclick="Controller.selectMaster('${m.id}')">
+                        <div class="text-9xl mb-8 text-white">${m.emoji}</div>
+                        <div class="text-4xl font-bold mb-4" style="color:${m.color}">${m.name}</div>
+                        <p class="text-xl text-center text-gray-400 font-bold text-white">${m.desc}</p>
+                    </div>`).join('');
+            },
+
+            selectMaster(id) {
+                Model.state.playerMaster = Model.MASTERS.find(m => m.id === id);
+                document.getElementById('master-name').innerText = Model.state.playerMaster.name;
+                document.getElementById('master-name').style.color = Model.state.playerMaster.color;
+                document.getElementById('master-alignment').innerText = Model.state.playerMaster.alignment;
+
+                Model.state.castles = [
+                    { id: 'c1', name: '王都', x: 150, y: 200, owner: 'player', captureBonus: 0, uniqueUnit: null, neighbors: ['c3', 'c7'] },
+                    { id: 'c2', name: '暗黒城', x: 750, y: 550, owner: 'enemy', captureBonus: 2000, uniqueUnit: 'hell-hound', neighbors: ['c3', 'c5', 'c6'] },
+                    { id: 'c3', name: '自由都市', x: 450, y: 350, owner: 'neutral', captureBonus: 500, uniqueUnit: 'guard', neighbors: ['c1', 'c2', 'c4', 'c5'] },
+                    { id: 'c4', name: '北の砦', x: 450, y: 100, owner: 'neutral', captureBonus: 350, uniqueUnit: 'crossbow', neighbors: ['c3', 'c6'] },
+                    { id: 'c5', name: '南の村', x: 250, y: 550, owner: 'neutral', captureBonus: 200, uniqueUnit: 'militia', neighbors: ['c2', 'c3'] },
+                    { id: 'c6', name: '東の塔', x: 750, y: 150, owner: 'neutral', captureBonus: 800, uniqueUnit: 'sorcerer', neighbors: ['c2', 'c4'] },
+                    { id: 'c7', name: '西の廃墟', x: 100, y: 450, owner: 'neutral', captureBonus: 400, uniqueUnit: 'ghost', neighbors: ['c1'] }
+                ];
+
+                Model.state.mapUnits = [
+                    { id: 'master-army', owner: 'player', x: 150, y: 200, targetX: 150, targetY: 200, emoji: Model.state.playerMaster.emoji, army: Model.FACTION_UNITS[id].map(u => ({ ...u, currentHp: u.hp, rank: 0, xp: 0 })), isMaster: true, hasActed: false, isMoving: false },
+                    { id: 'enemy-1', owner: 'enemy', x: 750, y: 550, targetX: 750, targetY: 550, emoji: '👹', army: Model.FACTION_UNITS['demon'].map(u => ({ ...u, currentHp: u.hp, rank: 0, xp: 0 })), isMaster: false, hasActed: false, isMoving: false }
+                ];
+                View.changeScreen('map');
+            },
+
+            updateLogic() {
+                if (Model.state.currentScreen !== 'map') return;
+
+                Model.state.mapUnits.forEach(u => {
+                    const dx = u.targetX - u.x, dy = u.targetY - u.y, dist = Math.hypot(dx, dy);
+                    if (dist > Model.UNIT_SPEED) { u.x += dx / dist * Model.UNIT_SPEED; u.y += dy / dist * Model.UNIT_SPEED; }
+                    else { u.x = u.targetX; u.y = u.targetY; u.isMoving = false; }
+                });
+
+                if (Model.state.encounterCooldown > 0) Model.state.encounterCooldown--;
+                if (Model.state.encounterCooldown <= 0 && !Model.state.gameCleared) {
+                    for (let i = 0; i < Model.state.mapUnits.length; i++) {
+                        for (let j = i + 1; j < Model.state.mapUnits.length; j++) {
+                            const u1 = Model.state.mapUnits[i], u2 = Model.state.mapUnits[j];
+                            if (u1.owner !== u2.owner && Math.hypot(u1.x - u2.x, u1.y - u2.y) < 30) {
+                                u1.isMoving = false; u2.isMoving = false;
+                                // hasActedは戦闘終了後に設定するため、ここでは設定しない
+                                Model.state.encounterEnemy = (u1.owner === 'enemy') ? u1 : u2;
+                                Model.state.encounterPlayer = (u1.owner === 'player') ? u1 : u2;
+                                this.startBattle(); return;
+                            }
+                        }
+                    }
+                }
+
+                Model.state.castles.forEach(c => {
+                    const unitsOnCastle = Model.state.mapUnits.filter(u => Math.hypot(u.x - c.x, u.y - c.y) < 40);
+                    const currentGuard = unitsOnCastle.find(u => u.owner === c.owner);
+
+                    if (!currentGuard) {
+                        const player = unitsOnCastle.find(u => u.owner === 'player' && !u.isMoving);
+                        const enemy = unitsOnCastle.find(u => u.owner === 'enemy' && !u.isMoving);
+                        if (player && !enemy && c.owner !== 'player') {
+                            Model.state.gold += c.captureBonus;
+                            c.captureBonus = 0; // ボーナス取得済み
+                            c.owner = 'player'; View.showMessage(`${c.name}制圧！`);
+
+                            // 敵本拠地（暗黒城）陥落による降伏
+                            if (c.id === 'c2') {
+                                View.showMessage("敵の暗黒城が陥落！ 敵軍は降伏しました。");
+                                Model.state.mapUnits = Model.state.mapUnits.filter(u => u.owner !== 'enemy');
+                                Model.state.castles.forEach(cas => { if (cas.owner === 'enemy') cas.owner = 'player'; });
+                            }
+
+                            this.checkWinCondition();
+                        } else if (enemy && !player && c.owner !== 'enemy') {
+                            Model.state.enemyGold += c.captureBonus;
+                            c.captureBonus = 0;
+                            c.owner = 'enemy';
+
+                            // 自軍本拠地（王都）陥落による敗北
+                            if (c.id === 'c1') {
+                                Model.state.gameCleared = true;
+                                View.showEnding(false);
+                                return;
+                            }
+
+                            this.checkWinCondition(); // 敗北判定のためにチェック
+                        }
+                    }
+                });
+
+                // 敵ターン中に全部隊の移動が完了したかチェックしてプレイヤーターンへ
+                if (Model.state.strategicTurn === 'enemy' && Model.state.enemyTurnStarted) {
+                    const anyMoving = Model.state.mapUnits.some(u => u.isMoving);
+                    const battleActive = Model.state.currentScreen === 'battle';
+                    const encounterWaiting = Model.state.encounterCooldown > 0;
+                    if (!anyMoving && !battleActive && !encounterWaiting) {
+                        this.startPlayerTurn();
+                    }
+                }
+            },
+
+            checkWinCondition() {
+                if (Model.state.gameCleared) return;
+                const pOwned = Model.state.castles.filter(c => c.owner === 'player').length;
+                const eOwned = Model.state.castles.filter(c => c.owner === 'enemy').length;
+
+                if (eOwned === 0) {
+                    Model.state.gameCleared = true;
+                    setTimeout(() => View.showEnding(true), 1500); // 降伏演出を見せるため少し待つ
+                } else if (pOwned === 0) {
+                    Model.state.gameCleared = true;
+                    View.showEnding(false);
+                }
+            },
+
+            handleMapClick(e) {
+                if (e.button !== 0 || Model.state.strategicTurn !== 'player' || Model.state.gameCleared) return;
+                const rect = View.canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left, y = e.clientY - rect.top;
+
+                // 1. すでに部隊が選択されている場合、まず移動先（拠点）がクリックされたかを確認
+                if (Model.state.selectedMapUnit) {
+                    const castle = Model.state.castles.find(c => Math.hypot(c.x - x, c.y - y) < 45);
+                    if (castle) {
+                        const current = Model.state.castles.find(c => Math.hypot(c.x - Model.state.selectedMapUnit.x, c.y - Model.state.selectedMapUnit.y) < 45);
+                        if (current && current.neighbors.includes(castle.id)) {
+                            Model.state.selectedMapUnit.targetX = castle.x; Model.state.selectedMapUnit.targetY = castle.y;
+                            Model.state.selectedMapUnit.isMoving = true; Model.state.selectedMapUnit.hasActed = true;
+                            Model.state.selectedMapUnit = null;
+                            return; // 移動を実行したので終了
+                        } else {
+                            View.showMessage("隣接していません。");
+                            // 隣接していない拠点をクリックした場合は選択解除せず、部隊切り替え判定へ流すことも可能だが、
+                            // ここでは一旦クリックを消費
+                        }
+                    }
+                }
+
+                // 2. 拠点がクリックされていない、または移動不可だった場合、部隊の選択・切り替えを行う
+                const clickedUnits = Model.state.mapUnits.filter(u => u.owner === 'player' && !u.hasActed && Math.hypot(u.x - x, u.y - y) < 45);
+                if (clickedUnits.length > 0) {
+                    let nextIdx = 0;
+                    if (Model.state.selectedMapUnit && clickedUnits.includes(Model.state.selectedMapUnit)) {
+                        nextIdx = (clickedUnits.indexOf(Model.state.selectedMapUnit) + 1) % clickedUnits.length;
+                    }
+                    Model.state.selectedMapUnit = clickedUnits[nextIdx];
+                } else {
+                    // 何もない場所をクリックしたら選択解除
+                    Model.state.selectedMapUnit = null;
+                }
+            },
+
+            handleMapRightClick(e) {
+                e.preventDefault();
+                if (Model.state.strategicTurn !== 'player') return;
+                const rect = View.canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left, y = e.clientY - rect.top;
+                const clickedCastle = Model.state.castles.find(c => Math.hypot(c.x - x, c.y - y) < 45);
+                if (clickedCastle) View.toggleBaseMenu(clickedCastle);
+            },
+
+            endStrategicTurn() {
+                if (Model.state.strategicTurn !== 'player') return;
+
+                const movingUnit = Model.state.mapUnits.find(u => u.owner === 'player' && u.isMoving);
+                if (movingUnit) { View.showMessage("部隊が移動中です。完了までお待ちください。"); return; }
+
+                Model.state.strategicTurn = 'enemy';
+                Model.state.enemyTurnStarted = false;
+                document.getElementById('turn-text').innerText = "Enemy Turn";
+                document.getElementById('turn-text').classList.add('text-red-500');
+                document.getElementById('btn-end-strategic-turn').classList.add('hidden');
+                document.getElementById('save-load-group').classList.add('hidden');
+
+                setTimeout(() => {
+                    Model.state.enemyTurnStarted = true;
+                    const enemyCastles = Model.state.castles.filter(c => c.owner === 'enemy');
+                    const enemyCastleCount = enemyCastles.length;
+                    Model.state.enemyGold += (100 + enemyCastleCount * 200);
+
+                    // 1. 部隊の新規編成（資金がある場合）
+                    // 敵の本拠地、または支配下のすべての拠点で生産を試みる
+                    enemyCastles.forEach(castle => {
+                        const enemyUnitsAtCastle = Model.state.mapUnits.filter(u => u.owner === 'enemy' && Math.hypot(u.x - castle.x, u.y - castle.y) < 45);
+                        const totalEnemyArmies = Model.state.mapUnits.filter(u => u.owner === 'enemy').length;
+
+                        // 拠点に部隊がいない、または本拠地(c2)で守備隊が1つしかいない場合に新しい部隊を作成
+                        const needsNewArmy = (enemyUnitsAtCastle.length === 0) || (castle.id === 'c2' && enemyUnitsAtCastle.length < 2);
+
+                        if (needsNewArmy && totalEnemyArmies < Model.MAX_ARMIES && Model.state.enemyGold >= Model.ARMY_COST) {
+                            Model.state.enemyGold -= Model.ARMY_COST;
+                            Model.state.mapUnits.push({
+                                id: 'enemy-army-' + Date.now() + Math.random(),
+                                owner: 'enemy', x: castle.x, y: castle.y, targetX: castle.x, targetY: castle.y,
+                                emoji: '🚩',
+                                army: [{ ...Model.FACTION_UNITS['demon'][0], currentHp: Model.FACTION_UNITS['demon'][0].hp, rank: 0, xp: 0 }],
+                                isMaster: false, hasActed: true, isMoving: false
+                            });
+                        }
+                    });
+
+                    // 2. 既存部隊へのユニット追加（戦力が上限に達するまで雇用）
+                    Model.state.mapUnits.filter(u => u.owner === 'enemy').forEach(enemyArmy => {
+                        const castle = Model.state.castles.find(c => c.owner === 'enemy' && Math.hypot(c.x - enemyArmy.x, c.y - enemyArmy.y) < 45);
+                        if (castle) {
+                            // その拠点の固有ユニットも候補に加える
+                            let recruitOptions = [...Model.FACTION_UNITS['demon']];
+                            if (castle.uniqueUnit) recruitOptions.push(Model.SPECIAL_UNITS[castle.uniqueUnit]);
+
+                            while (enemyArmy.army.length < Model.MAX_UNITS) {
+                                // 資金が許す限り、高価なユニット（強いユニット）から優先的にチェック
+                                const affordableUnits = recruitOptions.filter(ut => Model.state.enemyGold >= ut.cost);
+                                if (affordableUnits.length === 0) break;
+
+                                // 最も高いユニット、またはランダムで選択（少しの揺らぎを持たせる）
+                                affordableUnits.sort((a, b) => b.cost - a.cost);
+                                const unitToRecruit = Math.random() > 0.3 ? affordableUnits[0] : affordableUnits[Math.floor(Math.random() * affordableUnits.length)];
+
+                                Model.state.enemyGold -= unitToRecruit.cost;
+                                enemyArmy.army.push({ ...unitToRecruit, currentHp: unitToRecruit.hp, rank: 0, xp: 0 });
+                            }
+                        }
+                    });
+
+                    // 3. 移動ロジック：本拠地防衛最優先
+                    Model.state.mapUnits.filter(u => u.owner === 'enemy').forEach(enemy => {
+                        const current = Model.state.castles.find(c => Math.hypot(c.x - enemy.x, c.y - enemy.y) < 45);
+                        if (!current) return;
+
+                        // 戦略的判断
+                        const isCapital = (current.id === 'c2');
+                        const enemyUnitsAtCapital = Model.state.mapUnits.filter(u => u.owner === 'enemy' && Math.hypot(u.x - Model.state.castles.find(c => c.id === 'c2').x, u.y - Model.state.castles.find(c => c.id === 'c2').y) < 45);
+
+                        // A. 本拠地にいる場合：守りつつ、余剰戦力は出撃
+                        if (isCapital) {
+                            // 本拠地に2部隊以上いるなら、その部隊は 60% の確率で出撃を試みる
+                            if (enemyUnitsAtCapital.length < 2 || Math.random() < 0.4) return;
+                        }
+
+                        // B. 本拠地が空の場合：近くの部隊が戻る
+                        if (enemyUnitsAtCapital.length === 0) {
+                            const capital = Model.state.castles.find(c => c.id === 'c2');
+                            if (current.neighbors.includes(capital.id)) {
+                                enemy.targetX = capital.x; enemy.targetY = capital.y; enemy.isMoving = true;
+                                return;
+                            }
+                        }
+
+                        // C. 通常の移動（隣接拠点へ）
+                        if (current.neighbors.length > 0) {
+                            // 50%の確率で移動（よりアグレッシブに）
+                            if (Math.random() > 0.5) {
+                                // プレイヤーの拠点、または中立拠点を優先的に狙う
+                                const targets = current.neighbors
+                                    .map(id => Model.state.castles.find(c => c.id === id))
+                                    .sort((a, b) => {
+                                        if (a.owner === 'player') return -1;
+                                        if (a.owner === 'neutral' && b.owner === 'enemy') return -1;
+                                        return 1;
+                                    });
+
+                                const next = targets[0]; // 最優先ターゲット
+                                // ターゲットが自軍領かつ既に誰か守っている場合は低確率でしか行かない
+                                const guards = Model.state.mapUnits.filter(u => u.owner === 'enemy' && Math.hypot(u.x - next.x, u.y - next.y) < 45);
+                                if (next.owner === 'enemy' && guards.length > 0 && Math.random() > 0.2) return;
+
+                                enemy.targetX = next.x; enemy.targetY = next.y; enemy.isMoving = true;
+                            }
+                        }
+                    });
+                    // 次のターンの開始（startPlayerTurn）は updateLogic 内の完了チェックで行う
+                }, 1000);
+            },
+
+            startPlayerTurn() {
+                Model.state.turnCount++;
+                Model.state.strategicTurn = 'player';
+                document.getElementById('turn-text').innerText = "Player Turn";
+                document.getElementById('turn-text').classList.remove('text-red-500');
+                document.getElementById('btn-end-strategic-turn').classList.remove('hidden');
+                document.getElementById('save-load-group').classList.remove('hidden');
+                const income = 100 + Model.state.castles.filter(c => c.owner === 'player').length * 200;
+                Model.state.gold += income;
+                Model.state.mapUnits.forEach(u => u.hasActed = false);
+                View.showMessage(`ターン開始：収入 ${income}G`);
+            },
+
+            createNewArmy(castle) {
+                if (Model.state.gold < Model.ARMY_COST) return;
+                if (Model.state.mapUnits.filter(u => u.owner === 'player').length >= Model.MAX_ARMIES) {
+                    View.showMessage("部隊数が上限に達しています");
+                    return;
+                }
+                Model.state.gold -= Model.ARMY_COST;
+                Model.state.mapUnits.push({ id: 'army-' + Date.now(), owner: 'player', x: castle.x, y: castle.y, targetX: castle.x, targetY: castle.y, emoji: '🚩', army: [{ ...Model.FACTION_UNITS[Model.state.playerMaster.id][0], currentHp: Model.FACTION_UNITS[Model.state.playerMaster.id][0].hp, rank: 0, xp: 0 }], isMaster: false, hasActed: true, isMoving: false });
+                View.renderBaseMenu(castle);
+            },
+
+            recruitUnit(aId, utId, cId) {
+                const army = Model.state.mapUnits.find(u => u.id === aId);
+                const ut = Model.FACTION_UNITS[Model.state.playerMaster.id].find(x => x.id === utId) || Model.SPECIAL_UNITS[utId];
+                if (army && ut && army.army.length < Model.MAX_UNITS && Model.state.gold >= ut.cost) {
+                    Model.state.gold -= ut.cost; army.army.push({ ...ut, currentHp: ut.hp, rank: 0, xp: 0 });
+                    View.renderBaseMenu(Model.state.castles.find(c => c.id === cId));
+                }
+            },
+
+            enhanceUnit(aId, idx, type, cId) {
+                const army = Model.state.mapUnits.find(u => u.id === aId);
+                if (!army) return;
+                const unit = army.army[idx];
+                if (type === 'hp' && Model.state.gold >= 100) { Model.state.gold -= 100; unit.hp += 10; unit.currentHp += 10; }
+                else if (type === 'atk' && Model.state.gold >= 150) { Model.state.gold -= 150; unit.atk += 3; }
+                View.renderBaseMenu(Model.state.castles.find(c => c.id === cId));
+            },
+
+            startBattle() {
+                window.gameState = Model.state;
+                View.changeScreen('battle');
+                this.initBattleGrid();
+            },
+
+            initBattleGrid() {
+                const grid = document.getElementById('battle-grid'); grid.innerHTML = '';
+                const cols = 7, rows = 6, hexSize = 90;
+                Model.state.battle.grid = [];
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        // 標準的なポイントトップ・ヘックスの配置計算
+                        const x = c * hexSize + (r % 2 ? hexSize / 2 : 0);
+                        const y = r * hexSize * 0.75;
+                        const hex = document.createElement('div');
+                        hex.className = 'hex hex-active absolute bg-slate-800/60 border border-slate-700 flex items-center justify-center transition-all duration-200 shadow-inner';
+                        hex.style.width = `${hexSize}px`; hex.style.height = `${hexSize}px`; hex.style.left = `${x}px`; hex.style.top = `${y}px`;
+                        hex.onclick = () => this.handleBattleHexClick(r, c);
+                        hex.oncontextmenu = (e) => { e.preventDefault(); this.handleBattleUnitRightClick(r, c); };
+                        grid.appendChild(hex); Model.state.battle.grid.push({ r, c, el: hex });
+                    }
+                }
+                grid.style.width = `${(cols + 0.5) * hexSize}px`; grid.style.height = `${(rows * 0.75 + 0.25) * hexSize}px`;
+                const pU = Model.state.encounterPlayer.army.map((u, i) => ({ ...u, r: 1 + i, c: 0, owner: 'player' })), eU = Model.state.encounterEnemy.army.map((u, i) => ({ ...u, r: 1 + i, c: 6, owner: 'enemy' }));
+                Model.state.battle.units = [...pU, ...eU]; Model.state.battle.movedUnits = new Set(); Model.state.battle.selectedUnit = null; Model.state.battle.tempMoved = false; Model.state.battle.turn = 'player'; Model.state.battle.active = true;
+                View.updateBattleUI();
+            },
+
+            handleBattleHexClick(r, c) {
+                const b = Model.state.battle; if (b.turn !== 'player' || !b.active) return;
+                const target = b.units.find(u => u.r === r && u.c === c);
+                if (b.selectedUnit && b.tempMoved) {
+                    const s = b.selectedUnit; const d = Model.getHexDist(s.r, s.c, r, c);
+                    if (target && target.owner === 'enemy' && d <= s.range) {
+                        if (s.range > 1) View.showMessage("遠距離は移動前のみ"); else this.battleAttack(s, target);
+                    } else { b.movedUnits.add(s); b.selectedUnit = null; b.tempMoved = false; if (target && target.owner === 'player' && !b.movedUnits.has(target)) b.selectedUnit = target; }
+                    View.updateBattleUI(); return;
+                }
+                if (target && target.owner === 'player') { if (!b.movedUnits.has(target)) { b.selectedUnit = target; b.tempMoved = false; } View.updateBattleUI(); return; }
+                if (b.selectedUnit) {
+                    const s = b.selectedUnit, d = Model.getHexDist(s.r, s.c, r, c);
+                    if (target && target.owner === 'enemy') { if (d <= s.range) this.battleAttack(s, target); }
+                    else if (!target && d <= s.move) { s.r = r; s.c = c; b.tempMoved = true; }
+                    else { b.selectedUnit = null; }
+                }
+                View.updateBattleUI(); this.checkBattleEnd();
+            },
+
+            handleBattleUnitRightClick(r, c) {
+                const b = Model.state.battle; if (!b.active) return;
+                const u = b.units.find(u => u.r === r && u.c === c);
+                if (u) {
+                    const rank = Model.RANKS[u.rank || 0];
+                    const xpText = u.rank === 5 ? "MAX" : `${u.xp || 0} / ${Model.RANK_UP_XP}`;
+                    const statusText = `【${u.name}】 (${u.owner === 'player' ? '自軍' : '敵軍'})
+ RANK: ${rank} (XP: ${xpText})
+ HP: ${u.currentHp} / ${u.hp}  ATK: ${u.atk}
+ RANGE: ${u.range}  MOVE: ${u.move}`;
+                    View.showMessage(statusText);
+                }
+            },
+
+            battleAttack(atk, def) {
+                const dmg = Math.floor(atk.atk * (0.8 + Math.random() * 0.4)); def.currentHp -= dmg;
+                View.showMessage(`${atk.name}の攻撃！ ${def.name}に${dmg}ダメ！`);
+
+                // XP獲得
+                this.gainXp(atk, 10);
+
+                Model.state.battle.movedUnits.add(atk); Model.state.battle.selectedUnit = null; Model.state.battle.tempMoved = false;
+                if (def.currentHp <= 0) {
+                    this.gainXp(atk, 30); // 撃破ボーナス
+                    Model.state.battle.units = Model.state.battle.units.filter(u => u !== def);
+                }
+            },
+
+            gainXp(unit, amount) {
+                if (unit.rank === 5) return; // Sランクは成長停止
+                if (!unit.xp && unit.xp !== 0) { unit.xp = 0; unit.rank = 0; }
+                unit.xp += amount;
+                if (unit.xp >= Model.RANK_UP_XP) {
+                    unit.xp -= Model.RANK_UP_XP;
+                    unit.rank++;
+
+                    // 各能力のその時点の値の20%向上
+                    const hpBonus = Math.max(1, Math.floor(unit.hp * 0.2));
+                    const atkBonus = Math.max(1, Math.floor(unit.atk * 0.2));
+
+                    unit.hp += hpBonus;
+                    unit.currentHp += hpBonus;
+                    unit.atk += atkBonus;
+
+                    View.showMessage(`${unit.name}がランクアップ！ RANK ${Model.RANKS[unit.rank]}になった！\n(HP+${hpBonus}, ATK+${atkBonus})`);
+                    if (unit.rank === 5) { unit.xp = 0; } // Sランク到達
+                }
+            },
+
+            battleEndTurnOrder() {
+                const b = Model.state.battle; if (!b.active || b.turn !== 'player') return;
+                if (b.selectedUnit && b.tempMoved) b.movedUnits.add(b.selectedUnit);
+                b.selectedUnit = null; b.tempMoved = false; b.turn = 'enemy'; b.movedUnits.clear();
+                View.updateBattleUI(); setTimeout(() => this.enemyBattleTurn(), 800);
+            },
+
+            enemyBattleTurn() {
+                const b = Model.state.battle; if (!b.active) return;
+                Model.state.battle.units.filter(u => u.owner === 'enemy').forEach(e => {
+                    const targets = Model.state.battle.units.filter(u => u.owner === 'player');
+                    if (targets.length > 0) {
+                        const t = targets[0], d = Model.getHexDist(e.r, e.c, t.r, t.c);
+                        if (d <= e.range) this.battleAttack(e, t);
+                        else {
+                            let nR = e.r, nC = e.c;
+                            if (e.r > t.r) nR--; else if (e.r < t.r) nR++;
+                            if (e.c > t.c) nC--; else if (e.c < t.c) nC++;
+                            if (!b.units.some(u => u.r === nR && u.c === nC)) { e.r = nR; e.c = nC; }
+                            if (Model.getHexDist(e.r, e.c, t.r, t.c) <= e.range) this.battleAttack(e, t);
+                            b.movedUnits.add(e);
+                        }
+                    }
+                });
+                this.checkBattleEnd();
+                if (b.active) { b.turn = 'player'; b.movedUnits.clear(); View.updateBattleUI(); View.showMessage("あなたのターンです"); }
+            },
+
+            checkBattleEnd() {
+                const b = Model.state.battle; if (!b.active) return;
+                const pC = b.units.filter(u => u.owner === 'player').length, eC = b.units.filter(u => u.owner === 'enemy').length;
+                if (eC === 0) { b.active = false; View.openModal("VICTORY", "勝利！", [{ label: "続行", action: () => this.finishBattle(true) }]); }
+                else if (pC === 0) { b.active = false; View.openModal("敗北", "全滅した...", [{ label: "帰還", action: () => this.finishBattle(false) }]); }
+            },
+
+            finishBattle(win) {
+                const pA = Model.state.encounterPlayer;
+                pA.hasActed = true; // 戦闘終了後に行動済みとする（次のターン開始時にリセットされる）
+                if (win) {
+                    Model.state.mapUnits = Model.state.mapUnits.filter(u => u !== Model.state.encounterEnemy);
+                    // 生き残ったユニットを全回復させて引き継ぐ
+                    pA.army = Model.state.battle.units.filter(u => u.owner === 'player').map(u => ({ ...u, currentHp: u.hp }));
+                } else {
+                    // 本拠地（王都）での敗北・撤退は即座にゲームオーバー
+                    const atHQ = Math.hypot(pA.x - 150, pA.y - 200) < 45; // c1 (王都) の座標
+                    if (atHQ) {
+                        Model.state.gameCleared = true;
+                        View.showEnding(false);
+                        return;
+                    }
+
+                    // 敗北時はペナルティとして初期ユニット1体で復活（HP全開）
+                    pA.army = [{ ...Model.FACTION_UNITS[Model.state.playerMaster.id][0], currentHp: Model.FACTION_UNITS[Model.state.playerMaster.id][0].hp }];
+                    const hq = Model.state.castles.find(c => c.id === 'c1');
+                    if (hq) {
+                        // もし王都が既に敵に占領されていたら敗北
+                        if (hq.owner === 'enemy') {
+                            Model.state.gameCleared = true;
+                            View.showEnding(false);
+                            return;
+                        }
+                        pA.x = hq.x; pA.y = hq.y; pA.targetX = hq.x; pA.targetY = hq.y;
+                    }
+                }
+                Model.state.encounterCooldown = 60; Model.state.battle.active = false; View.changeScreen('map');
+            },
+
+            showEscapeConfirm() { View.openModal("撤退確認", "戦場から離脱しますか？", [{ label: "はい", action: () => this.finishBattle(false) }, { label: "いいえ", action: () => { } }]); },
+
+            saveGame() {
+                const saveState = JSON.parse(JSON.stringify(Model.state));
+                saveState.battle.grid = [];
+                if (Model.state.battle.movedUnits) {
+                    saveState.battle.movedUnitsIndices = [...Model.state.battle.movedUnits].map(u => Model.state.battle.units.indexOf(u));
+                }
+                localStorage.setItem('bahamut_save', JSON.stringify(saveState));
+                View.showMessage("システム：進行状況をセーブしました");
+            },
+
+            loadGame() {
+                const data = localStorage.getItem('bahamut_save');
+                if (!data) { View.showMessage("エラー：セーブデータが見つかりません"); return; }
+                const state = JSON.parse(data);
+                if (state.battle.movedUnitsIndices) {
+                    state.battle.movedUnits = new Set(state.battle.movedUnitsIndices.map(i => state.battle.units[i]));
+                } else {
+                    state.battle.movedUnits = new Set();
+                }
+                Model.state = state;
+                View.changeScreen(Model.state.currentScreen);
+                if (Model.state.currentScreen === 'map') {
+                    View.initCanvas();
+                } else if (Model.state.currentScreen === 'battle') {
+                    this.initBattleGrid();
+                }
+                if (Model.state.playerMaster) {
+                    document.getElementById('master-name').innerText = Model.state.playerMaster.name;
+                    document.getElementById('master-name').style.color = Model.state.playerMaster.color;
+                    document.getElementById('master-alignment').innerText = Model.state.playerMaster.alignment;
+                }
+                const turns = Model.state.strategicTurn === 'enemy';
+                document.getElementById('turn-text').innerText = turns ? "Enemy Turn" : "Player Turn";
+                document.getElementById('turn-text').classList.toggle('text-red-500', turns);
+                document.getElementById('btn-end-strategic-turn').classList.toggle('hidden', turns);
+                document.getElementById('save-load-group').classList.toggle('hidden', turns);
+                View.showMessage("システム：ゲームをロードしました");
+            }
+        };
+
+        /**
+         * TEST SUITE: システムテスト
+         */
+        const TestSuite = {
+            logs: [],
+            assert(condition, message) {
+                this.logs.push(`${condition ? '✅ PASS' : '❌ FAIL'}: ${message}`);
+                return condition ? 1 : 0;
+            },
+
+            runAll() {
+                this.logs = [];
+                let passed = 0, total = 0;
+
+                console.log("--- Starting System Tests ---");
+
+                // 1. 距離計算のテスト
+                total++; passed += this.assert(Model.getHexDist(0, 0, 0, 1) === 1, "Hex Distance: Adjacent");
+                total++; passed += this.assert(Model.getHexDist(0, 0, 2, 2) === 3, "Hex Distance: Diagonal (0,0 to 2,2 is 3 steps)");
+                total++; passed += this.assert(Model.getHexDist(0, 0, 5, 0) === 5, "Hex Distance: Far");
+
+                // 2. 座標変換のテスト
+                const cube = Model.getCubeCoords(2, 2);
+                total++; passed += this.assert(cube.x + cube.y + cube.z === 0, "Cube Coordinates: Sum is zero");
+
+                // 3. 資金管理と雇用制限のテスト
+                const originalGold = Model.state.gold;
+                const originalUnits = [...Model.state.mapUnits];
+                const originalMaster = Model.state.playerMaster;
+
+                // モックデータ設定
+                Model.state.playerMaster = Model.MASTERS[0]; // knight
+                Model.state.gold = 400; // 500G未満に設定
+                const mockCastle = { x: 0, y: 0, id: 'test-c' };
+
+                Controller.createNewArmy(mockCastle);
+                total++; passed += this.assert(Model.state.mapUnits.length === originalUnits.length, "Create Army: Should fail if insufficient gold");
+
+                Model.state.gold = 1000;
+                Controller.createNewArmy(mockCastle);
+                total++; passed += this.assert(Model.state.mapUnits.length === originalUnits.length + 1, "Create Army: Should succeed if enough gold");
+                total++; passed += this.assert(Model.state.gold === 500, "Create Army: Gold should be deducted");
+
+                // 最大部隊数制限のテスト
+                Model.state.gold = 10000;
+                while (Model.state.mapUnits.length < Model.MAX_ARMIES) { Controller.createNewArmy(mockCastle); }
+                const countBefore = Model.state.mapUnits.length;
+                Controller.createNewArmy(mockCastle);
+                total++; passed += this.assert(Model.state.mapUnits.length === countBefore, "Create Army: Should not exceed MAX_ARMIES");
+
+                // 4. 収入計算のテスト
+                Model.state.gold = 0;
+                const originalCastlesIncome = JSON.parse(JSON.stringify(Model.state.castles));
+                Model.state.castles = [
+                    { owner: 'player' }, { owner: 'player' }, { owner: 'enemy' }
+                ];
+                Controller.startPlayerTurn();
+                // 100(基本) + 2(城数) * 200 = 500
+                total++; passed += this.assert(Model.state.gold === 500, `Income Calculation: Expected 500, got ${Model.state.gold}`);
+
+                // 5. 勝利・敗北判定のテスト
+                Model.state.gameCleared = false;
+                Model.state.castles = [{ owner: 'player' }, { owner: 'neutral' }]; // 敵が0
+                Controller.checkWinCondition();
+                total++; passed += this.assert(Model.state.gameCleared === true, "Win Condition: Enemy castles are zero");
+
+                Model.state.gameCleared = false;
+                Model.state.castles = [{ owner: 'enemy' }, { owner: 'neutral' }]; // 自軍が0
+                Controller.checkWinCondition();
+                total++; passed += this.assert(Model.state.gameCleared === true, "Lose Condition: Player castles are zero");
+
+                // 6. ターンリセットと行動フラグのテスト
+                // 戦闘終了後のフラグ設定テスト
+                const mockArmy = { hasActed: false };
+                Model.state.encounterPlayer = mockArmy;
+                Controller.finishBattle(true);
+                total++; passed += this.assert(mockArmy.hasActed === true, "Action Flag: Unit should be 'acted' after battle");
+
+                // ターン開始時のリセットテスト
+                Model.state.mapUnits = [
+                    { hasActed: true, owner: 'player' },
+                    { hasActed: true, owner: 'player' },
+                    { hasActed: false, owner: 'enemy' }
+                ];
+                Controller.startPlayerTurn();
+                total++; passed += this.assert(Model.state.mapUnits[0].hasActed === false, "Turn Reset: Player unit 1 should be reset");
+                total++; passed += this.assert(Model.state.mapUnits[1].hasActed === false, "Turn Reset: Player unit 2 should be reset");
+
+                // 環境の復元
+                Model.state.gold = originalGold;
+                Model.state.mapUnits = originalUnits;
+                Model.state.playerMaster = originalMaster;
+                Model.state.castles = originalCastlesIncome;
+                Model.state.gameCleared = false;
+                Model.state.encounterPlayer = null;
+
+                // 結果の表示
+                this.logs.forEach(log => console.log(log));
+                console.log(`--- Test Results: ${passed}/${total} passed ---`);
+                View.showMessage(`テスト完了: ${passed}/${total} 合格。詳細はコンソールを確認してください。`);
+            }
+        };
+
+        window.onload = () => { Controller.init(); View.changeScreen('title'); };
+        window.onresize = () => { if (Model.state.currentScreen === 'map') View.initCanvas(); };
+    </script>
+</body>
+
+</html>
