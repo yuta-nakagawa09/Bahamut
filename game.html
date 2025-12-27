@@ -169,20 +169,6 @@
             </div>
         </div>
 
-        <!-- 設定画面 -->
-        <div id="screen-settings"
-            class="absolute inset-0 bg-black/90 flex flex-col items-center justify-center hidden pointer-events-auto z-[100] p-8">
-            <h2 class="text-6xl text-yellow-500 font-bold mb-12 uppercase">Settings</h2>
-            <div class="pixel-border p-12 max-w-4xl w-full bg-gray-900/80">
-                <h3 class="text-3xl font-bold mb-8 border-b-2 border-gray-700 pb-2 text-white">戦略マップ選択</h3>
-                <div id="map-select-list" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                </div>
-                <div class="flex justify-center">
-                    <button onclick="View.toggleSettings()"
-                        class="px-16 py-6 bg-blue-900 hover:bg-blue-700 border-2 border-white text-2xl font-bold shadow-xl text-white transition-all hover:scale-105">完了</button>
-                </div>
-            </div>
-        </div>
 
         <!-- 最前面に表示すべき要素 -->
         <div id="top-elements" class="absolute inset-0 pointer-events-none z-[110]">
@@ -230,7 +216,7 @@
             Bahamut Strategy</h1>
         <p class="mb-16 text-3xl text-gray-400 italic font-bold text-center">〜 大陸統一：本格シミュレーション 〜</p>
         <div class="flex gap-4">
-            <button onclick="Controller.showMasterSelection()"
+            <button onclick="Controller.startFlow()"
                 class="px-16 py-6 bg-red-900 hover:bg-red-700 border-2 border-white transition-all text-4xl font-bold shadow-2xl hover:scale-105 text-white">START
                 GAME</button>
             <button onclick="Controller.loadGame()"
@@ -238,19 +224,30 @@
                 GAME</button>
         </div>
         <div class="mt-8 flex gap-4 pointer-events-auto">
-            <button onclick="View.toggleSettings()"
-                class="px-10 py-4 bg-gray-900 hover:bg-gray-700 border-2 border-gray-500 transition-all text-2xl font-bold shadow-xl text-white">SETTING</button>
             <button onclick="TestSuite.runAll()"
                 class="px-4 py-2 bg-gray-800 text-gray-500 text-xs hover:text-white border border-gray-700 transition-colors">Run
                 System Tests</button>
         </div>
     </div>
 
-    <!-- 設定画面はUIレイヤー内に移動しました -->
+    <!-- マップ選択画面 -->
+    <div id="screen-map-select" class="hidden flex-col items-center justify-center min-h-screen p-8 bg-black/95">
+        <h2 class="text-6xl mb-12 font-bold text-center text-yellow-500 uppercase tracking-widest">戦地を選択せよ</h2>
+        <div id="map-flow-list" class="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-7xl w-full mb-12"></div>
+        <div class="flex justify-center gap-6">
+            <button onclick="View.changeScreen('title')"
+                class="px-12 py-4 bg-gray-900 hover:bg-gray-700 border-2 border-gray-500 text-2xl font-bold shadow-xl text-white transition-all">戻る</button>
+        </div>
+    </div>
 
-    <div id="screen-select" class="hidden flex-col items-center justify-center h-screen p-4 overflow-y-auto">
-        <h2 class="text-5xl mb-16 font-bold text-center text-white">マスターを選択せよ</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-7xl w-full"></div>
+    <div id="screen-select"
+        class="hidden flex-col items-center justify-center min-h-screen p-8 bg-black/95 overflow-y-auto">
+        <h2 class="text-5xl mb-16 font-bold text-center text-white italic tracking-widest uppercase">マスターを選択せよ</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-7xl w-full mb-12"></div>
+        <div class="flex justify-center gap-6">
+            <button onclick="View.changeScreen('map-select')"
+                class="px-12 py-4 bg-gray-900 hover:bg-gray-700 border-2 border-gray-500 text-2xl font-bold shadow-xl text-white transition-all">戻る</button>
+        </div>
     </div>
 
     <div id="screen-map" class="hidden relative h-screen bg-green-900/20">
@@ -436,6 +433,18 @@
                          class="p-6 border-2 transition-all cursor-pointer rounded-xl ${Model.state.selectedMapId === t.id ? 'border-yellow-500 bg-yellow-900/20' : 'border-gray-700 hover:border-gray-500 bg-black/40'}">
                         <div class="text-2xl font-bold mb-2 ${Model.state.selectedMapId === t.id ? 'text-yellow-500' : 'text-white'}">${t.name}</div>
                         <p class="text-sm text-gray-400">${t.desc}</p>
+                    </div>
+                `).join('');
+            },
+
+            renderMapFlow() {
+                const list = document.getElementById('map-flow-list');
+                list.innerHTML = Model.MAP_TEMPLATES.map(t => `
+                    <div onclick="Controller.selectMapAndNext('${t.id}')" 
+                         class="p-10 border-4 border-gray-700 hover:border-yellow-500 transition-all cursor-pointer rounded-2xl bg-gray-900 shadow-2xl hover:scale-105">
+                        <div class="text-4xl font-bold mb-6 text-white text-center">${t.name}</div>
+                        <p class="text-xl text-gray-400 text-center leading-relaxed mb-4">${t.desc}</p>
+                        <div class="text-center text-yellow-500 font-bold uppercase tracking-widest text-sm">Click to Select</div>
                     </div>
                 `).join('');
             },
@@ -781,15 +790,25 @@
         const Controller = {
             init() { setInterval(() => this.updateLogic(), 50); },
 
+            startFlow() {
+                View.changeScreen('map-select');
+                View.renderMapFlow();
+            },
+
+            selectMapAndNext(id) {
+                Model.state.selectedMapId = id;
+                this.showMasterSelection();
+            },
+
             showMasterSelection() {
                 View.changeScreen('select');
                 const container = document.querySelector('#screen-select div');
                 container.innerHTML = Model.MASTERS.map(m => `
-                    <div class="bg-gray-800 border-2 border-gray-600 p-10 hover:border-white cursor-pointer flex flex-col items-center transition-transform hover:scale-105 shadow-2xl text-white text-white" 
+                    <div class="bg-gray-800 border-2 border-gray-600 p-10 hover:border-white cursor-pointer flex flex-col items-center transition-transform hover:scale-105 shadow-2xl text-white" 
                          onclick="Controller.selectMaster('${m.id}')">
-                        <div class="text-9xl mb-8 text-white">${m.emoji}</div>
+                        <div class="text-9xl mb-8">${m.emoji}</div>
                         <div class="text-4xl font-bold mb-4" style="color:${m.color}">${m.name}</div>
-                        <p class="text-xl text-center text-gray-400 font-bold text-white">${m.desc}</p>
+                        <p class="text-xl text-center text-gray-400 font-bold">${m.desc}</p>
                     </div>`).join('');
             },
 
