@@ -109,11 +109,6 @@
                             <div id="gold-amount" class="text-4xl text-yellow-400 font-bold font-mono text-white">500
                             </div>
                         </div>
-                        <div class="text-right border-l border-gray-600 pl-4 opacity-40">
-                            <div class="text-[10px] text-red-400 uppercase font-bold">E-Gold</div>
-                            <div id="enemy-gold-amount" class="text-xl text-red-400 font-bold font-mono text-white">500
-                            </div>
-                        </div>
                     </div>
                 </div>
                 <div class="flex gap-3">
@@ -316,10 +311,10 @@
                     castles: [
                         { id: 'c1', name: '王都', x: 150, y: 200, owner: 'player', captureBonus: 0, uniqueUnit: null, neighbors: ['c3', 'c7'] },
                         { id: 'c2', name: '暗黒城', x: 750, y: 550, owner: 'enemy', captureBonus: 2000, uniqueUnit: 'hell-hound', neighbors: ['c3', 'c5', 'c6'] },
+                        { id: 'c6', name: '東の塔', x: 750, y: 150, owner: 'enemy2', captureBonus: 800, uniqueUnit: 'sorcerer', neighbors: ['c2', 'c4'] },
                         { id: 'c3', name: '自由都市', x: 450, y: 350, owner: 'neutral', captureBonus: 500, uniqueUnit: 'guard', neighbors: ['c1', 'c2', 'c4', 'c5'] },
                         { id: 'c4', name: '北の砦', x: 450, y: 100, owner: 'neutral', captureBonus: 350, uniqueUnit: 'crossbow', neighbors: ['c3', 'c6'] },
                         { id: 'c5', name: '南の村', x: 250, y: 550, owner: 'neutral', captureBonus: 200, uniqueUnit: 'militia', neighbors: ['c2', 'c3'] },
-                        { id: 'c6', name: '東の塔', x: 750, y: 150, owner: 'neutral', captureBonus: 800, uniqueUnit: 'sorcerer', neighbors: ['c2', 'c4'] },
                         { id: 'c7', name: '西の廃墟', x: 100, y: 450, owner: 'neutral', captureBonus: 400, uniqueUnit: 'ghost', neighbors: ['c1'] }
                     ]
                 },
@@ -328,9 +323,9 @@
                     castles: [
                         { id: 'c1', name: '王都', x: 100, y: 300, owner: 'player', captureBonus: 0, uniqueUnit: null, neighbors: ['c3'] },
                         { id: 'c2', name: '影の島', x: 800, y: 300, owner: 'enemy', captureBonus: 2000, uniqueUnit: 'hell-hound', neighbors: ['c6'] },
+                        { id: 'c5', name: '炎の運河', x: 650, y: 450, owner: 'enemy2', captureBonus: 300, uniqueUnit: 'sorcerer', neighbors: ['c4', 'c6'] },
                         { id: 'c3', name: '風の関所', x: 250, y: 150, owner: 'neutral', captureBonus: 300, uniqueUnit: 'crossbow', neighbors: ['c1', 'c4'] },
                         { id: 'c4', name: '中央島', x: 450, y: 300, owner: 'neutral', captureBonus: 600, uniqueUnit: 'guard', neighbors: ['c3', 'c5'] },
-                        { id: 'c5', name: '炎の運河', x: 650, y: 450, owner: 'neutral', captureBonus: 300, uniqueUnit: 'sorcerer', neighbors: ['c4', 'c6'] },
                         { id: 'c6', name: '境界の門', x: 700, y: 150, owner: 'neutral', captureBonus: 400, uniqueUnit: 'pirate', neighbors: ['c2', 'c5'] }
                     ]
                 },
@@ -339,7 +334,7 @@
                     castles: [
                         { id: 'c1', name: '王都', x: 450, y: 80, owner: 'player', captureBonus: 0, uniqueUnit: null, neighbors: ['c3', 'c4'] },
                         { id: 'c2', name: '暗黒城', x: 450, y: 520, owner: 'enemy', captureBonus: 2000, uniqueUnit: 'hell-hound', neighbors: ['c5', 'c6'] },
-                        { id: 'c3', name: '東の港', x: 700, y: 200, owner: 'neutral', captureBonus: 400, uniqueUnit: 'pirate', neighbors: ['c1', 'c5'] },
+                        { id: 'c3', name: '東の港', x: 700, y: 200, owner: 'enemy2', captureBonus: 400, uniqueUnit: 'pirate', neighbors: ['c1', 'c5'] },
                         { id: 'c4', name: '西の砦', x: 200, y: 200, owner: 'neutral', captureBonus: 400, uniqueUnit: 'dwarf', neighbors: ['c1', 'c6'] },
                         { id: 'c5', name: '南東の平原', x: 700, y: 400, owner: 'neutral', captureBonus: 400, uniqueUnit: 'berserker', neighbors: ['c3', 'c2'] },
                         { id: 'c6', name: '南西の森', x: 200, y: 400, owner: 'neutral', captureBonus: 400, uniqueUnit: 'fenrir', neighbors: ['c4', 'c2'] }
@@ -363,10 +358,11 @@
             state: {
                 currentScreen: 'title',
                 selectedMapId: 'classic',
-                playerMaster: null, gold: 500, enemyGold: 500,
+                factions: [], // { id, name, gold, master, color, isPlayer, isAlive, hqId }
                 mapUnits: [], castles: [], selectedMapUnit: null,
-                strategicTurn: 'player', encounterEnemy: null, encounterPlayer: null,
-                encounterCooldown: 0, gameCleared: false, turnCount: 0, enemyTurnStarted: false,
+                strategicTurn: 'player', // faction id
+                battleUnitA: null, battleUnitB: null, // Units in tactical battle
+                globalBattleCooldown: 0, gameCleared: false, turnCount: 0, aiActionStarted: false,
                 battle: { active: false, grid: [], units: [], turn: 'player', selectedUnit: null, movedUnits: new Set(), tempMoved: false }
             },
 
@@ -395,13 +391,31 @@
 
                 const status = document.getElementById('status-bar');
                 const turn = document.getElementById('turn-indicator');
+                const player = Model.state.factions.find(f => f.isPlayer);
+                if (screenId === 'map' && player) {
+                    status.classList.remove('hidden');
+                    turn.classList.remove('hidden');
+                    document.getElementById('gold-amount').innerText = Math.floor(player.gold);
+                } else {
+                    status.classList.add('hidden');
+                    turn.classList.add('hidden');
+                }
                 const btn = document.getElementById('btn-end-strategic-turn');
+                const saveLoad = document.getElementById('save-load-group');
+                const isPlayerTurn = Model.state.strategicTurn === 'player';
 
                 if (screenId === 'map') {
-                    status.classList.remove('hidden'); turn.classList.remove('hidden'); btn.classList.remove('hidden');
+                    if (isPlayerTurn) {
+                        btn.classList.remove('hidden');
+                        saveLoad.classList.remove('hidden');
+                    } else {
+                        btn.classList.add('hidden');
+                        saveLoad.classList.add('hidden');
+                    }
                     this.initCanvas();
                 } else {
-                    status.classList.add('hidden'); turn.classList.add('hidden'); btn.classList.add('hidden');
+                    btn.classList.add('hidden');
+                    saveLoad.classList.add('hidden');
                 }
             },
 
@@ -489,10 +503,13 @@
                 const ctx = this.ctx;
                 ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
-                document.getElementById('castle-count-display').innerText = `${Model.state.castles.filter(c => c.owner === 'player').length} / ${Model.state.castles.length}`;
-                document.getElementById('army-total-display').innerText = `${Model.state.mapUnits.filter(u => u.owner === 'player').length} / ${Model.MAX_ARMIES}`;
-                document.getElementById('gold-amount').innerText = Math.floor(Model.state.gold);
-                document.getElementById('enemy-gold-amount').innerText = Math.floor(Model.state.enemyGold);
+                const playerFaction = Model.state.factions.find(f => f.isPlayer);
+                if (!playerFaction) return; // 勢力が初期化される前は描画をスキップ
+
+                document.getElementById('castle-count-display').innerText = `${Model.state.castles.filter(c => c.owner === playerFaction.id).length} / ${Model.state.castles.length}`;
+                document.getElementById('army-total-display').innerText = `${Model.state.mapUnits.filter(u => u.owner === playerFaction.id).length} / ${Model.MAX_ARMIES}`;
+                document.getElementById('gold-amount').innerText = Math.floor(playerFaction.gold);
+                // 敵軍ゴールド表示は廃止（各拠点で確認）
                 document.getElementById('turn-display').innerText = `TURN ${Model.state.turnCount}`;
 
                 ctx.setLineDash([10, 5]); ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 4;
@@ -507,11 +524,26 @@
                 Model.state.castles.forEach(c => {
                     ctx.font = '50px serif'; ctx.textAlign = 'center'; ctx.fillText('🏰', c.x, c.y);
                     ctx.font = '24px DotGothic16';
-                    ctx.fillStyle = c.owner === 'player' ? '#44aaff' : (c.owner === 'enemy' ? '#ff4444' : '#aaaaaa');
-                    ctx.fillText(c.name, c.x, c.y + 45);
+                    const faction = Model.state.factions.find(f => f.id === c.owner);
+                    ctx.fillStyle = faction ? faction.color : '#aaaaaa';
+                    ctx.fillText(c.name, c.x, c.y + 40);
+
+                    ctx.font = '16px DotGothic16';
+                    const ownerName = faction ? faction.master.name : '中立';
+                    ctx.fillText(ownerName, c.x, c.y + 65);
+
+                    // HQ判定
+                    const isHQ = Model.state.factions.some(f => f.hqId === c.id && f.isAlive);
+                    if (isHQ) {
+                        ctx.font = 'bold 24px DotGothic16';
+                        ctx.fillStyle = '#FFD700'; // Gold
+                        ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(255,215,0,0.5)';
+                        ctx.fillText('👑HQ', c.x, c.y - 60);
+                        ctx.shadowBlur = 0;
+                    }
 
                     // 戦力表示
-                    const unitsAtCastle = Model.state.mapUnits.filter(u => Math.hypot(u.x - c.x, u.y - c.y) < 45);
+                    const unitsAtCastle = Model.state.mapUnits.filter(u => u.owner === c.owner && Math.hypot(u.x - c.x, u.y - c.y) < 45);
                     const totalAtk = unitsAtCastle.reduce((sum, u) => sum + u.army.reduce((aSum, unit) => aSum + unit.atk, 0), 0);
                     const totalHp = unitsAtCastle.reduce((sum, u) => sum + u.army.reduce((aSum, unit) => aSum + unit.currentHp, 0), 0);
                     if (totalAtk > 0 || totalHp > 0) {
@@ -548,18 +580,22 @@
             },
 
             renderBaseMenu(castle) {
-                const sP = Model.state.mapUnits.filter(u => u.owner === 'player' && Math.hypot(u.x - castle.x, u.y - castle.y) < 45);
-                const sE = Model.state.mapUnits.filter(u => u.owner === 'enemy' && Math.hypot(u.x - castle.x, u.y - castle.y) < 45);
+                const castleOwner = Model.state.factions.find(f => f.id === castle.owner);
+                const playerFaction = Model.state.factions.find(f => f.isPlayer);
+                const sP = Model.state.mapUnits.filter(u => u.owner === playerFaction.id && Math.hypot(u.x - castle.x, u.y - castle.y) < 45);
+                const sE = Model.state.mapUnits.filter(u => u.owner !== playerFaction.id && Math.hypot(u.x - castle.x, u.y - castle.y) < 45);
 
-                document.getElementById('base-menu-title').innerText = castle.name;
-                document.getElementById('menu-gold-display').innerText = `${Math.floor(Model.state.gold)}G`;
+                const isHQ = Model.state.factions.some(f => f.hqId === castle.id && f.isAlive);
+                document.getElementById('base-menu-title').innerHTML = castle.name + (isHQ ? ' <span class="bg-yellow-600 text-white text-sm px-3 py-1 rounded-full align-middle ml-4 border border-yellow-400 font-bold shadow-lg">👑本拠地</span>' : '');
+                const ownerGold = castleOwner ? Math.floor(castleOwner.gold) : 0;
+                document.getElementById('menu-gold-display').innerText = `${ownerGold}G (${castleOwner ? castleOwner.name : '中立'})`;
 
-                const ownerColor = castle.owner === 'player' ? 'text-blue-400' : 'text-red-400';
-                const ownerText = castle.owner === 'player' ? '自軍領' : '敵領・中立';
-                const count = castle.owner === 'player' ? sP.length : sE.length;
+                const ownerDisplay = castleOwner ? `<span style="color:${castleOwner.color}">${castleOwner.master.name}</span>` : '<span class="text-gray-500">中立</span>';
+                const ownerType = castle.owner === playerFaction.id ? '（自軍領）' : (castle.owner === 'neutral' ? '' : '（敵対勢力）');
+                const count = Model.state.mapUnits.filter(u => u.owner === castle.owner && Math.hypot(u.x - castle.x, u.y - castle.y) < 45).length;
 
                 document.getElementById('castle-stat-panel').innerHTML = `
-                    <div>支配勢力: <span class="${ownerColor}">${ownerText}</span></div>
+                    <div>支配勢力: ${ownerDisplay}${ownerType}</div>
                     <div>駐留部隊数: <span class="text-white">${count}</span></div>
                 `;
 
@@ -571,88 +607,124 @@
                 } else { uniquePanel.classList.add('hidden'); }
 
                 const createBtn = document.getElementById('btn-create-army');
-                createBtn.disabled = castle.owner !== 'player' || Model.state.gold < Model.ARMY_COST || Model.state.mapUnits.filter(u => u.owner === 'player').length >= Model.MAX_ARMIES;
+                createBtn.disabled = castle.owner !== playerFaction.id || playerFaction.gold < Model.ARMY_COST || Model.state.mapUnits.filter(u => u.owner === playerFaction.id).length >= Model.MAX_ARMIES;
                 createBtn.onclick = () => Controller.createNewArmy(castle);
 
                 const menuContent = document.getElementById('base-menu-content');
                 const noMsg = document.getElementById('no-unit-message');
                 menuContent.innerHTML = '';
 
-                if (castle.owner === 'player' && sP.length > 0) {
-                    noMsg.classList.add('hidden');
-                    sP.forEach(unit => {
-                        const card = document.createElement('div');
-                        card.className = "bg-gray-800/80 border-2 border-gray-700 p-8 rounded-2xl shadow-2xl mb-4 text-white";
-                        card.innerHTML = `
-                            <div class="flex justify-between items-center mb-8 border-b border-gray-600 pb-4">
-                                <div class="flex items-center gap-6"><span class="text-6xl">${unit.emoji}</span><span class="text-3xl font-bold text-blue-300">${unit.isMaster ? '主軍' : '別働隊'}</span></div>
-                                <span class="text-xl font-bold font-mono">構成: ${unit.army.length} / ${Model.MAX_UNITS}</span>
-                            </div>
-                            <div class="grid grid-cols-1 gap-10">
-                                <div class="bg-black/50 p-6 rounded-xl border border-blue-900/30">
-                                    <p class="text-2xl text-blue-400 mb-6 font-bold border-b border-blue-900/50 pb-2 uppercase tracking-widest text-center">ユニット雇用・編成</p>
-                                    <div class="flex flex-col gap-6">
-                                        <!-- 補充ユニット（新規雇用）を上部に配置 -->
-                                        <div>
-                                            <p class="text-sm text-gray-400 mb-4 font-bold uppercase tracking-widest">補充ユニット（新規雇用）</p>
-                                            <div class="grid grid-cols-1 gap-4 mb-8">
-                                                ${(() => {
-                                const factionUnits = Model.FACTION_UNITS[Model.state.playerMaster.id];
-                                let options = [...factionUnits];
-                                if (castle.uniqueUnit) {
-                                    const spec = Model.SPECIAL_UNITS[castle.uniqueUnit];
-                                    if (spec) options.push(spec);
-                                }
-                                return options.map(ut => this.recruitItemHTML(ut, unit, castle)).join('');
-                            })()}
+                if (castle.owner === playerFaction.id) {
+                    if (sP.length > 0) {
+                        noMsg.classList.add('hidden');
+                        sP.forEach(unit => {
+                            const card = document.createElement('div');
+                            card.className = "bg-gray-800/80 border-2 border-gray-700 p-8 rounded-2xl shadow-2xl mb-4 text-white";
+                            card.innerHTML = `
+                                <div class="flex justify-between items-center mb-8 border-b border-gray-600 pb-4">
+                                    <div class="flex items-center gap-6"><span class="text-6xl">${unit.emoji}</span><span class="text-3xl font-bold text-blue-300">${unit.isMaster ? '主軍' : '別働隊'}</span></div>
+                                    <span class="text-xl font-bold font-mono">構成: ${unit.army.length} / ${Model.MAX_UNITS}</span>
+                                </div>
+                                <div class="grid grid-cols-1 gap-10">
+                                    <div class="bg-black/50 p-6 rounded-xl border border-blue-900/30">
+                                        <p class="text-2xl text-blue-400 mb-6 font-bold border-b border-blue-900/50 pb-2 uppercase tracking-widest text-center">ユニット雇用・編成</p>
+                                        <div class="flex flex-col gap-6">
+                                            <div>
+                                                <p class="text-sm text-gray-400 mb-4 font-bold uppercase tracking-widest">補充ユニット（新規雇用）</p>
+                                                <div class="grid grid-cols-1 gap-4 mb-8">
+                                                    ${(() => {
+                                    const factionUnits = Model.FACTION_UNITS[playerFaction.master.id];
+                                    let options = [...factionUnits];
+                                    if (castle.uniqueUnit) {
+                                        const spec = Model.SPECIAL_UNITS[castle.uniqueUnit];
+                                        if (spec) options.push(spec);
+                                    }
+                                    return options.map(ut => this.recruitItemHTML(ut, unit, castle)).join('');
+                                })()}
+                                                </div>
                                             </div>
-                                        </div>
-
-                                        <!-- 既存ユニット（編成済み）を下部に配置 -->
-                                        <div class="pt-8 border-t border-gray-700">
-                                            <p class="text-sm text-gray-400 mb-4 font-bold uppercase tracking-widest">編成済みユニット（詳細・強化）</p>
-                                            <div class="flex flex-col gap-6">
-                                                ${unit.army.map((u, i) => `
-                                                    <div class="bg-gray-900 p-4 border border-gray-700 rounded-lg">
-                                                        <div class="flex justify-between items-center mb-4">
-                                                            <div class="flex items-center gap-4">
-                                                                <span class="text-5xl">${u.emoji}</span>
-                                                                <div>
-                                                                    <div class="text-2xl font-bold">${u.name} <span class="text-yellow-500 ml-2 text-xl">RANK ${Model.RANKS[u.rank || 0]}</span></div>
-                                                                    <div class="text-sm text-gray-400">練度: ${u.rank === 5 ? 'MAX' : (u.xp || 0) + ' / ' + Model.RANK_UP_XP}</div>
+                                            <div class="pt-8 border-t border-gray-700">
+                                                <p class="text-sm text-gray-400 mb-4 font-bold uppercase tracking-widest">編成済みユニット（詳細・強化）</p>
+                                                <div class="flex flex-col gap-6">
+                                                    ${unit.army.map((u, i) => `
+                                                        <div class="bg-gray-900 p-4 border border-gray-700 rounded-lg">
+                                                            <div class="flex justify-between items-center mb-4">
+                                                                <div class="flex items-center gap-4">
+                                                                    <span class="text-5xl">${u.emoji}</span>
+                                                                    <div>
+                                                                        <div class="text-2xl font-bold">${u.name} <span class="text-yellow-500 ml-2 text-xl">RANK ${Model.RANKS[u.rank || 0]}</span></div>
+                                                                        <div class="text-sm text-gray-400">練度: ${u.rank === 5 ? 'MAX' : (u.xp || 0) + ' / ' + Model.RANK_UP_XP}</div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="text-right">
+                                                                    <div class="text-green-400 font-bold">HP: ${u.currentHp}/${u.hp}</div>
+                                                                    <div class="text-red-400 font-bold">ATK: ${u.atk}</div>
                                                                 </div>
                                                             </div>
-                                                            <div class="text-right">
-                                                                <div class="text-green-400 font-bold">HP: ${u.currentHp}/${u.hp}</div>
-                                                                <div class="text-red-400 font-bold">ATK: ${u.atk}</div>
+                                                            <div class="w-full h-2 bg-gray-800 rounded-full overflow-hidden mb-4">
+                                                                <div class="h-full bg-yellow-500" style="width:${u.rank === 5 ? 100 : ((u.xp || 0) / Model.RANK_UP_XP) * 100}%"></div>
                                                             </div>
-                                                        </div>
-                                                        <div class="w-full h-2 bg-gray-800 rounded-full overflow-hidden mb-4">
-                                                            <div class="h-full bg-yellow-500" style="width:${u.rank === 5 ? 100 : ((u.xp || 0) / Model.RANK_UP_XP) * 100}%"></div>
-                                                        </div>
-                                                        <div class="flex gap-4">
-                                                            <button onclick="Controller.enhanceUnit('${unit.id}', ${i}, 'hp', '${castle.id}')" class="flex-1 py-2 bg-green-900/50 border border-green-700 hover:bg-green-700 text-sm font-bold uppercase transition-colors text-white">HP+10(100G)</button>
-                                                            <button onclick="Controller.enhanceUnit('${unit.id}', ${i}, 'atk', '${castle.id}')" class="flex-1 py-2 bg-red-900/50 border border-red-700 hover:bg-red-700 text-sm font-bold uppercase transition-colors text-white">ATK+3(150G)</button>
-                                                        </div>
-                                                    </div>`).join('')}
+                                                            <div class="flex gap-4">
+                                                                <button onclick="Controller.enhanceUnit('${unit.id}', ${i}, 'hp', '${castle.id}')" class="flex-1 py-2 bg-green-900/50 border border-green-700 hover:bg-green-700 text-sm font-bold uppercase transition-colors text-white">HP+10(100G)</button>
+                                                                <button onclick="Controller.enhanceUnit('${unit.id}', ${i}, 'atk', '${castle.id}')" class="flex-1 py-2 bg-red-900/50 border border-red-700 hover:bg-red-700 text-sm font-bold uppercase transition-colors text-white">ATK+3(150G)</button>
+                                                            </div>
+                                                        </div>`).join('')}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        `;
-                        menuContent.appendChild(card);
-                    });
+                            `;
+                            menuContent.appendChild(card);
+                        });
+                    } else {
+                        noMsg.classList.remove('hidden');
+                        noMsg.innerText = "駐留部隊なし";
+                    }
                 } else {
-                    noMsg.classList.remove('hidden');
-                    if (castle.owner !== 'player') noMsg.innerText = sE.length > 0 ? "敵部隊が守備しています" : "防衛部隊はいません";
+                    if (sE.length > 0) {
+                        noMsg.classList.add('hidden');
+                        sE.forEach(unit => {
+                            const card = document.createElement('div');
+                            const owner = Model.state.factions.find(f => f.id === unit.owner);
+                            card.className = "bg-red-900/20 border-2 border-red-700/50 p-8 rounded-2xl shadow-2xl mb-4 text-white";
+                            card.innerHTML = `
+                                <div class="flex justify-between items-center mb-8 border-b border-red-800/50 pb-4">
+                                    <div class="flex items-center gap-6"><span class="text-6xl">${unit.emoji}</span><span class="text-3xl font-bold text-red-400">${owner ? owner.name : '敵軍'}</span></div>
+                                    <span class="text-xl font-bold font-mono">構成: ${unit.army.length} / ${Model.MAX_UNITS}</span>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    ${unit.army.map(u => `
+                                        <div class="bg-black/40 p-4 border border-red-900/20 rounded-lg flex justify-between items-center">
+                                            <div class="flex items-center gap-4">
+                                                <span class="text-5xl">${u.emoji}</span>
+                                                <div>
+                                                    <div class="text-2xl font-bold text-red-200">${u.name}</div>
+                                                    <div class="text-sm text-yellow-600 font-bold uppercase">RANK ${Model.RANKS[u.rank || 0]}</div>
+                                                </div>
+                                            </div>
+                                            <div class="text-right">
+                                                <div class="text-green-500 font-bold">HP: ${u.currentHp}/${u.hp}</div>
+                                                <div class="text-red-500 font-bold">ATK: ${u.atk}</div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            `;
+                            menuContent.appendChild(card);
+                        });
+                    } else {
+                        noMsg.classList.remove('hidden');
+                        noMsg.innerText = "防衛部隊はいません";
+                    }
                 }
             },
 
             recruitItemHTML(ut, unit, castle) {
-                const can = Model.state.gold >= ut.cost;
+                const playerFaction = Model.state.factions.find(f => f.isPlayer);
+                const can = playerFaction.gold >= ut.cost;
                 const isFull = unit.army.length >= Model.MAX_UNITS;
-                const dis = isFull || !can || castle.owner !== 'player';
+                const dis = isFull || !can || castle.owner !== playerFaction.id;
                 const lbl = isFull ? "満員" : `${ut.cost}G`;
                 return `<div class="recruit-item flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/10 cursor-pointer transition-colors" 
                     onclick="View.showMessage('【${ut.name}】 HP:${ut.hp} / ATK:${ut.atk} / RNG:${ut.range} / MOVE:${ut.move}')">
@@ -722,22 +794,34 @@
             },
 
             selectMaster(id) {
-                Model.state.playerMaster = Model.MASTERS.find(m => m.id === id);
-                document.getElementById('master-name').innerText = Model.state.playerMaster.name;
-                document.getElementById('master-name').style.color = Model.state.playerMaster.color;
-                document.getElementById('master-alignment').innerText = Model.state.playerMaster.alignment;
+                const playerMaster = Model.MASTERS.find(m => m.id === id);
+                const others = Model.MASTERS.filter(m => m.id !== id);
+
+                // 勢力の初期化
+                Model.state.factions = [
+                    { id: 'player', name: '自軍', gold: 500, master: playerMaster, color: '#44aaff', isPlayer: true, isAlive: true, hqId: 'c1' },
+                    { id: 'enemy', name: '敵軍', gold: 500, master: others[0], color: '#ff4444', isPlayer: false, isAlive: true, hqId: 'c2' },
+                    { id: 'enemy2', name: '第二敵軍', gold: 500, master: others[1], color: '#ff44ff', isPlayer: false, isAlive: true, hqId: (Model.state.selectedMapId === 'classic' ? 'c6' : (Model.state.selectedMapId === 'islands' ? 'c5' : 'c3')) }
+                ];
+
+                document.getElementById('master-name').innerText = playerMaster.name;
+                document.getElementById('master-name').style.color = playerMaster.color;
+                document.getElementById('master-alignment').innerText = playerMaster.alignment;
 
                 // 選択されたマップテンプレートからコピーして初期化
                 const template = Model.MAP_TEMPLATES.find(t => t.id === Model.state.selectedMapId) || Model.MAP_TEMPLATES[0];
                 Model.state.castles = JSON.parse(JSON.stringify(template.castles));
 
-                const hqP = Model.state.castles.find(c => c.owner === 'player');
-                const hqE = Model.state.castles.find(c => c.owner === 'enemy');
+                Model.state.mapUnits = Model.state.factions.map(f => {
+                    const hq = Model.state.castles.find(c => c.id === f.hqId);
+                    return {
+                        id: f.id + '-master', owner: f.id, x: hq.x, y: hq.y, targetX: hq.x, targetY: hq.y,
+                        emoji: f.master.emoji,
+                        army: Model.FACTION_UNITS[f.master.id].map(u => ({ ...u, currentHp: u.hp, rank: 0, xp: 0 })),
+                        isMaster: f.isPlayer, hasActed: false, isMoving: false
+                    };
+                });
 
-                Model.state.mapUnits = [
-                    { id: 'master-army', owner: 'player', x: hqP.x, y: hqP.y, targetX: hqP.x, targetY: hqP.y, emoji: Model.state.playerMaster.emoji, army: Model.FACTION_UNITS[id].map(u => ({ ...u, currentHp: u.hp, rank: 0, xp: 0 })), isMaster: true, hasActed: false, isMoving: false },
-                    { id: 'enemy-1', owner: 'enemy', x: hqE.x, y: hqE.y, targetX: hqE.x, targetY: hqE.y, emoji: '👹', army: Model.FACTION_UNITS['demon'].map(u => ({ ...u, currentHp: u.hp, rank: 0, xp: 0 })), isMaster: false, hasActed: false, isMoving: false }
-                ];
                 View.changeScreen('map');
             },
 
@@ -755,17 +839,24 @@
                     else { u.x = u.targetX; u.y = u.targetY; u.isMoving = false; }
                 });
 
-                if (Model.state.encounterCooldown > 0) Model.state.encounterCooldown--;
-                if (Model.state.encounterCooldown <= 0 && !Model.state.gameCleared) {
+                if (Model.state.globalBattleCooldown > 0) Model.state.globalBattleCooldown--;
+                if (Model.state.globalBattleCooldown <= 0 && !Model.state.gameCleared) {
                     for (let i = 0; i < Model.state.mapUnits.length; i++) {
                         for (let j = i + 1; j < Model.state.mapUnits.length; j++) {
                             const u1 = Model.state.mapUnits[i], u2 = Model.state.mapUnits[j];
                             if (u1.owner !== u2.owner && Math.hypot(u1.x - u2.x, u1.y - u2.y) < 30) {
                                 u1.isMoving = false; u2.isMoving = false;
-                                // hasActedは戦闘終了後に設定するため、ここでは設定しない
-                                Model.state.encounterEnemy = (u1.owner === 'enemy') ? u1 : u2;
-                                Model.state.encounterPlayer = (u1.owner === 'player') ? u1 : u2;
-                                this.startBattle(); return;
+
+                                const playerFaction = Model.state.factions.find(f => f.isPlayer);
+                                if (u1.owner === playerFaction.id || u2.owner === playerFaction.id) {
+                                    Model.state.battleUnitA = (u1.owner === playerFaction.id) ? u1 : u2;
+                                    Model.state.battleUnitB = (u1.owner === playerFaction.id) ? u2 : u1;
+                                    this.startBattle();
+                                } else {
+                                    // AI vs AI: オートバトル処理
+                                    this.autoResolveBattle(u1, u2);
+                                }
+                                return;
                             }
                         }
                     }
@@ -773,58 +864,76 @@
 
                 Model.state.castles.forEach(c => {
                     const unitsOnCastle = Model.state.mapUnits.filter(u => Math.hypot(u.x - c.x, u.y - c.y) < 40);
+                    const playerFaction = Model.state.factions.find(f => f.isPlayer);
                     const currentGuard = unitsOnCastle.find(u => u.owner === c.owner);
 
                     if (!currentGuard) {
-                        const player = unitsOnCastle.find(u => u.owner === 'player' && !u.isMoving);
-                        const enemy = unitsOnCastle.find(u => u.owner === 'enemy' && !u.isMoving);
-                        if (player && !enemy && c.owner !== 'player') {
-                            Model.state.gold += c.captureBonus;
-                            c.captureBonus = 0; // ボーナス取得済み
-                            c.owner = 'player'; View.showMessage(`${c.name}制圧！`);
+                        const playerUnit = unitsOnCastle.find(u => u.owner === playerFaction.id && !u.isMoving);
+                        const enemyUnit = unitsOnCastle.find(u => u.owner !== playerFaction.id && !u.isMoving); // Any non-player unit
 
-                            // 敵本拠地（暗黒城）陥落による降伏
-                            if (c.id === 'c2') {
-                                View.showMessage("敵の暗黒城が陥落！ 敵軍は降伏しました。");
-                                Model.state.mapUnits = Model.state.mapUnits.filter(u => u.owner !== 'enemy');
-                                Model.state.castles.forEach(cas => { if (cas.owner === 'enemy') cas.owner = 'player'; });
+                        if (playerUnit && !enemyUnit && c.owner !== playerFaction.id) {
+                            playerFaction.gold += c.captureBonus;
+                            c.captureBonus = 0; // ボーナス取得済み
+                            c.owner = playerFaction.id; View.showMessage(`${c.name}制圧！`);
+
+                            // 敵本拠地陥落による降伏
+                            const capturedFaction = Model.state.factions.find(f => f.hqId === c.id);
+                            if (capturedFaction && !capturedFaction.isPlayer && capturedFaction.isAlive) {
+                                View.showMessage(`${capturedFaction.name}が陥落！ 敵軍は降伏しました。`);
+                                capturedFaction.isAlive = false;
+                                Model.state.mapUnits = Model.state.mapUnits.filter(u => u.owner !== capturedFaction.id);
+                                Model.state.castles.forEach(cas => { if (cas.owner === capturedFaction.id) cas.owner = playerFaction.id; });
                             }
 
                             this.checkWinCondition();
-                        } else if (enemy && !player && c.owner !== 'enemy') {
-                            Model.state.enemyGold += c.captureBonus;
-                            c.captureBonus = 0;
-                            c.owner = 'enemy';
+                        } else if (enemyUnit && !playerUnit && c.owner !== enemyUnit.owner) {
+                            const captorFaction = Model.state.factions.find(f => f.id === enemyUnit.owner);
+                            const previousOwnerId = c.owner;
 
-                            // 自軍本拠地（王都）陥落による敗北
-                            if (c.id === 'c1') {
+                            if (captorFaction) captorFaction.gold += c.captureBonus;
+                            c.captureBonus = 0;
+                            c.owner = captorFaction.id;
+
+                            // 本拠地陥落判定
+                            const defeatedFaction = Model.state.factions.find(f => f.id === previousOwnerId && f.hqId === c.id);
+                            if (defeatedFaction && !defeatedFaction.isPlayer) {
+                                View.showMessage(`${defeatedFaction.name}が陥落！ 勝利した${captorFaction.name}が全ての領地を吸収しました。`);
+                                defeatedFaction.isAlive = false;
+                                Model.state.mapUnits = Model.state.mapUnits.filter(u => u.owner !== defeatedFaction.id);
+                                Model.state.castles.forEach(cas => { if (cas.owner === defeatedFaction.id) cas.owner = captorFaction.id; });
+                            }
+
+                            // プレイヤー本拠地（王都）陥落による敗北
+                            if (c.id === playerFaction.hqId && c.owner !== playerFaction.id) {
                                 Model.state.gameCleared = true;
                                 View.showEnding(false);
                                 return;
                             }
 
-                            this.checkWinCondition(); // 敗北判定のためにチェック
+                            this.checkWinCondition();
                         }
                     }
                 });
 
-                // 敵ターン中に全部隊の移動が完了したかチェックしてプレイヤーターンへ
-                if (Model.state.strategicTurn === 'enemy' && Model.state.enemyTurnStarted) {
+                // ターン遷移のチェック
+                if (Model.state.strategicTurn !== 'player' && Model.state.aiActionStarted) {
                     const anyMoving = Model.state.mapUnits.some(u => u.isMoving);
                     const battleActive = Model.state.currentScreen === 'battle';
-                    const encounterWaiting = Model.state.encounterCooldown > 0;
+                    const encounterWaiting = Model.state.globalBattleCooldown > 0;
+
                     if (!anyMoving && !battleActive && !encounterWaiting) {
-                        this.startPlayerTurn();
+                        this.startNextFactionTurn();
                     }
                 }
             },
 
             checkWinCondition() {
                 if (Model.state.gameCleared) return;
-                const pOwned = Model.state.castles.filter(c => c.owner === 'player').length;
-                const eOwned = Model.state.castles.filter(c => c.owner === 'enemy').length;
+                const playerFaction = Model.state.factions.find(f => f.isPlayer);
+                const pOwned = Model.state.castles.filter(c => c.owner === playerFaction.id).length;
+                const activeEnemyFactions = Model.state.factions.filter(f => !f.isPlayer && f.isAlive);
 
-                if (eOwned === 0) {
+                if (activeEnemyFactions.length === 0) {
                     Model.state.gameCleared = true;
                     setTimeout(() => View.showEnding(true), 1500); // 降伏演出を見せるため少し待つ
                 } else if (pOwned === 0) {
@@ -857,7 +966,8 @@
                 }
 
                 // 2. 拠点がクリックされていない、または移動不可だった場合、部隊の選択・切り替えを行う
-                const clickedUnits = Model.state.mapUnits.filter(u => u.owner === 'player' && !u.hasActed && Math.hypot(u.x - x, u.y - y) < 45);
+                const playerFaction = Model.state.factions.find(f => f.isPlayer);
+                const clickedUnits = Model.state.mapUnits.filter(u => u.owner === playerFaction.id && !u.hasActed && Math.hypot(u.x - x, u.y - y) < 45);
                 if (clickedUnits.length > 0) {
                     let nextIdx = 0;
                     if (Model.state.selectedMapUnit && clickedUnits.includes(Model.state.selectedMapUnit)) {
@@ -885,152 +995,164 @@
                 const movingUnit = Model.state.mapUnits.find(u => u.owner === 'player' && u.isMoving);
                 if (movingUnit) { View.showMessage("部隊が移動中です。完了までお待ちください。"); return; }
 
-                Model.state.strategicTurn = 'enemy';
-                Model.state.enemyTurnStarted = false;
-                document.getElementById('turn-text').innerText = "Enemy Turn";
-                document.getElementById('turn-text').classList.add('text-red-500');
+                this.startNextFactionTurn();
+            },
+
+            startNextFactionTurn() {
+                const currentFactionIdx = Model.state.factions.findIndex(f => f.id === Model.state.strategicTurn);
+                let nextFaction = null;
+                for (let i = 1; i <= Model.state.factions.length; i++) { // Iterate through all factions, including current
+                    const f = Model.state.factions[(currentFactionIdx + i) % Model.state.factions.length];
+                    if (f.isAlive) {
+                        nextFaction = f;
+                        break;
+                    }
+                }
+
+                if (!nextFaction) { // No active factions left (shouldn't happen if player is alive)
+                    this.checkWinCondition();
+                    return;
+                }
+
+                if (nextFaction.isPlayer) {
+                    this.startPlayerTurn();
+                } else {
+                    this.startEnemyTurn(nextFaction.id);
+                }
+            },
+
+            startEnemyTurn(factionId) {
+                Model.state.strategicTurn = factionId;
+                Model.state.aiActionStarted = false;
+
+                const faction = Model.state.factions.find(f => f.id === factionId);
+                if (!faction || !faction.isAlive) {
+                    this.startNextFactionTurn(); // Skip if faction is defeated
+                    return;
+                }
+
+                document.getElementById('turn-text').innerText = faction.name + " Turn";
+                document.getElementById('turn-text').className = `text-4xl font-bold italic tracking-wider drop-shadow-[0_2px_2px_rgba(0,0,0,1)] text-white`;
+                document.getElementById('turn-text').style.color = faction.color;
+
                 document.getElementById('btn-end-strategic-turn').classList.add('hidden');
                 document.getElementById('save-load-group').classList.add('hidden');
 
                 setTimeout(() => {
-                    Model.state.enemyTurnStarted = true;
-                    const enemyCastles = Model.state.castles.filter(c => c.owner === 'enemy');
-                    const enemyCastleCount = enemyCastles.length;
-                    Model.state.enemyGold += (100 + enemyCastleCount * 200);
+                    Model.state.aiActionStarted = true;
+                    const enemyCastles = Model.state.castles.filter(c => c.owner === faction.id);
 
-                    // 1. 部隊の新規編成（資金がある場合）
-                    // 敵の本拠地、または支配下のすべての拠点で生産を試みる
+                    faction.gold += (100 + enemyCastles.length * 200);
+
+                    // 1. 部隊の新規編成
                     enemyCastles.forEach(castle => {
-                        const enemyUnitsAtCastle = Model.state.mapUnits.filter(u => u.owner === 'enemy' && Math.hypot(u.x - castle.x, u.y - castle.y) < 45);
-                        const totalEnemyArmies = Model.state.mapUnits.filter(u => u.owner === 'enemy').length;
+                        const unitsAtCastle = Model.state.mapUnits.filter(u => u.owner === faction.id && Math.hypot(u.x - castle.x, u.y - castle.y) < 45);
+                        const totalArmies = Model.state.mapUnits.filter(u => u.owner === faction.id).length;
+                        const hq = Model.state.castles.find(c => c.id === faction.hqId);
 
-                        // 拠点に部隊がいない、または本拠地(c2)で守備隊が1つしかいない場合に新しい部隊を作成
-                        const needsNewArmy = (enemyUnitsAtCastle.length === 0) || (castle.id === 'c2' && enemyUnitsAtCastle.length < 2);
-
-                        if (needsNewArmy && totalEnemyArmies < Model.MAX_ARMIES && Model.state.enemyGold >= Model.ARMY_COST) {
-                            Model.state.enemyGold -= Model.ARMY_COST;
+                        const needsNewArmy = (unitsAtCastle.length === 0) || (castle === hq && unitsAtCastle.length < 2);
+                        if (needsNewArmy && totalArmies < Model.MAX_ARMIES && faction.gold >= Model.ARMY_COST) {
+                            faction.gold -= Model.ARMY_COST;
                             Model.state.mapUnits.push({
-                                id: 'enemy-army-' + Date.now() + Math.random(),
-                                owner: 'enemy', x: castle.x, y: castle.y, targetX: castle.x, targetY: castle.y,
-                                emoji: '🚩',
-                                army: [{ ...Model.FACTION_UNITS['demon'][0], currentHp: Model.FACTION_UNITS['demon'][0].hp, rank: 0, xp: 0 }],
+                                id: faction.id + '-army-' + Date.now() + Math.random(),
+                                owner: faction.id, x: castle.x, y: castle.y, targetX: castle.x, targetY: castle.y,
+                                emoji: faction.master.emoji,
+                                army: [{ ...Model.FACTION_UNITS[faction.master.id][0], currentHp: Model.FACTION_UNITS[faction.master.id][0].hp, rank: 0, xp: 0 }],
                                 isMaster: false, hasActed: true, isMoving: false
                             });
                         }
                     });
 
-                    // 2. 既存部隊へのユニット追加（戦力が上限に達するまで雇用）
-                    Model.state.mapUnits.filter(u => u.owner === 'enemy').forEach(enemyArmy => {
-                        const castle = Model.state.castles.find(c => c.owner === 'enemy' && Math.hypot(c.x - enemyArmy.x, c.y - enemyArmy.y) < 45);
+                    // 2. ユニット追加
+                    Model.state.mapUnits.filter(u => u.owner === faction.id).forEach(enemyArmy => {
+                        const castle = Model.state.castles.find(c => c.owner === faction.id && Math.hypot(c.x - enemyArmy.x, c.y - enemyArmy.y) < 45);
                         if (castle) {
-                            // その拠点の固有ユニットも候補に加える
-                            let recruitOptions = [...Model.FACTION_UNITS['demon']];
+                            let recruitOptions = [...Model.FACTION_UNITS[faction.master.id]];
                             if (castle.uniqueUnit) recruitOptions.push(Model.SPECIAL_UNITS[castle.uniqueUnit]);
-
                             while (enemyArmy.army.length < Model.MAX_UNITS) {
-                                // 資金が許す限り、高価なユニット（強いユニット）から優先的にチェック
-                                const affordableUnits = recruitOptions.filter(ut => Model.state.enemyGold >= ut.cost);
-                                if (affordableUnits.length === 0) break;
-
-                                // 最も高いユニット、またはランダムで選択（少しの揺らぎを持たせる）
-                                affordableUnits.sort((a, b) => b.cost - a.cost);
-                                const unitToRecruit = Math.random() > 0.3 ? affordableUnits[0] : affordableUnits[Math.floor(Math.random() * affordableUnits.length)];
-
-                                Model.state.enemyGold -= unitToRecruit.cost;
+                                const affordable = recruitOptions.filter(ut => faction.gold >= ut.cost);
+                                if (affordable.length === 0) break;
+                                affordable.sort((a, b) => b.cost - a.cost);
+                                const unitToRecruit = Math.random() > 0.3 ? affordable[0] : affordable[Math.floor(Math.random() * affordable.length)];
+                                faction.gold -= unitToRecruit.cost;
                                 enemyArmy.army.push({ ...unitToRecruit, currentHp: unitToRecruit.hp, rank: 0, xp: 0 });
                             }
                         }
                     });
 
-                    // 3. 移動ロジック：本拠地防衛最優先
-                    Model.state.mapUnits.filter(u => u.owner === 'enemy').forEach(enemy => {
-                        const current = Model.state.castles.find(c => Math.hypot(c.x - enemy.x, c.y - enemy.y) < 45);
+                    // 3. 移動
+                    Model.state.mapUnits.filter(u => u.owner === faction.id).forEach(enemy => {
+                        const current = Model.state.castles.find(c => Math.hypot(enemy.x - c.x, enemy.y - c.y) < 45);
                         if (!current) return;
+                        const hq = Model.state.castles.find(c => c.id === faction.hqId);
+                        const unitsAtHQ = Model.state.mapUnits.filter(u => u.owner === faction.id && Math.hypot(u.x - hq.x, u.y - hq.y) < 45);
+                        if (current === hq && unitsAtHQ.length < 2 && Math.random() < 0.7) return;
+                        if (unitsAtHQ.length === 0 && current.neighbors.includes(hq.id)) { enemy.targetX = hq.x; enemy.targetY = hq.y; enemy.isMoving = true; return; }
 
-                        // 戦略的判断
-                        const isCapital = (current.id === 'c2');
-                        const enemyUnitsAtCapital = Model.state.mapUnits.filter(u => u.owner === 'enemy' && Math.hypot(u.x - Model.state.castles.find(c => c.id === 'c2').x, u.y - Model.state.castles.find(c => c.id === 'c2').y) < 45);
-
-                        // A. 本拠地にいる場合：守りつつ、余剰戦力は出撃
-                        if (isCapital) {
-                            // 本拠地に2部隊以上いるなら、その部隊は 60% の確率で出撃を試みる
-                            if (enemyUnitsAtCapital.length < 2 || Math.random() < 0.4) return;
-                        }
-
-                        // B. 本拠地が空の場合：近くの部隊が戻る
-                        if (enemyUnitsAtCapital.length === 0) {
-                            const capital = Model.state.castles.find(c => c.id === 'c2');
-                            if (current.neighbors.includes(capital.id)) {
-                                enemy.targetX = capital.x; enemy.targetY = capital.y; enemy.isMoving = true;
-                                return;
-                            }
-                        }
-
-                        // C. 通常の移動（隣接拠点へ）
-                        if (current.neighbors.length > 0) {
-                            // 50%の確率で移動（よりアグレッシブに）
-                            if (Math.random() > 0.5) {
-                                // プレイヤーの拠点、または中立拠点を優先的に狙う
-                                const targets = current.neighbors
-                                    .map(id => Model.state.castles.find(c => c.id === id))
-                                    .sort((a, b) => {
-                                        if (a.owner === 'player') return -1;
-                                        if (a.owner === 'neutral' && b.owner === 'enemy') return -1;
-                                        return 1;
-                                    });
-
-                                const next = targets[0]; // 最優先ターゲット
-                                // ターゲットが自軍領かつ既に誰か守っている場合は低確率でしか行かない
-                                const guards = Model.state.mapUnits.filter(u => u.owner === 'enemy' && Math.hypot(u.x - next.x, u.y - next.y) < 45);
-                                if (next.owner === 'enemy' && guards.length > 0 && Math.random() > 0.2) return;
-
-                                enemy.targetX = next.x; enemy.targetY = next.y; enemy.isMoving = true;
-                            }
+                        if (current.neighbors.length > 0 && Math.random() > 0.4) {
+                            const targets = current.neighbors
+                                .map(id => Model.state.castles.find(c => c.id === id))
+                                .sort((a, b) => {
+                                    if (a.owner !== faction.id && b.owner === faction.id) return -1;
+                                    if (a.owner === 'player' && b.owner !== 'player') return -1;
+                                    return 0;
+                                });
+                            const next = targets[0];
+                            const guards = Model.state.mapUnits.filter(u => u.owner === faction.id && Math.hypot(u.x - next.x, u.y - next.y) < 45);
+                            if (next.owner === faction.id && guards.length > 0 && Math.random() > 0.1) return;
+                            enemy.targetX = next.x; enemy.targetY = next.y; enemy.isMoving = true;
                         }
                     });
-                    // 次のターンの開始（startPlayerTurn）は updateLogic 内の完了チェックで行う
                 }, 1000);
             },
 
             startPlayerTurn() {
                 Model.state.turnCount++;
                 Model.state.strategicTurn = 'player';
+
                 document.getElementById('turn-text').innerText = "Player Turn";
-                document.getElementById('turn-text').classList.remove('text-red-500');
+                document.getElementById('turn-text').className = "text-4xl font-bold italic tracking-wider drop-shadow-[0_2px_2px_rgba(0,0,0,1)] text-white";
+                document.getElementById('turn-text').style.color = "";
+
                 document.getElementById('btn-end-strategic-turn').classList.remove('hidden');
                 document.getElementById('save-load-group').classList.remove('hidden');
-                const income = 100 + Model.state.castles.filter(c => c.owner === 'player').length * 200;
-                Model.state.gold += income;
+
+                const player = Model.state.factions.find(f => f.isPlayer);
+                const income = 100 + Model.state.castles.filter(c => c.owner === player.id).length * 200;
+                player.gold += income;
                 Model.state.mapUnits.forEach(u => u.hasActed = false);
                 View.showMessage(`ターン開始：収入 ${income}G`);
             },
 
             createNewArmy(castle) {
-                if (Model.state.gold < Model.ARMY_COST) return;
-                if (Model.state.mapUnits.filter(u => u.owner === 'player').length >= Model.MAX_ARMIES) {
+                const player = Model.state.factions.find(f => f.isPlayer);
+                if (player.gold < Model.ARMY_COST) return;
+                if (Model.state.mapUnits.filter(u => u.owner === player.id).length >= Model.MAX_ARMIES) {
                     View.showMessage("部隊数が上限に達しています");
                     return;
                 }
-                Model.state.gold -= Model.ARMY_COST;
-                Model.state.mapUnits.push({ id: 'army-' + Date.now(), owner: 'player', x: castle.x, y: castle.y, targetX: castle.x, targetY: castle.y, emoji: '🚩', army: [{ ...Model.FACTION_UNITS[Model.state.playerMaster.id][0], currentHp: Model.FACTION_UNITS[Model.state.playerMaster.id][0].hp, rank: 0, xp: 0 }], isMaster: false, hasActed: true, isMoving: false });
+                player.gold -= Model.ARMY_COST;
+                Model.state.mapUnits.push({ id: 'army-' + Date.now(), owner: player.id, x: castle.x, y: castle.y, targetX: castle.x, targetY: castle.y, emoji: player.master.emoji, army: [{ ...Model.FACTION_UNITS[player.master.id][0], currentHp: Model.FACTION_UNITS[player.master.id][0].hp, rank: 0, xp: 0 }], isMaster: false, hasActed: true, isMoving: false });
                 View.renderBaseMenu(castle);
             },
 
             recruitUnit(aId, utId, cId) {
+                const player = Model.state.factions.find(f => f.isPlayer);
                 const army = Model.state.mapUnits.find(u => u.id === aId);
-                const ut = Model.FACTION_UNITS[Model.state.playerMaster.id].find(x => x.id === utId) || Model.SPECIAL_UNITS[utId];
-                if (army && ut && army.army.length < Model.MAX_UNITS && Model.state.gold >= ut.cost) {
-                    Model.state.gold -= ut.cost; army.army.push({ ...ut, currentHp: ut.hp, rank: 0, xp: 0 });
+                const ut = Model.FACTION_UNITS[player.master.id].find(x => x.id === utId) || Model.SPECIAL_UNITS[utId];
+                if (army && ut && army.army.length < Model.MAX_UNITS && player.gold >= ut.cost) {
+                    player.gold -= ut.cost; army.army.push({ ...ut, currentHp: ut.hp, rank: 0, xp: 0 });
                     View.renderBaseMenu(Model.state.castles.find(c => c.id === cId));
                 }
             },
 
             enhanceUnit(aId, idx, type, cId) {
+                const player = Model.state.factions.find(f => f.isPlayer);
                 const army = Model.state.mapUnits.find(u => u.id === aId);
                 if (!army) return;
                 const unit = army.army[idx];
-                if (type === 'hp' && Model.state.gold >= 100) { Model.state.gold -= 100; unit.hp += 10; unit.currentHp += 10; }
-                else if (type === 'atk' && Model.state.gold >= 150) { Model.state.gold -= 150; unit.atk += 3; }
+                if (type === 'hp' && player.gold >= 100) { player.gold -= 100; unit.hp += 10; unit.currentHp += 10; }
+                else if (type === 'atk' && player.gold >= 150) { player.gold -= 150; unit.atk += 3; }
                 View.renderBaseMenu(Model.state.castles.find(c => c.id === cId));
             },
 
@@ -1058,7 +1180,7 @@
                     }
                 }
                 grid.style.width = `${(cols + 0.5) * hexSize}px`; grid.style.height = `${(rows * 0.75 + 0.25) * hexSize}px`;
-                const pU = Model.state.encounterPlayer.army.map((u, i) => ({ ...u, r: 1 + i, c: 0, owner: 'player' })), eU = Model.state.encounterEnemy.army.map((u, i) => ({ ...u, r: 1 + i, c: 6, owner: 'enemy' }));
+                const pU = Model.state.battleUnitA.army.map((u, i) => ({ ...u, r: 1 + i, c: 0, owner: 'player' })), eU = Model.state.battleUnitB.army.map((u, i) => ({ ...u, r: 1 + i, c: 6, owner: 'enemy' }));
                 Model.state.battle.units = [...pU, ...eU]; Model.state.battle.movedUnits = new Set(); Model.state.battle.selectedUnit = null; Model.state.battle.tempMoved = false; Model.state.battle.turn = 'player'; Model.state.battle.active = true;
                 View.updateBattleUI();
             },
@@ -1167,16 +1289,58 @@
                 else if (pC === 0) { b.active = false; View.openModal("敗北", "全滅した...", [{ label: "帰還", action: () => this.finishBattle(false) }]); }
             },
 
+            autoResolveBattle(u1, u2) {
+                const p1 = u1.army.reduce((sum, unit) => sum + unit.atk, 0) * (u1.army.length / 5 + 0.5);
+                const p2 = u2.army.reduce((sum, unit) => sum + unit.atk, 0) * (u2.army.length / 5 + 0.5);
+
+                // 両軍にダメージ
+                u1.army.forEach(u => u.currentHp -= Math.floor(p2 / u1.army.length * (0.5 + Math.random())));
+                u2.army.forEach(u => u.currentHp -= Math.floor(p1 / u2.army.length * (0.5 + Math.random())));
+
+                u1.army = u1.army.filter(u => u.currentHp > 0);
+                u2.army = u2.army.filter(u => u.currentHp > 0);
+
+                u1.army.forEach(u => u.currentHp -= Math.floor(p2 / u1.army.length * (0.5 + Math.random())));
+                u2.army.forEach(u => u.currentHp -= Math.floor(p1 / u2.army.length * (0.5 + Math.random())));
+
+                u1.army = u1.army.filter(u => u.currentHp > 0);
+                u2.army = u2.army.filter(u => u.currentHp > 0);
+
+                const f1 = Model.state.factions.find(f => f.id === u1.owner);
+                const f2 = Model.state.factions.find(f => f.id === u2.owner);
+
+                if (u1.army.length === 0 && u2.army.length === 0) {
+                    View.showMessage(`激戦の末、${f1.name}と${f2.name}は相打ちとなり共に消滅しました！`);
+                    Model.state.mapUnits = Model.state.mapUnits.filter(u => u !== u1 && u !== u2);
+                } else if (u1.army.length === 0) {
+                    View.showMessage(`${f1.name}は敗北し、${f2.name}が勝利しました！`);
+                    Model.state.mapUnits = Model.state.mapUnits.filter(u => u !== u1);
+                } else if (u2.army.length === 0) {
+                    View.showMessage(`${f2.name}は敗北し、${f1.name}が勝利しました！`);
+                    Model.state.mapUnits = Model.state.mapUnits.filter(u => u !== u2);
+                } else {
+                    View.showMessage(`${f1.name}と${f2.name}の小競り合いが発生しました！`);
+                }
+
+                Model.state.globalBattleCooldown = 40;
+
+                // バトルが発生した場所が拠点なら、敗北した側のユニットが消滅した後に拠点の制圧チェックを呼ぶ必要がある
+                // updateLogicのメインループで判定されるが、即時メッセージを出すためにフラグを立てる等の処理は不要
+            },
+
             finishBattle(win) {
-                const pA = Model.state.encounterPlayer;
-                pA.hasActed = true; // 戦闘終了後に行動済みとする（次のターン開始時にリセットされる）
+                const pA = Model.state.battleUnitA;
+                pA.hasActed = true; // 戦闘終了後に行動済みとする
                 if (win) {
-                    Model.state.mapUnits = Model.state.mapUnits.filter(u => u !== Model.state.encounterEnemy);
+                    Model.state.mapUnits = Model.state.mapUnits.filter(u => u !== Model.state.battleUnitB);
                     // 生き残ったユニットを全回復させて引き継ぐ
                     pA.army = Model.state.battle.units.filter(u => u.owner === 'player').map(u => ({ ...u, currentHp: u.hp }));
                 } else {
-                    // 本拠地（王都）での敗北・撤退は即座にゲームオーバー
-                    const atHQ = Math.hypot(pA.x - 150, pA.y - 200) < 45; // c1 (王都) の座標
+                    // 本拠地（HQ）での敗北・撤退は即座にゲームオーバー
+                    const castleAtPos = Model.state.castles.find(c => Math.hypot(pA.x - c.x, pA.y - c.y) < 45);
+                    const playerFaction = Model.state.factions.find(f => f.isPlayer);
+                    const atHQ = castleAtPos && castleAtPos.id === playerFaction.hqId;
+
                     if (atHQ) {
                         Model.state.gameCleared = true;
                         View.showEnding(false);
@@ -1184,11 +1348,11 @@
                     }
 
                     // 敗北時はペナルティとして初期ユニット1体で復活（HP全開）
-                    pA.army = [{ ...Model.FACTION_UNITS[Model.state.playerMaster.id][0], currentHp: Model.FACTION_UNITS[Model.state.playerMaster.id][0].hp }];
-                    const hq = Model.state.castles.find(c => c.id === 'c1');
+                    pA.army = [{ ...Model.FACTION_UNITS[playerFaction.master.id][0], currentHp: Model.FACTION_UNITS[playerFaction.master.id][0].hp, rank: 0, xp: 0 }];
+                    const hq = Model.state.castles.find(c => c.id === playerFaction.hqId);
                     if (hq) {
-                        // もし王都が既に敵に占領されていたら敗北
-                        if (hq.owner === 'enemy') {
+                        // もし本拠地が既に敵に占領されていたら敗北
+                        if (hq.owner !== playerFaction.id) {
                             Model.state.gameCleared = true;
                             View.showEnding(false);
                             return;
@@ -1196,7 +1360,7 @@
                         pA.x = hq.x; pA.y = hq.y; pA.targetX = hq.x; pA.targetY = hq.y;
                     }
                 }
-                Model.state.encounterCooldown = 60; Model.state.battle.active = false; View.changeScreen('map');
+                Model.state.globalBattleCooldown = 60; Model.state.battle.active = false; View.changeScreen('map');
             },
 
             showEscapeConfirm() { View.openModal("撤退確認", "戦場から離脱しますか？", [{ label: "はい", action: () => this.finishBattle(false) }, { label: "いいえ", action: () => { } }]); },
@@ -1227,13 +1391,14 @@
                 } else if (Model.state.currentScreen === 'battle') {
                     this.initBattleGrid();
                 }
-                if (Model.state.playerMaster) {
-                    document.getElementById('master-name').innerText = Model.state.playerMaster.name;
-                    document.getElementById('master-name').style.color = Model.state.playerMaster.color;
-                    document.getElementById('master-alignment').innerText = Model.state.playerMaster.alignment;
+                const player = Model.state.factions.find(f => f.isPlayer);
+                if (player) {
+                    document.getElementById('master-name').innerText = player.master.name;
+                    document.getElementById('master-name').style.color = player.master.color;
+                    document.getElementById('master-alignment').innerText = player.master.alignment;
                 }
-                const turns = Model.state.strategicTurn === 'enemy';
-                document.getElementById('turn-text').innerText = turns ? "Enemy Turn" : "Player Turn";
+                const turns = Model.state.strategicTurn !== 'player';
+                document.getElementById('turn-text').innerText = turns ? (Model.state.factions.find(f => f.id === Model.state.strategicTurn)?.name + " Turn") : "Player Turn";
                 document.getElementById('turn-text').classList.toggle('text-red-500', turns);
                 document.getElementById('btn-end-strategic-turn').classList.toggle('hidden', turns);
                 document.getElementById('save-load-group').classList.toggle('hidden', turns);
@@ -1257,6 +1422,19 @@
 
                 console.log("--- Starting System Tests ---");
 
+                // 実行前の状態を保存
+                const originalFactions = JSON.parse(JSON.stringify(Model.state.factions));
+                const originalUnits = [...Model.state.mapUnits];
+                const originalCastles = JSON.parse(JSON.stringify(Model.state.castles));
+
+                // 進行状態でなければテスト用に最小限の初期化を行う
+                if (Model.state.factions.length === 0) {
+                    Model.state.factions = [
+                        { id: 'player', name: '自軍', gold: 500, master: Model.MASTERS[0], color: '#44aaff', isPlayer: true, isAlive: true, hqId: 'c1' },
+                        { id: 'enemy', name: '敵軍', gold: 500, master: Model.MASTERS[1], color: '#ff4444', isPlayer: false, isAlive: true, hqId: 'c2' }
+                    ];
+                }
+
                 // 1. 距離計算のテスト
                 total++; passed += this.assert(Model.getHexDist(0, 0, 0, 1) === 1, "Hex Distance: Adjacent");
                 total++; passed += this.assert(Model.getHexDist(0, 0, 2, 2) === 3, "Hex Distance: Diagonal (0,0 to 2,2 is 3 steps)");
@@ -1267,55 +1445,55 @@
                 total++; passed += this.assert(cube.x + cube.y + cube.z === 0, "Cube Coordinates: Sum is zero");
 
                 // 3. 資金管理と雇用制限のテスト
-                const originalGold = Model.state.gold;
-                const originalUnits = [...Model.state.mapUnits];
-                const originalMaster = Model.state.playerMaster;
+                const player = Model.state.factions.find(f => f.isPlayer);
+                if (!player) { View.showMessage("テスト失敗: プレイヤー勢力が見つかりません"); return; }
 
                 // モックデータ設定
-                Model.state.playerMaster = Model.MASTERS[0]; // knight
-                Model.state.gold = 400; // 500G未満に設定
+                player.master = Model.MASTERS[0]; // knight
+                player.gold = 400; // 500G未満に設定
                 const mockCastle = { x: 0, y: 0, id: 'test-c' };
 
                 Controller.createNewArmy(mockCastle);
                 total++; passed += this.assert(Model.state.mapUnits.length === originalUnits.length, "Create Army: Should fail if insufficient gold");
 
-                Model.state.gold = 1000;
+                player.gold = 1000;
                 Controller.createNewArmy(mockCastle);
                 total++; passed += this.assert(Model.state.mapUnits.length === originalUnits.length + 1, "Create Army: Should succeed if enough gold");
-                total++; passed += this.assert(Model.state.gold === 500, "Create Army: Gold should be deducted");
+                total++; passed += this.assert(player.gold === 500, "Create Army: Gold should be deducted");
 
                 // 最大部隊数制限のテスト
-                Model.state.gold = 10000;
+                player.gold = 10000;
                 while (Model.state.mapUnits.length < Model.MAX_ARMIES) { Controller.createNewArmy(mockCastle); }
                 const countBefore = Model.state.mapUnits.length;
                 Controller.createNewArmy(mockCastle);
                 total++; passed += this.assert(Model.state.mapUnits.length === countBefore, "Create Army: Should not exceed MAX_ARMIES");
 
                 // 4. 収入計算のテスト
-                Model.state.gold = 0;
-                const originalCastlesIncome = JSON.parse(JSON.stringify(Model.state.castles));
+                player.gold = 0;
                 Model.state.castles = [
                     { owner: 'player' }, { owner: 'player' }, { owner: 'enemy' }
                 ];
                 Controller.startPlayerTurn();
                 // 100(基本) + 2(城数) * 200 = 500
-                total++; passed += this.assert(Model.state.gold === 500, `Income Calculation: Expected 500, got ${Model.state.gold}`);
+                total++; passed += this.assert(player.gold === 500, `Income Calculation: Expected 500, got ${player.gold}`);
 
                 // 5. 勝利・敗北判定のテスト
                 Model.state.gameCleared = false;
-                Model.state.castles = [{ owner: 'player' }, { owner: 'neutral' }]; // 敵が0
+                // 全ての敵勢力を滅亡させる
+                Model.state.factions.forEach(f => { if (!f.isPlayer) f.isAlive = false; });
                 Controller.checkWinCondition();
-                total++; passed += this.assert(Model.state.gameCleared === true, "Win Condition: Enemy castles are zero");
+                total++; passed += this.assert(Model.state.gameCleared === true, "Win Condition: All enemies are dead");
 
                 Model.state.gameCleared = false;
-                Model.state.castles = [{ owner: 'enemy' }, { owner: 'neutral' }]; // 自軍が0
+                Model.state.factions.forEach(f => { if (!f.isPlayer) f.isAlive = true; });
+                Model.state.castles = [{ owner: 'enemy' }, { owner: 'neutral' }]; // 自軍拠点が0
                 Controller.checkWinCondition();
                 total++; passed += this.assert(Model.state.gameCleared === true, "Lose Condition: Player castles are zero");
 
                 // 6. ターンリセットと行動フラグのテスト
-                // 戦闘終了後のフラグ設定テスト
-                const mockArmy = { hasActed: false };
-                Model.state.encounterPlayer = mockArmy;
+                const mockArmy = { hasActed: false, owner: 'player', x: 0, y: 0, targetX: 0, targetY: 0, army: [] };
+                Model.state.battleUnitA = mockArmy;
+                Model.state.battleUnitB = { owner: 'enemy', army: [] };
                 Controller.finishBattle(true);
                 total++; passed += this.assert(mockArmy.hasActed === true, "Action Flag: Unit should be 'acted' after battle");
 
@@ -1330,12 +1508,12 @@
                 total++; passed += this.assert(Model.state.mapUnits[1].hasActed === false, "Turn Reset: Player unit 2 should be reset");
 
                 // 環境の復元
-                Model.state.gold = originalGold;
+                Model.state.factions = originalFactions;
                 Model.state.mapUnits = originalUnits;
-                Model.state.playerMaster = originalMaster;
-                Model.state.castles = originalCastlesIncome;
+                Model.state.castles = originalCastles;
                 Model.state.gameCleared = false;
-                Model.state.encounterPlayer = null;
+                Model.state.battleUnitA = null;
+                Model.state.battleUnitB = null;
 
                 // 結果の表示
                 this.logs.forEach(log => console.log(log));
