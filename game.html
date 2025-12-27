@@ -174,8 +174,23 @@
             </div>
         </div>
 
+        <!-- 設定画面 -->
+        <div id="screen-settings"
+            class="absolute inset-0 bg-black/90 flex flex-col items-center justify-center hidden pointer-events-auto z-[100] p-8">
+            <h2 class="text-6xl text-yellow-500 font-bold mb-12 uppercase">Settings</h2>
+            <div class="pixel-border p-12 max-w-4xl w-full bg-gray-900/80">
+                <h3 class="text-3xl font-bold mb-8 border-b-2 border-gray-700 pb-2 text-white">戦略マップ選択</h3>
+                <div id="map-select-list" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                </div>
+                <div class="flex justify-center">
+                    <button onclick="View.toggleSettings()"
+                        class="px-16 py-6 bg-blue-900 hover:bg-blue-700 border-2 border-white text-2xl font-bold shadow-xl text-white transition-all hover:scale-105">完了</button>
+                </div>
+            </div>
+        </div>
+
         <!-- 最前面に表示すべき要素 -->
-        <div id="top-elements" class="absolute inset-0 pointer-events-none">
+        <div id="top-elements" class="absolute inset-0 pointer-events-none z-[110]">
             <!-- ターン表示 -->
             <div id="turn-indicator"
                 class="absolute top-4 left-1/2 -translate-x-1/2 px-12 py-2 bg-black/80 border-2 border-white hidden pointer-events-auto shadow-2xl flex flex-col items-center">
@@ -227,10 +242,16 @@
                 class="px-16 py-6 bg-blue-900 hover:bg-blue-700 border-2 border-white transition-all text-4xl font-bold shadow-2xl hover:scale-105 text-white">LOAD
                 GAME</button>
         </div>
-        <button onclick="TestSuite.runAll()"
-            class="absolute bottom-4 right-4 px-4 py-2 bg-gray-800 text-gray-500 text-xs hover:text-white border border-gray-700 pointer-events-auto transition-colors">Run
-            System Tests</button>
+        <div class="mt-8 flex gap-4 pointer-events-auto">
+            <button onclick="View.toggleSettings()"
+                class="px-10 py-4 bg-gray-900 hover:bg-gray-700 border-2 border-gray-500 transition-all text-2xl font-bold shadow-xl text-white">SETTING</button>
+            <button onclick="TestSuite.runAll()"
+                class="px-4 py-2 bg-gray-800 text-gray-500 text-xs hover:text-white border border-gray-700 transition-colors">Run
+                System Tests</button>
+        </div>
     </div>
+
+    <!-- 設定画面はUIレイヤー内に移動しました -->
 
     <div id="screen-select" class="hidden flex-col items-center justify-center h-screen p-4 overflow-y-auto">
         <h2 class="text-5xl mb-16 font-bold text-center text-white">マスターを選択せよ</h2>
@@ -289,17 +310,59 @@
                 ]
             },
 
+            MAP_TEMPLATES: [
+                {
+                    id: 'classic', name: 'バハムート大陸 (Classic)', desc: '標準的なバランスの初期マップです。',
+                    castles: [
+                        { id: 'c1', name: '王都', x: 150, y: 200, owner: 'player', captureBonus: 0, uniqueUnit: null, neighbors: ['c3', 'c7'] },
+                        { id: 'c2', name: '暗黒城', x: 750, y: 550, owner: 'enemy', captureBonus: 2000, uniqueUnit: 'hell-hound', neighbors: ['c3', 'c5', 'c6'] },
+                        { id: 'c3', name: '自由都市', x: 450, y: 350, owner: 'neutral', captureBonus: 500, uniqueUnit: 'guard', neighbors: ['c1', 'c2', 'c4', 'c5'] },
+                        { id: 'c4', name: '北の砦', x: 450, y: 100, owner: 'neutral', captureBonus: 350, uniqueUnit: 'crossbow', neighbors: ['c3', 'c6'] },
+                        { id: 'c5', name: '南の村', x: 250, y: 550, owner: 'neutral', captureBonus: 200, uniqueUnit: 'militia', neighbors: ['c2', 'c3'] },
+                        { id: 'c6', name: '東の塔', x: 750, y: 150, owner: 'neutral', captureBonus: 800, uniqueUnit: 'sorcerer', neighbors: ['c2', 'c4'] },
+                        { id: 'c7', name: '西の廃墟', x: 100, y: 450, owner: 'neutral', captureBonus: 400, uniqueUnit: 'ghost', neighbors: ['c1'] }
+                    ]
+                },
+                {
+                    id: 'islands', name: '群島諸国 (Islands)', desc: '細長いルートで構成された機動力が試されるマップ。',
+                    castles: [
+                        { id: 'c1', name: '王都', x: 100, y: 300, owner: 'player', captureBonus: 0, uniqueUnit: null, neighbors: ['c3'] },
+                        { id: 'c2', name: '影の島', x: 800, y: 300, owner: 'enemy', captureBonus: 2000, uniqueUnit: 'hell-hound', neighbors: ['c6'] },
+                        { id: 'c3', name: '風の関所', x: 250, y: 150, owner: 'neutral', captureBonus: 300, uniqueUnit: 'crossbow', neighbors: ['c1', 'c4'] },
+                        { id: 'c4', name: '中央島', x: 450, y: 300, owner: 'neutral', captureBonus: 600, uniqueUnit: 'guard', neighbors: ['c3', 'c5'] },
+                        { id: 'c5', name: '炎の運河', x: 650, y: 450, owner: 'neutral', captureBonus: 300, uniqueUnit: 'sorcerer', neighbors: ['c4', 'c6'] },
+                        { id: 'c6', name: '境界の門', x: 700, y: 150, owner: 'neutral', captureBonus: 400, uniqueUnit: 'pirate', neighbors: ['c2', 'c5'] }
+                    ]
+                },
+                {
+                    id: 'ring', name: '環状大陸 (Ring)', desc: '拠点が輪のように繋がった特殊なマップ。',
+                    castles: [
+                        { id: 'c1', name: '王都', x: 450, y: 80, owner: 'player', captureBonus: 0, uniqueUnit: null, neighbors: ['c3', 'c4'] },
+                        { id: 'c2', name: '暗黒城', x: 450, y: 520, owner: 'enemy', captureBonus: 2000, uniqueUnit: 'hell-hound', neighbors: ['c5', 'c6'] },
+                        { id: 'c3', name: '東の港', x: 700, y: 200, owner: 'neutral', captureBonus: 400, uniqueUnit: 'pirate', neighbors: ['c1', 'c5'] },
+                        { id: 'c4', name: '西の砦', x: 200, y: 200, owner: 'neutral', captureBonus: 400, uniqueUnit: 'dwarf', neighbors: ['c1', 'c6'] },
+                        { id: 'c5', name: '南東の平原', x: 700, y: 400, owner: 'neutral', captureBonus: 400, uniqueUnit: 'berserker', neighbors: ['c3', 'c2'] },
+                        { id: 'c6', name: '南西の森', x: 200, y: 400, owner: 'neutral', captureBonus: 400, uniqueUnit: 'fenrir', neighbors: ['c4', 'c2'] }
+                    ]
+                }
+            ],
+
             SPECIAL_UNITS: {
                 'hell-hound': { id: 'hell-hound', name: 'ケルベロス', emoji: '🐕', hp: 45, atk: 22, range: 1, move: 5, cost: 600, origin: '暗黒城' },
                 'guard': { id: 'guard', name: '重装衛兵', emoji: '💂', hp: 80, atk: 18, range: 1, move: 2, cost: 400, origin: '自由都市' },
                 'crossbow': { id: 'crossbow', name: '弩兵', emoji: '🏹', hp: 35, atk: 22, range: 4, move: 2, cost: 550, origin: '北の砦' },
                 'militia': { id: 'militia', name: '義勇兵', emoji: '🧑‍🌾', hp: 25, atk: 12, range: 1, move: 3, cost: 100, origin: '南の村' },
                 'sorcerer': { id: 'sorcerer', name: '魔導師', emoji: '🧙', hp: 40, atk: 28, range: 3, move: 2, cost: 800, origin: '東の塔' },
-                'ghost': { id: 'ghost', name: '亡霊', emoji: '👻', hp: 25, atk: 22, range: 1, move: 6, cost: 350, origin: '西の廃墟' }
+                'ghost': { id: 'ghost', name: '亡霊', emoji: '👻', hp: 25, atk: 22, range: 1, move: 6, cost: 350, origin: '西の廃墟' },
+                'pirate': { id: 'pirate', name: '海賊', emoji: '🏴‍☠️', hp: 50, atk: 24, range: 1, move: 4, cost: 450, origin: '諸島/港' },
+                'dwarf': { id: 'dwarf', name: 'ドワーフ兵', emoji: '⚒️', hp: 70, atk: 26, range: 1, move: 2, cost: 600, origin: '西の砦' },
+                'berserker': { id: 'berserker', name: '狂戦士', emoji: '🪓', hp: 45, atk: 35, range: 1, move: 4, cost: 700, origin: '東の平原' },
+                'fenrir': { id: 'fenrir', name: '魔狼', emoji: '🐺', hp: 55, atk: 24, range: 1, move: 6, cost: 650, origin: '南西の森' }
             },
 
             state: {
                 currentScreen: 'title',
+                selectedMapId: 'classic',
                 playerMaster: null, gold: 500, enemyGold: 500,
                 mapUnits: [], castles: [], selectedMapUnit: null,
                 strategicTurn: 'player', encounterEnemy: null, encounterPlayer: null,
@@ -340,6 +403,27 @@
                 } else {
                     status.classList.add('hidden'); turn.classList.add('hidden'); btn.classList.add('hidden');
                 }
+            },
+
+            toggleSettings() {
+                const el = document.getElementById('screen-settings');
+                if (el.classList.contains('hidden')) {
+                    this.renderSettings();
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            },
+
+            renderSettings() {
+                const list = document.getElementById('map-select-list');
+                list.innerHTML = Model.MAP_TEMPLATES.map(t => `
+                    <div onclick="Controller.setMap('${t.id}')" 
+                         class="p-6 border-2 transition-all cursor-pointer rounded-xl ${Model.state.selectedMapId === t.id ? 'border-yellow-500 bg-yellow-900/20' : 'border-gray-700 hover:border-gray-500 bg-black/40'}">
+                        <div class="text-2xl font-bold mb-2 ${Model.state.selectedMapId === t.id ? 'text-yellow-500' : 'text-white'}">${t.name}</div>
+                        <p class="text-sm text-gray-400">${t.desc}</p>
+                    </div>
+                `).join('');
             },
 
             showMessage(text) {
@@ -643,21 +727,23 @@
                 document.getElementById('master-name').style.color = Model.state.playerMaster.color;
                 document.getElementById('master-alignment').innerText = Model.state.playerMaster.alignment;
 
-                Model.state.castles = [
-                    { id: 'c1', name: '王都', x: 150, y: 200, owner: 'player', captureBonus: 0, uniqueUnit: null, neighbors: ['c3', 'c7'] },
-                    { id: 'c2', name: '暗黒城', x: 750, y: 550, owner: 'enemy', captureBonus: 2000, uniqueUnit: 'hell-hound', neighbors: ['c3', 'c5', 'c6'] },
-                    { id: 'c3', name: '自由都市', x: 450, y: 350, owner: 'neutral', captureBonus: 500, uniqueUnit: 'guard', neighbors: ['c1', 'c2', 'c4', 'c5'] },
-                    { id: 'c4', name: '北の砦', x: 450, y: 100, owner: 'neutral', captureBonus: 350, uniqueUnit: 'crossbow', neighbors: ['c3', 'c6'] },
-                    { id: 'c5', name: '南の村', x: 250, y: 550, owner: 'neutral', captureBonus: 200, uniqueUnit: 'militia', neighbors: ['c2', 'c3'] },
-                    { id: 'c6', name: '東の塔', x: 750, y: 150, owner: 'neutral', captureBonus: 800, uniqueUnit: 'sorcerer', neighbors: ['c2', 'c4'] },
-                    { id: 'c7', name: '西の廃墟', x: 100, y: 450, owner: 'neutral', captureBonus: 400, uniqueUnit: 'ghost', neighbors: ['c1'] }
-                ];
+                // 選択されたマップテンプレートからコピーして初期化
+                const template = Model.MAP_TEMPLATES.find(t => t.id === Model.state.selectedMapId) || Model.MAP_TEMPLATES[0];
+                Model.state.castles = JSON.parse(JSON.stringify(template.castles));
+
+                const hqP = Model.state.castles.find(c => c.owner === 'player');
+                const hqE = Model.state.castles.find(c => c.owner === 'enemy');
 
                 Model.state.mapUnits = [
-                    { id: 'master-army', owner: 'player', x: 150, y: 200, targetX: 150, targetY: 200, emoji: Model.state.playerMaster.emoji, army: Model.FACTION_UNITS[id].map(u => ({ ...u, currentHp: u.hp, rank: 0, xp: 0 })), isMaster: true, hasActed: false, isMoving: false },
-                    { id: 'enemy-1', owner: 'enemy', x: 750, y: 550, targetX: 750, targetY: 550, emoji: '👹', army: Model.FACTION_UNITS['demon'].map(u => ({ ...u, currentHp: u.hp, rank: 0, xp: 0 })), isMaster: false, hasActed: false, isMoving: false }
+                    { id: 'master-army', owner: 'player', x: hqP.x, y: hqP.y, targetX: hqP.x, targetY: hqP.y, emoji: Model.state.playerMaster.emoji, army: Model.FACTION_UNITS[id].map(u => ({ ...u, currentHp: u.hp, rank: 0, xp: 0 })), isMaster: true, hasActed: false, isMoving: false },
+                    { id: 'enemy-1', owner: 'enemy', x: hqE.x, y: hqE.y, targetX: hqE.x, targetY: hqE.y, emoji: '👹', army: Model.FACTION_UNITS['demon'].map(u => ({ ...u, currentHp: u.hp, rank: 0, xp: 0 })), isMaster: false, hasActed: false, isMoving: false }
                 ];
                 View.changeScreen('map');
+            },
+
+            setMap(id) {
+                Model.state.selectedMapId = id;
+                View.renderSettings();
             },
 
             updateLogic() {
