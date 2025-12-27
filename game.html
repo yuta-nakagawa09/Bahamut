@@ -63,17 +63,21 @@
             background-color: rgba(255, 255, 255, 0.05);
         }
 
-        ::-webkit-scrollbar {
-            width: 8px;
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
         }
 
-        ::-webkit-scrollbar-track {
-            background: #000;
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
         }
 
-        ::-webkit-scrollbar-thumb {
-            background: #444;
-            border-radius: 4px;
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(100, 100, 100, 0.5);
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(150, 150, 150, 0.8);
         }
     </style>
 </head>
@@ -84,78 +88,13 @@
     <!-- VIEW: UI Elements -->
     <div id="ui-layer" class="fixed inset-0 z-50 pointer-events-none">
 
-        <!-- ステータスバー -->
-        <div id="status-bar"
-            class="absolute top-4 left-4 right-4 flex justify-between items-start hidden pointer-events-none">
-            <div class="bg-black/70 p-4 border-2 border-gray-600 pointer-events-auto shadow-lg">
-                <div class="text-xs text-gray-400 text-center uppercase mb-1 font-bold tracking-widest">Commander</div>
-                <div id="master-name" class="text-2xl text-yellow-500 text-center font-bold"></div>
-                <div id="master-alignment" class="text-sm text-center opacity-70 mt-1 text-white"></div>
-            </div>
-
-            <div class="flex flex-col gap-2 items-end">
-                <div class="bg-black/70 p-4 border-2 border-gray-600 text-right pointer-events-auto shadow-lg">
-                    <div class="flex gap-8 items-center">
-                        <div class="text-right">
-                            <div class="text-xs text-gray-400 uppercase font-bold text-blue-400">P-Castles</div>
-                            <div id="castle-count-display" class="text-2xl text-blue-400 font-bold">1 / 7</div>
-                        </div>
-                        <div class="text-right border-l border-gray-600 pl-6">
-                            <div class="text-xs text-gray-400 uppercase font-bold text-green-400">P-Armies</div>
-                            <div id="army-total-display" class="text-2xl text-green-400 font-bold">1 / 8</div>
-                        </div>
-                        <div class="text-right border-l border-gray-600 pl-6">
-                            <div class="text-xs text-gray-400 uppercase font-bold text-yellow-400">P-Gold</div>
-                            <div id="gold-amount" class="text-4xl text-yellow-400 font-bold font-mono text-white">500
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex gap-3">
-                    <div id="save-load-group" class="flex gap-3">
-                        <button onclick="Controller.saveGame()"
-                            class="px-6 py-2 bg-green-900 hover:bg-green-700 border-2 border-white text-lg font-bold pointer-events-auto transition-all shadow-xl text-white">セーブ</button>
-                        <button onclick="Controller.loadGame()"
-                            class="px-6 py-2 bg-blue-900 hover:bg-blue-700 border-2 border-white text-lg font-bold pointer-events-auto transition-all shadow-xl text-white">ロード</button>
-                    </div>
-                    <button id="btn-end-strategic-turn" onclick="Controller.endStrategicTurn()"
-                        class="px-10 py-3 bg-red-900 hover:bg-red-700 border-2 border-white text-2xl font-bold pointer-events-auto transition-all shadow-xl hidden">ターン終了</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 城メニュー -->
-        <div id="base-menu"
-            class="absolute inset-0 bg-black/95 flex items-center justify-center hidden pointer-events-auto p-4 text-white">
-            <div class="pixel-border p-8 w-full max-w-6xl max-h-[95vh] overflow-y-auto shadow-[0_0_50px_rgba(0,0,0,1)]">
-                <div class="flex justify-between items-start mb-6 border-b border-gray-700 pb-6">
-                    <div>
-                        <h2 class="text-5xl text-yellow-500 font-bold mb-2" id="base-menu-title">城の名前</h2>
-                        <div id="castle-stat-panel" class="flex gap-8 text-xl font-bold"></div>
-                    </div>
-                    <div class="flex flex-col items-end gap-4">
-                        <div
-                            class="flex items-center gap-4 bg-black/50 p-3 rounded border border-gray-700 shadow-inner">
-                            <span class="text-gray-400 text-sm font-bold uppercase">Funds:</span>
-                            <span class="text-3xl text-yellow-400 font-bold font-mono"
-                                id="menu-gold-display">500G</span>
-                        </div>
-                        <div class="flex gap-3">
-                            <button id="btn-create-army"
-                                class="px-8 py-3 bg-purple-900 hover:bg-purple-700 border-2 border-purple-400 text-xl transition-colors disabled:opacity-30 disabled:grayscale font-bold shadow-xl">新規部隊を編成
-                                (500G)</button>
-                            <button onclick="View.toggleBaseMenu()"
-                                class="text-gray-400 hover:text-white transition-colors text-5xl p-2">✕</button>
-                        </div>
-                    </div>
-                </div>
-                <div id="unique-unit-info-panel"
-                    class="mb-8 p-6 bg-yellow-900/30 border-2 border-yellow-700/50 rounded-xl flex items-center gap-8 hidden text-white">
-                </div>
-                <div id="base-menu-content" class="grid grid-cols-1 lg:grid-cols-2 gap-8 text-white"></div>
-                <div id="no-unit-message"
-                    class="hidden py-24 text-center border-4 border-dashed border-gray-800 rounded-xl text-gray-500 text-2xl font-bold">
-                    駐留部隊なし</div>
+        <!-- 結果モーダル -->
+        <div id="modal-layer"
+            class="absolute inset-0 bg-black/80 flex items-center justify-center hidden pointer-events-auto text-white z-[200]">
+            <div class="bg-gray-900 border-4 border-double border-white p-12 max-w-lg w-full text-center shadow-2xl">
+                <h3 id="modal-title" class="text-4xl font-bold mb-6 text-yellow-500">確認</h3>
+                <p id="modal-body" class="text-xl mb-10 leading-relaxed"></p>
+                <div id="modal-footer" class="flex justify-center gap-6"></div>
             </div>
         </div>
 
@@ -172,11 +111,12 @@
 
         <!-- 最前面に表示すべき要素 -->
         <div id="top-elements" class="absolute inset-0 pointer-events-none z-[110]">
-            <!-- ターン表示 -->
+            <!-- ターン表示（戦略マップ以外で使用） -->
             <div id="turn-indicator"
                 class="absolute top-4 left-1/2 -translate-x-1/2 px-12 py-2 bg-black/80 border-2 border-white hidden pointer-events-auto shadow-2xl flex flex-col items-center">
-                <div id="turn-display" class="text-sm text-yellow-500 font-bold mb-1">TURN 1</div>
-                <p id="turn-text" class="text-3xl font-bold tracking-widest text-center uppercase">Player Turn</p>
+                <div id="turn-display-overlay" class="text-sm text-yellow-500 font-bold mb-1">第1ターン</div>
+                <p id="turn-text" class="text-3xl font-bold tracking-widest text-center uppercase text-white">プレイヤーターン
+                </p>
             </div>
 
             <!-- メッセージボックス -->
@@ -233,7 +173,7 @@
     <!-- マップ選択画面 -->
     <div id="screen-map-select" class="hidden flex-col items-center justify-center min-h-screen p-8 bg-black/95">
         <h2 class="text-6xl mb-12 font-bold text-center text-yellow-500 uppercase tracking-widest">戦地を選択せよ</h2>
-        <div id="map-flow-list" class="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-7xl w-full mb-12"></div>
+        <div id="map-flow-list" class="flex flex-wrap justify-center gap-10 w-full mb-12"></div>
         <div class="flex justify-center gap-6">
             <button onclick="View.changeScreen('title')"
                 class="px-12 py-4 bg-gray-900 hover:bg-gray-700 border-2 border-gray-500 text-2xl font-bold shadow-xl text-white transition-all">戻る</button>
@@ -243,22 +183,157 @@
     <div id="screen-select"
         class="hidden flex-col items-center justify-center min-h-screen p-8 bg-black/95 overflow-y-auto">
         <h2 class="text-5xl mb-16 font-bold text-center text-white italic tracking-widest uppercase">マスターを選択せよ</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-7xl w-full mb-12"></div>
+        <div class="flex flex-wrap justify-center gap-10 w-full mb-12"></div>
         <div class="flex justify-center gap-6">
             <button onclick="View.changeScreen('map-select')"
                 class="px-12 py-4 bg-gray-900 hover:bg-gray-700 border-2 border-gray-500 text-2xl font-bold shadow-xl text-white transition-all">戻る</button>
         </div>
     </div>
 
-    <div id="screen-map" class="hidden relative h-screen bg-green-900/20">
-        <canvas id="map-canvas" class="w-full h-full"></canvas>
+    <div id="screen-map" class="hidden flex flex-col h-screen bg-black overflow-hidden select-none">
+        <!-- HEADER: 戦略指令部ステータス -->
+        <header
+            class="relative h-20 bg-gray-900 border-b-2 border-gray-700 flex items-center justify-between px-8 shrink-0 z-[60] shadow-2xl">
+            <div class="flex items-center gap-10">
+                <!-- 指導者情報 -->
+                <div class="flex flex-col">
+                    <div class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">最高司令官</div>
+                    <div id="master-name"
+                        class="text-2xl text-yellow-500 font-black tracking-tighter uppercase leading-none"></div>
+                    <div id="master-alignment"
+                        class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest opacity-50"></div>
+                </div>
+
+                <div class="h-12 w-[2px] bg-gradient-to-b from-transparent via-gray-700 to-transparent"></div>
+
+                <!-- 統計情報 -->
+                <div class="flex gap-10">
+                    <div class="flex flex-col">
+                        <div class="text-[10px] text-blue-500 uppercase font-black tracking-widest mb-1">支配拠点数</div>
+                        <div id="castle-count-display" class="text-2xl text-white font-mono font-bold leading-none">0/0
+                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <div class="text-[10px] text-green-500 uppercase font-black tracking-widest mb-1">展開部隊数</div>
+                        <div id="army-total-display" class="text-2xl text-white font-mono font-bold leading-none">0/0
+                        </div>
+                    </div>
+                    <div class="flex flex-col">
+                        <div class="text-[10px] text-yellow-500 uppercase font-black tracking-widest mb-1">国庫資金</div>
+                        <div id="gold-amount"
+                            class="text-2xl text-yellow-400 font-mono font-black leading-none text-white">500G</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 現在のターン -->
+            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <div id="turn-display" class="text-xs text-yellow-600 font-black uppercase tracking-[0.3em] mb-1">第1ターン
+                </div>
+                <p id="turn-text-map"
+                    class="text-3xl font-black italic uppercase tracking-tighter text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                    自軍フェーズ</p>
+            </div>
+
+            <!-- システム操作 -->
+            <div id="save-load-group" class="flex gap-4 items-center">
+                <button onclick="Controller.saveGame()"
+                    class="px-6 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-xs font-bold transition-all text-white">クイックセーブ</button>
+                <button onclick="Controller.loadGame()"
+                    class="px-6 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-xs font-bold transition-all text-white">クイックロード</button>
+            </div>
+        </header>
+
+        <div class="flex flex-1 overflow-hidden relative">
+            <!-- BODY: 戦域マップ -->
+            <main class="flex-1 relative bg-green-950/20 overflow-hidden">
+                <canvas id="map-canvas" class="w-full h-full cursor-crosshair blur-[0.3px]"></canvas>
+
+                <!-- 拠点情報・諜報パネル (オーバーレイ) -->
+                <div id="base-menu"
+                    class="absolute top-4 left-4 bottom-4 w-[675px] max-w-[98vw] bg-gray-900/90 border-2 border-gray-700 flex flex-col shrink-0 z-50 overflow-hidden rounded-xl shadow-2xl backdrop-blur-sm hidden">
+                    <div class="p-4 bg-black/60 border-b border-gray-800 flex justify-between items-center shrink-0">
+                        <div class="flex flex-col">
+                            <div class="text-[10px] text-gray-400 uppercase font-black tracking-[0.2em]">戦域戦略情報パネル</div>
+                            <h2 id="base-menu-title"
+                                class="text-2xl text-yellow-500 font-black tracking-tighter uppercase leading-tight">
+                                拠点を選択してください</h2>
+                        </div>
+                        <button onclick="View.clearBaseMenu()"
+                            class="text-gray-500 hover:text-white transition-colors text-2xl bg-white/10 w-8 h-8 rounded-full flex items-center justify-center">✕</button>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4 custom-scrollbar">
+                        <!-- 基本統計 -->
+                        <div id="castle-stat-panel"
+                            class="grid grid-cols-2 gap-2 text-xs font-bold uppercase tracking-widest text-gray-300">
+                        </div>
+
+                        <!-- 資金情報とお金 -->
+                        <div
+                            class="bg-black/40 p-3 border border-gray-700/50 rounded flex justify-between items-center">
+                            <span class="text-[10px] text-gray-500 uppercase font-black">利用可能資金</span>
+                            <span id="menu-gold-display"
+                                class="text-xl text-yellow-400 font-mono font-black italic">0G</span>
+                        </div>
+
+                        <!-- 特殊ユニット -->
+                        <div id="unique-unit-info-panel"
+                            class="p-3 bg-yellow-900/10 border border-yellow-700/20 rounded hidden"></div>
+
+                        <!-- アクションバウト -->
+                        <button id="btn-create-army"
+                            class="w-full py-3 bg-purple-900 hover:bg-purple-700 border border-purple-400 text-lg font-black uppercase tracking-widest shadow-lg transition-all transform active:scale-95 disabled:opacity-30 disabled:grayscale text-white rounded">
+                            新規部隊を展開
+                        </button>
+
+                        <div class="h-px bg-gray-700/50 w-full my-1"></div>
+
+                        <!-- 駐留部隊リスト -->
+                        <h3 class="text-[10px] text-gray-500 uppercase font-black tracking-[0.3em]">駐留中の部隊一覧</h3>
+                        <div id="base-menu-content" class="flex flex-col gap-3"></div>
+                        <div id="no-unit-message"
+                            class="py-12 text-center border-2 border-dashed border-gray-800 rounded-lg text-gray-600 text-xs font-black uppercase tracking-widest italic">
+                            駐留部隊なし</div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- RIGHT SIDEBAR: コマンドボタンのみ -->
+            <aside id="command-sidebar"
+                class="w-24 bg-gray-950 border-l border-gray-800 flex flex-col justify-end items-center pb-4 z-[55] shadow-xl">
+                <button id="btn-end-strategic-turn" onclick="Controller.endStrategicTurn()"
+                    class="w-20 py-8 bg-gradient-to-b from-red-800 to-red-950 hover:from-red-700 hover:to-red-900 border-2 border-red-600 text-white font-black uppercase tracking-widest shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all transform active:scale-95 rounded-lg flex flex-col items-center gap-2 hidden group">
+                    <span class="text-sm writing-vertical-rl">ターン終了</span>
+                    <span class="text-2xl">🛑</span>
+                </button>
+            </aside>
+        </div>
+
+        <!-- FOOTER: 指令コマンド -->
+        <footer
+            class="h-16 bg-gray-950 border-t-2 border-gray-700 flex items-center justify-between px-8 shrink-0 z-[60]">
+            <div class="flex items-center gap-6">
+                <div
+                    class="p-2 bg-yellow-900/10 border border-yellow-900/30 rounded text-yellow-700 text-[10px] font-black uppercase">
+                    作戦名：大陸統一作戦</div>
+                <div class="text-gray-700 text-[10px] font-bold uppercase tracking-widest">状況：作戦行動中</div>
+            </div>
+
+            <!-- FOOTER: 指令コマンド (ボタン移動済み) -->
+            <button class="hidden"></button>
+
+            <div class="text-gray-700 text-[8px] font-bold uppercase tracking-widest text-right">
+                全ての戦略通信は<br>バハムート・リンクにより暗号化されています
+            </div>
+        </footer>
     </div>
 
     <div id="screen-battle" class="hidden flex flex-col items-center justify-center h-screen bg-slate-900">
         <div class="mb-8 flex gap-16">
-            <div id="p1-stats" class="text-4xl text-blue-400 font-bold uppercase tracking-wider">PLAYER</div>
+            <div id="p1-stats" class="text-4xl text-blue-400 font-bold uppercase tracking-wider">プレイヤー部隊</div>
             <div class="text-white text-2xl font-bold opacity-30 italic self-center">VS</div>
-            <div id="p2-stats" class="text-4xl text-red-400 font-bold uppercase tracking-wider">ENEMY</div>
+            <div id="p2-stats" class="text-4xl text-red-400 font-bold uppercase tracking-wider">敵勢力部隊</div>
         </div>
         <div id="battle-grid" class="relative scale-110"></div>
         <div class="mt-16 flex gap-10">
@@ -377,8 +452,91 @@
         /**
          * VIEW: 表示制御
          */
+        const UI = {
+            // 基本的なボタンスタイル
+            Button: (label, onclick, type = 'primary', extraClass = '') => {
+                const base = "px-10 py-4 border-2 transition-all font-bold shadow-xl hover:scale-105 active:translate-y-1 text-white disabled:opacity-50 disabled:cursor-not-allowed";
+                const types = {
+                    primary: "bg-red-900 hover:bg-red-700 border-white text-3xl",
+                    secondary: "bg-blue-900 hover:bg-blue-700 border-white text-2xl",
+                    neutral: "bg-gray-900 hover:bg-gray-700 border-gray-500 text-xl",
+                    battle: "bg-blue-800 hover:bg-blue-600 border-white text-2xl rounded-lg",
+                    action: "bg-purple-900 hover:bg-purple-700 border-purple-400 text-xl",
+                    menu: "bg-green-900 hover:bg-green-700 border-white text-lg"
+                };
+                return `<button onclick="${onclick}" class="${base} ${types[type]} ${extraClass}">${label}</button>`;
+            },
+
+            // 選択用カード（マップ用・マスター用共通）
+            Card: (title, desc, icon, onclick, subtext = '', extraClass = '') => {
+                return `
+                    <div onclick="${onclick}" 
+                         class="group p-10 border-4 border-gray-700 hover:border-yellow-500 transition-all cursor-pointer rounded-2xl bg-gray-900/80 shadow-2xl hover:scale-105 flex flex-col items-center w-[400px] shrink-0 ${extraClass}">
+                        ${icon ? `<div class="text-9xl mb-8 transition-transform group-hover:scale-110">${icon}</div>` : ''}
+                        <div class="text-4xl font-bold mb-4 text-white text-center group-hover:text-yellow-500 transition-colors">${title}</div>
+                        <p class="text-xl text-gray-400 text-center leading-relaxed mb-6">${desc}</p>
+                        ${subtext ? `<div class="text-yellow-500 font-bold uppercase tracking-widest text-sm animate-pulse">${subtext}</div>` : ''}
+                    </div>`;
+            },
+
+            // 各種パネル
+            Panel: (content, extraClass = '') => {
+                return `<div class="bg-gray-800/80 border-2 border-gray-700 p-8 rounded-2xl shadow-2xl mb-4 text-white ${extraClass}">${content}</div>`;
+            },
+
+            // 部隊カード (BaseMenu内などで使用)
+            ArmyCard: (unit, isPlayer, factionName, extraContent = '') => {
+                const colorClass = isPlayer ? 'text-blue-300' : 'text-red-400';
+                const bgClass = isPlayer ? 'bg-gray-800/80 border-gray-700' : 'bg-red-900/20 border-red-700/50';
+                return `
+                    <div class="${bgClass} border-2 p-8 rounded-2xl shadow-2xl mb-4 text-white">
+                        <div class="flex justify-between items-center mb-8 border-b border-gray-600 pb-4">
+                            <div class="flex items-center gap-6">
+                                <span class="text-6xl">${unit.emoji}</span>
+                                <span class="text-3xl font-bold ${colorClass}">${factionName}</span>
+                            </div>
+                            <span class="text-xl font-bold font-mono">構成: ${unit.army.length} / ${Model.MAX_UNITS}</span>
+                        </div>
+                        ${extraContent}
+                    </div>`;
+            },
+
+            // ユニット詳細行
+            UnitListItem: (u, index, callbacks = null) => {
+                const rankName = Model.RANKS[u.rank || 0];
+                const xpPercent = u.rank === 5 ? 100 : ((u.xp || 0) / Model.RANK_UP_XP) * 100;
+                const hpColor = u.currentHp / u.hp < 0.3 ? 'text-red-500' : 'text-green-400';
+                return `
+                    <div class="bg-black/40 p-4 border border-white/10 rounded-lg">
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="flex items-center gap-4">
+                                <span class="text-5xl">${u.emoji}</span>
+                                <div>
+                                    <div class="text-2xl font-bold">${u.name} <span class="text-yellow-500 ml-2 text-xl">RANK ${rankName}</span></div>
+                                    <div class="text-sm text-gray-400">練度: ${u.rank === 5 ? 'MAX' : (u.xp || 0) + ' / ' + Model.RANK_UP_XP}</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="${hpColor} font-bold">HP: ${u.currentHp}/${u.hp}</div>
+                                <div class="text-red-400 font-bold">ATK: ${u.atk}</div>
+                            </div>
+                        </div>
+                        <div class="w-full h-2 bg-gray-800 rounded-full overflow-hidden mb-4">
+                            <div class="h-full bg-yellow-500" style="width:${xpPercent}%"></div>
+                        </div>
+                        ${callbacks ? `
+                            <div class="flex gap-4">
+                                <button onclick="${callbacks.hp}" class="flex-1 py-2 bg-green-900/50 border border-green-700 hover:bg-green-700 text-sm font-bold uppercase transition-colors text-white">HP+10(100G)</button>
+                                <button onclick="${callbacks.atk}" class="flex-1 py-2 bg-red-900/50 border border-red-700 hover:bg-red-700 text-sm font-bold uppercase transition-colors text-white">ATK+3(150G)</button>
+                            </div>
+                        ` : ''}
+                    </div>`;
+            }
+        };
+
         const View = {
             canvas: null, ctx: null,
+            Components: UI,
 
             changeScreen(screenId) {
                 document.querySelectorAll('div[id^="screen-"]').forEach(el => el.classList.add('hidden'));
@@ -386,33 +544,28 @@
                 if (target) target.classList.remove('hidden');
                 Model.state.currentScreen = screenId;
 
-                const status = document.getElementById('status-bar');
-                const turn = document.getElementById('turn-indicator');
+                const turnIndicator = document.getElementById('turn-indicator');
                 const player = Model.state.factions.find(f => f.isPlayer);
-                if (screenId === 'map' && player) {
-                    status.classList.remove('hidden');
-                    turn.classList.remove('hidden');
-                    document.getElementById('gold-amount').innerText = Math.floor(player.gold);
-                } else {
-                    status.classList.add('hidden');
-                    turn.classList.add('hidden');
-                }
-                const btn = document.getElementById('btn-end-strategic-turn');
-                const saveLoad = document.getElementById('save-load-group');
                 const isPlayerTurn = Model.state.strategicTurn === 'player';
 
                 if (screenId === 'map') {
+                    turnIndicator.classList.add('hidden'); // マップ内ヘッダーで表示するため隠す
+                    this.initCanvas();
+                    const endBtn = document.getElementById('btn-end-strategic-turn');
+                    const saveLoad = document.getElementById('save-load-group');
+                    const menu = document.getElementById('base-menu');
+                    menu.classList.add('hidden'); // 初期状態ではメニューを隠す
+                    this.clearBaseMenu();
+
                     if (isPlayerTurn) {
-                        btn.classList.remove('hidden');
+                        endBtn.classList.remove('hidden');
                         saveLoad.classList.remove('hidden');
                     } else {
-                        btn.classList.add('hidden');
+                        endBtn.classList.add('hidden');
                         saveLoad.classList.add('hidden');
                     }
-                    this.initCanvas();
                 } else {
-                    btn.classList.add('hidden');
-                    saveLoad.classList.add('hidden');
+                    turnIndicator.classList.add('hidden');
                 }
             },
 
@@ -439,14 +592,9 @@
 
             renderMapFlow() {
                 const list = document.getElementById('map-flow-list');
-                list.innerHTML = Model.MAP_TEMPLATES.map(t => `
-                    <div onclick="Controller.selectMapAndNext('${t.id}')" 
-                         class="p-10 border-4 border-gray-700 hover:border-yellow-500 transition-all cursor-pointer rounded-2xl bg-gray-900 shadow-2xl hover:scale-105">
-                        <div class="text-4xl font-bold mb-6 text-white text-center">${t.name}</div>
-                        <p class="text-xl text-gray-400 text-center leading-relaxed mb-4">${t.desc}</p>
-                        <div class="text-center text-yellow-500 font-bold uppercase tracking-widest text-sm">Click to Select</div>
-                    </div>
-                `).join('');
+                list.innerHTML = Model.MAP_TEMPLATES.map(t =>
+                    UI.Card(t.name, t.desc, '', `Controller.selectMapAndNext('${t.id}')`, 'Click to Select')
+                ).join('');
             },
 
             showMessage(text) {
@@ -495,12 +643,33 @@
             initCanvas() {
                 const canvas = document.getElementById('map-canvas');
                 if (!canvas) return;
+                const container = canvas.parentElement;
                 const newCanvas = canvas.cloneNode(true);
                 canvas.parentNode.replaceChild(newCanvas, canvas);
-                newCanvas.width = window.innerWidth;
-                newCanvas.height = window.innerHeight;
+                newCanvas.width = container.clientWidth;
+                newCanvas.height = container.clientHeight;
                 this.ctx = newCanvas.getContext('2d');
                 this.canvas = newCanvas;
+
+                // マップのセンタリング計算
+                if (Model.state.castles.length > 0) {
+                    const padding = 100;
+                    const minX = Math.min(...Model.state.castles.map(c => c.x));
+                    const maxX = Math.max(...Model.state.castles.map(c => c.x));
+                    const minY = Math.min(...Model.state.castles.map(c => c.y));
+                    const maxY = Math.max(...Model.state.castles.map(c => c.y));
+
+                    const mapWidth = maxX - minX;
+                    const mapHeight = maxY - minY;
+                    const centerX = minX + mapWidth / 2;
+                    const centerY = minY + mapHeight / 2;
+
+                    this.mapOffsetX = (this.canvas.width / 2) - centerX;
+                    this.mapOffsetY = (this.canvas.height / 2) - centerY;
+                } else {
+                    this.mapOffsetX = 0;
+                    this.mapOffsetY = 0;
+                }
 
                 newCanvas.addEventListener('mousedown', Controller.handleMapClick);
                 newCanvas.addEventListener('contextmenu', Controller.handleMapRightClick);
@@ -510,36 +679,48 @@
             renderMapLoop() {
                 if (Model.state.currentScreen !== 'map' || !this.ctx) return;
                 const ctx = this.ctx;
-                ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+                ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
                 const playerFaction = Model.state.factions.find(f => f.isPlayer);
-                if (!playerFaction) return; // 勢力が初期化される前は描画をスキップ
+                if (!playerFaction) return;
 
                 document.getElementById('castle-count-display').innerText = `${Model.state.castles.filter(c => c.owner === playerFaction.id).length} / ${Model.state.castles.length}`;
                 document.getElementById('army-total-display').innerText = `${Model.state.mapUnits.filter(u => u.owner === playerFaction.id).length} / ${Model.MAX_ARMIES}`;
-                document.getElementById('gold-amount').innerText = Math.floor(playerFaction.gold);
-                // 敵軍ゴールド表示は廃止（各拠点で確認）
-                document.getElementById('turn-display').innerText = `TURN ${Model.state.turnCount}`;
+                document.getElementById('gold-amount').innerText = Math.floor(playerFaction.gold) + 'G';
+                document.getElementById('turn-display').innerText = `SYSTEM TURN ${Model.state.turnCount}`;
+
+                const turnText = document.getElementById('turn-text-map');
+                const currentFaction = Model.state.factions.find(f => f.id === Model.state.strategicTurn);
+                if (currentFaction && turnText) {
+                    turnText.innerText = currentFaction.isPlayer ? "自軍フェーズ" : `${currentFaction.name}フェーズ`;
+                    turnText.style.color = currentFaction.color;
+                }
 
                 ctx.setLineDash([10, 5]); ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 4;
+                const ox = this.mapOffsetX || 0;
+                const oy = this.mapOffsetY || 0;
+
                 Model.state.castles.forEach(c => {
                     c.neighbors.forEach(nId => {
                         const n = Model.state.castles.find(nc => nc.id === nId);
-                        if (n) { ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(n.x, n.y); ctx.stroke(); }
+                        if (n) { ctx.beginPath(); ctx.moveTo(c.x + ox, c.y + oy); ctx.lineTo(n.x + ox, n.y + oy); ctx.stroke(); }
                     });
                 });
                 ctx.setLineDash([]);
 
                 Model.state.castles.forEach(c => {
-                    ctx.font = '50px serif'; ctx.textAlign = 'center'; ctx.fillText('🏰', c.x, c.y);
+                    const cx = c.x + ox;
+                    const cy = c.y + oy;
+
+                    ctx.font = '50px serif'; ctx.textAlign = 'center'; ctx.fillText('🏰', cx, cy);
                     ctx.font = '24px DotGothic16';
                     const faction = Model.state.factions.find(f => f.id === c.owner);
                     ctx.fillStyle = faction ? faction.color : '#aaaaaa';
-                    ctx.fillText(c.name, c.x, c.y + 40);
+                    ctx.fillText(c.name, cx, cy + 40);
 
                     ctx.font = '16px DotGothic16';
                     const ownerName = faction ? faction.master.name : '中立';
-                    ctx.fillText(ownerName, c.x, c.y + 65);
+                    ctx.fillText(ownerName, cx, cy + 65);
 
                     // HQ判定
                     const isHQ = Model.state.factions.some(f => f.hqId === c.id && f.isAlive);
@@ -547,7 +728,7 @@
                         ctx.font = 'bold 24px DotGothic16';
                         ctx.fillStyle = '#FFD700'; // Gold
                         ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(255,215,0,0.5)';
-                        ctx.fillText('👑HQ', c.x, c.y - 60);
+                        ctx.fillText('👑HQ', cx, cy - 60);
                         ctx.shadowBlur = 0;
                     }
 
@@ -559,19 +740,48 @@
                         ctx.font = 'bold 16px DotGothic16';
                         ctx.fillStyle = '#ffffff';
                         ctx.shadowBlur = 4; ctx.shadowColor = 'black';
-                        ctx.fillText(`⚒${totalAtk} ❤${totalHp}`, c.x, c.y - 45);
+                        ctx.fillText(`⚒${totalAtk} ❤${totalHp}`, cx, cy - 45);
                         ctx.shadowBlur = 0;
                     }
                 });
 
-                Model.state.mapUnits.forEach(u => {
+                // 描画順序を制御：非選択→選択中の順で描画することで、選択ユニットを最前面に表示
+                const unitsToRender = Model.state.mapUnits.filter(u => {
                     const isStationed = Model.state.castles.some(c => Math.hypot(u.x - c.x, u.y - c.y) < 30) && !u.isMoving;
-                    if (isStationed && u !== Model.state.selectedMapUnit) return;
+                    return !(isStationed && u !== Model.state.selectedMapUnit);
+                }).sort((a, b) => (a === Model.state.selectedMapUnit ? 1 : (b === Model.state.selectedMapUnit ? -1 : 0)));
+
+                unitsToRender.forEach(u => {
+                    const ux = u.x + ox;
+                    const uy = u.y + oy;
+                    const isSelected = (u === Model.state.selectedMapUnit);
+
+                    if (isSelected) {
+                        ctx.save();
+                        // 選択マーカーとテキスト
+                        ctx.fillStyle = 'cyan';
+                        ctx.font = 'bold 24px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.shadowBlur = 10; ctx.shadowColor = 'black';
+
+                        // マーカーが上下にフワフワするアニメーション
+                        const bounce = Math.sin(Date.now() / 150) * 5;
+                        ctx.fillText('▼', ux, uy - 45 + bounce);
+
+                        // 部隊識別テキスト
+                        ctx.font = 'bold 16px DotGothic16';
+                        const label = u.isMaster ? "★主軍" : `部隊 ${Model.state.mapUnits.filter(mu => mu.owner === u.owner).indexOf(u) + 1}`;
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillText(label, ux, uy - 70 + bounce);
+                        ctx.restore();
+
+                        ctx.shadowBlur = 40; ctx.shadowColor = 'cyan';
+                    }
 
                     ctx.font = '40px serif';
-                    if (u === Model.state.selectedMapUnit) { ctx.shadowBlur = 30; ctx.shadowColor = 'cyan'; }
+                    ctx.textAlign = 'center';
                     ctx.globalAlpha = (u.owner === 'player' && u.hasActed) ? 0.4 : 1.0;
-                    ctx.fillText(u.emoji, u.x, u.y);
+                    ctx.fillText(u.emoji, ux, uy);
                     ctx.globalAlpha = 1.0; ctx.shadowBlur = 0;
                 });
 
@@ -579,13 +789,20 @@
             },
 
             toggleBaseMenu(castle = null) {
-                const el = document.getElementById('base-menu');
-                if (el.classList.contains('hidden')) {
-                    if (castle) this.renderBaseMenu(castle);
-                    el.classList.remove('hidden');
-                } else {
-                    el.classList.add('hidden');
+                if (castle) {
+                    this.renderBaseMenu(castle);
+                    document.getElementById('base-menu').classList.remove('hidden');
                 }
+            },
+
+            clearBaseMenu() {
+                document.getElementById('base-menu').classList.add('hidden');
+                document.getElementById('base-menu-title').innerText = "拠点を選択してください";
+                document.getElementById('base-menu-content').innerHTML = "";
+                document.getElementById('castle-stat-panel').innerHTML = "";
+                document.getElementById('menu-gold-display').innerText = "0G";
+                document.getElementById('unique-unit-info-panel').classList.add('hidden');
+                document.getElementById('no-unit-message').classList.remove('hidden');
             },
 
             renderBaseMenu(castle) {
@@ -627,63 +844,30 @@
                     if (sP.length > 0) {
                         noMsg.classList.add('hidden');
                         sP.forEach(unit => {
+                            const factionUnits = Model.FACTION_UNITS[playerFaction.master.id];
+                            let options = [...factionUnits];
+                            if (castle.uniqueUnit) {
+                                const spec = Model.SPECIAL_UNITS[castle.uniqueUnit];
+                                if (spec) options.push(spec);
+                            }
+
+                            const recruitHTML = `
+                                <div class="bg-black/50 p-6 rounded-xl border border-blue-900/30 mb-6">
+                                    <p class="text-2xl text-blue-400 mb-6 font-bold border-b border-blue-900/50 pb-2 uppercase tracking-widest text-center">ユニット雇用</p>
+                                    <div class="grid grid-cols-1 gap-4">${options.map(ut => this.recruitItemHTML(ut, unit, castle)).join('')}</div>
+                                </div>`;
+
+                            const unitsHTML = `
+                                <p class="text-sm text-gray-400 mb-4 font-bold uppercase tracking-widest text-center">部隊編成・強化</p>
+                                <div class="flex flex-col gap-6">
+                                    ${unit.army.map((u, i) => UI.UnitListItem(u, i, {
+                                hp: `Controller.enhanceUnit('${unit.id}', ${i}, 'hp', '${castle.id}')`,
+                                atk: `Controller.enhanceUnit('${unit.id}', ${i}, 'atk', '${castle.id}')`
+                            })).join('')}
+                                </div>`;
+
                             const card = document.createElement('div');
-                            card.className = "bg-gray-800/80 border-2 border-gray-700 p-8 rounded-2xl shadow-2xl mb-4 text-white";
-                            card.innerHTML = `
-                                <div class="flex justify-between items-center mb-8 border-b border-gray-600 pb-4">
-                                    <div class="flex items-center gap-6"><span class="text-6xl">${unit.emoji}</span><span class="text-3xl font-bold text-blue-300">${unit.isMaster ? '主軍' : '別働隊'}</span></div>
-                                    <span class="text-xl font-bold font-mono">構成: ${unit.army.length} / ${Model.MAX_UNITS}</span>
-                                </div>
-                                <div class="grid grid-cols-1 gap-10">
-                                    <div class="bg-black/50 p-6 rounded-xl border border-blue-900/30">
-                                        <p class="text-2xl text-blue-400 mb-6 font-bold border-b border-blue-900/50 pb-2 uppercase tracking-widest text-center">ユニット雇用・編成</p>
-                                        <div class="flex flex-col gap-6">
-                                            <div>
-                                                <p class="text-sm text-gray-400 mb-4 font-bold uppercase tracking-widest">補充ユニット（新規雇用）</p>
-                                                <div class="grid grid-cols-1 gap-4 mb-8">
-                                                    ${(() => {
-                                    const factionUnits = Model.FACTION_UNITS[playerFaction.master.id];
-                                    let options = [...factionUnits];
-                                    if (castle.uniqueUnit) {
-                                        const spec = Model.SPECIAL_UNITS[castle.uniqueUnit];
-                                        if (spec) options.push(spec);
-                                    }
-                                    return options.map(ut => this.recruitItemHTML(ut, unit, castle)).join('');
-                                })()}
-                                                </div>
-                                            </div>
-                                            <div class="pt-8 border-t border-gray-700">
-                                                <p class="text-sm text-gray-400 mb-4 font-bold uppercase tracking-widest">編成済みユニット（詳細・強化）</p>
-                                                <div class="flex flex-col gap-6">
-                                                    ${unit.army.map((u, i) => `
-                                                        <div class="bg-gray-900 p-4 border border-gray-700 rounded-lg">
-                                                            <div class="flex justify-between items-center mb-4">
-                                                                <div class="flex items-center gap-4">
-                                                                    <span class="text-5xl">${u.emoji}</span>
-                                                                    <div>
-                                                                        <div class="text-2xl font-bold">${u.name} <span class="text-yellow-500 ml-2 text-xl">RANK ${Model.RANKS[u.rank || 0]}</span></div>
-                                                                        <div class="text-sm text-gray-400">練度: ${u.rank === 5 ? 'MAX' : (u.xp || 0) + ' / ' + Model.RANK_UP_XP}</div>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="text-right">
-                                                                    <div class="text-green-400 font-bold">HP: ${u.currentHp}/${u.hp}</div>
-                                                                    <div class="text-red-400 font-bold">ATK: ${u.atk}</div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="w-full h-2 bg-gray-800 rounded-full overflow-hidden mb-4">
-                                                                <div class="h-full bg-yellow-500" style="width:${u.rank === 5 ? 100 : ((u.xp || 0) / Model.RANK_UP_XP) * 100}%"></div>
-                                                            </div>
-                                                            <div class="flex gap-4">
-                                                                <button onclick="Controller.enhanceUnit('${unit.id}', ${i}, 'hp', '${castle.id}')" class="flex-1 py-2 bg-green-900/50 border border-green-700 hover:bg-green-700 text-sm font-bold uppercase transition-colors text-white">HP+10(100G)</button>
-                                                                <button onclick="Controller.enhanceUnit('${unit.id}', ${i}, 'atk', '${castle.id}')" class="flex-1 py-2 bg-red-900/50 border border-red-700 hover:bg-red-700 text-sm font-bold uppercase transition-colors text-white">ATK+3(150G)</button>
-                                                            </div>
-                                                        </div>`).join('')}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
+                            card.innerHTML = UI.ArmyCard(unit, true, unit.isMaster ? '主軍' : '別働隊', recruitHTML + unitsHTML);
                             menuContent.appendChild(card);
                         });
                     } else {
@@ -694,32 +878,10 @@
                     if (sE.length > 0) {
                         noMsg.classList.add('hidden');
                         sE.forEach(unit => {
-                            const card = document.createElement('div');
                             const owner = Model.state.factions.find(f => f.id === unit.owner);
-                            card.className = "bg-red-900/20 border-2 border-red-700/50 p-8 rounded-2xl shadow-2xl mb-4 text-white";
-                            card.innerHTML = `
-                                <div class="flex justify-between items-center mb-8 border-b border-red-800/50 pb-4">
-                                    <div class="flex items-center gap-6"><span class="text-6xl">${unit.emoji}</span><span class="text-3xl font-bold text-red-400">${owner ? owner.name : '敵軍'}</span></div>
-                                    <span class="text-xl font-bold font-mono">構成: ${unit.army.length} / ${Model.MAX_UNITS}</span>
-                                </div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    ${unit.army.map(u => `
-                                        <div class="bg-black/40 p-4 border border-red-900/20 rounded-lg flex justify-between items-center">
-                                            <div class="flex items-center gap-4">
-                                                <span class="text-5xl">${u.emoji}</span>
-                                                <div>
-                                                    <div class="text-2xl font-bold text-red-200">${u.name}</div>
-                                                    <div class="text-sm text-yellow-600 font-bold uppercase">RANK ${Model.RANKS[u.rank || 0]}</div>
-                                                </div>
-                                            </div>
-                                            <div class="text-right">
-                                                <div class="text-green-500 font-bold">HP: ${u.currentHp}/${u.hp}</div>
-                                                <div class="text-red-500 font-bold">ATK: ${u.atk}</div>
-                                            </div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            `;
+                            const unitsHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">${unit.army.map((u, i) => UI.UnitListItem(u, i)).join('')}</div>`;
+                            const card = document.createElement('div');
+                            card.innerHTML = UI.ArmyCard(unit, false, owner ? owner.name : '敵軍', unitsHTML);
                             menuContent.appendChild(card);
                         });
                     } else {
@@ -803,13 +965,9 @@
             showMasterSelection() {
                 View.changeScreen('select');
                 const container = document.querySelector('#screen-select div');
-                container.innerHTML = Model.MASTERS.map(m => `
-                    <div class="bg-gray-800 border-2 border-gray-600 p-10 hover:border-white cursor-pointer flex flex-col items-center transition-transform hover:scale-105 shadow-2xl text-white" 
-                         onclick="Controller.selectMaster('${m.id}')">
-                        <div class="text-9xl mb-8">${m.emoji}</div>
-                        <div class="text-4xl font-bold mb-4" style="color:${m.color}">${m.name}</div>
-                        <p class="text-xl text-center text-gray-400 font-bold">${m.desc}</p>
-                    </div>`).join('');
+                container.innerHTML = Model.MASTERS.map(m =>
+                    View.Components.Card(m.name, m.desc, m.emoji, `Controller.selectMaster('${m.id}')`, 'このマスターで開始', `border-[${m.color}]`)
+                ).join('');
             },
 
             selectMaster(id) {
@@ -964,7 +1122,10 @@
             handleMapClick(e) {
                 if (e.button !== 0 || Model.state.strategicTurn !== 'player' || Model.state.gameCleared) return;
                 const rect = View.canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left, y = e.clientY - rect.top;
+                const ox = View.mapOffsetX || 0;
+                const oy = View.mapOffsetY || 0;
+                const x = e.clientX - rect.left - ox; // オフセット補正
+                const y = e.clientY - rect.top - oy; // オフセット補正
 
                 // 1. すでに部隊が選択されている場合、まず移動先（拠点）がクリックされたかを確認
                 if (Model.state.selectedMapUnit) {
@@ -974,38 +1135,52 @@
                         if (current && current.neighbors.includes(castle.id)) {
                             Model.state.selectedMapUnit.targetX = castle.x; Model.state.selectedMapUnit.targetY = castle.y;
                             Model.state.selectedMapUnit.isMoving = true; Model.state.selectedMapUnit.hasActed = true;
+                            // 移動後は選択解除。パネル操作はしない（右クリックに任せる）
                             Model.state.selectedMapUnit = null;
-                            return; // 移動を実行したので終了
-                        } else {
-                            View.showMessage("隣接していません。");
-                            // 隣接していない拠点をクリックした場合は選択解除せず、部隊切り替え判定へ流すことも可能だが、
-                            // ここでは一旦クリックを消費
+                            View.clearBaseMenu();
+                            return;
                         }
+                        // 隣接していない場合は下の選択処理へ流す（移動キャンセル＆別ユニット選択の可能性）
                     }
                 }
 
-                // 2. 拠点がクリックされていない、または移動不可だった場合、部隊の選択・切り替えを行う
+                // 2. 部隊の選択・切り替え（パネル表示なし）
                 const playerFaction = Model.state.factions.find(f => f.isPlayer);
                 const clickedUnits = Model.state.mapUnits.filter(u => u.owner === playerFaction.id && !u.hasActed && Math.hypot(u.x - x, u.y - y) < 45);
+
                 if (clickedUnits.length > 0) {
+                    // 部隊がいればそれを選択
                     let nextIdx = 0;
                     if (Model.state.selectedMapUnit && clickedUnits.includes(Model.state.selectedMapUnit)) {
                         nextIdx = (clickedUnits.indexOf(Model.state.selectedMapUnit) + 1) % clickedUnits.length;
                     }
                     Model.state.selectedMapUnit = clickedUnits[nextIdx];
+                    // パネルは表示しない
                 } else {
-                    // 何もない場所をクリックしたら選択解除
+                    // 何もない場所、あるいはユニットのいない拠点をクリックしたら選択解除
                     Model.state.selectedMapUnit = null;
+                    View.clearBaseMenu();
                 }
             },
 
             handleMapRightClick(e) {
                 e.preventDefault();
-                if (Model.state.strategicTurn !== 'player') return;
                 const rect = View.canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left, y = e.clientY - rect.top;
+                const ox = View.mapOffsetX || 0;
+                const oy = View.mapOffsetY || 0;
+                const x = e.clientX - rect.left - ox; // オフセット補正
+                const y = e.clientY - rect.top - oy; // オフセット補正
+
+                // 拠点があれば情報表示
                 const clickedCastle = Model.state.castles.find(c => Math.hypot(c.x - x, c.y - y) < 45);
-                if (clickedCastle) View.toggleBaseMenu(clickedCastle);
+
+                if (clickedCastle) {
+                    View.toggleBaseMenu(clickedCastle);
+                } else {
+                    // 何もない場所なら選択解除＆メニュー閉じ
+                    Model.state.selectedMapUnit = null;
+                    View.clearBaseMenu();
+                }
             },
 
             endStrategicTurn() {
@@ -1050,7 +1225,7 @@
                     return;
                 }
 
-                document.getElementById('turn-text').innerText = faction.name + " Turn";
+                document.getElementById('turn-text').innerText = `${faction.name}のターン`;
                 document.getElementById('turn-text').className = `text-4xl font-bold italic tracking-wider drop-shadow-[0_2px_2px_rgba(0,0,0,1)] text-white`;
                 document.getElementById('turn-text').style.color = faction.color;
 
