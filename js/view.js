@@ -196,7 +196,7 @@ window.View = {
         footer.innerHTML = '';
         buttons.forEach(btn => {
             const b = document.createElement('button');
-            b.className = "px-10 py-4 bg-blue-700 hover:bg-blue-600 border-2 border-white text-2xl transition-colors font-bold rounded-lg shadow-lg text-white";
+            b.className = "px-10 py-4 bg-blue-700 hover:bg-blue-600 border-2 border-white text-2xl transition-colors font-bold rounded-lg shadow-lg text-white pointer-events-auto cursor-pointer";
             b.innerText = btn.label;
             b.onclick = () => { modal.classList.add('hidden'); btn.action(); };
             footer.appendChild(b);

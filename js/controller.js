@@ -190,10 +190,51 @@ window.Controller = {
         View.openModal("撤退しますか？", "撤退すると部隊は大きなダメージを受け、本拠地に戻されます。", [
             {
                 label: "撤退する", action: () => {
+                    const unit = Model.state.battleUnitA;
+                    const faction = Model.state.factions.find(f => f.id === unit.owner);
+
+                    // 現在地の拠点を特定
+                    const currentCastle = Model.state.castles.find(c => Math.hypot(c.x - unit.x, c.y - unit.y) < 40);
+                    let escaped = false;
+
+                    if (currentCastle && currentCastle.neighbors) {
+                        // 隣接する自軍拠点を探す
+                        const potentialRetreats = currentCastle.neighbors
+                            .map(nid => Model.state.castles.find(c => c.id === nid))
+                            .filter(c => c && c.owner === faction.id);
+
+                        // 候補があれば移動
+                        if (potentialRetreats.length > 0) {
+                            const target = potentialRetreats[0]; // 最初に見つかった所に逃げる
+                            unit.x = target.x;
+                            unit.y = target.y;
+                            unit.targetX = target.x;
+                            unit.targetY = target.y;
+                            unit.hasActed = true; // 行動済みにする
+
+                            // 撤退時も全回復（戦闘終了ロジックに準拠）
+                            unit.army.forEach(u => u.currentHp = u.hp);
+                            // 敵部隊も回復
+                            if (Model.state.battleUnitB) {
+                                Model.state.battleUnitB.army.forEach(u => u.currentHp = u.hp);
+                            }
+
+                            if (unit.army.length > 0) {
+                                escaped = true;
+                                View.showMessage(`"${target.name}" へ撤退しました`);
+                            }
+                        }
+                    }
+
                     Model.state.battle.active = false;
-                    Model.state.globalBattleCooldown = 100;
+                    Model.state.globalBattleCooldown = 150;
                     View.changeScreen('map');
-                    View.showMessage("撤退しました...");
+
+                    if (!escaped) {
+                        // 撤退先なし -> 部隊消滅
+                        Model.state.mapUnits = Model.state.mapUnits.filter(u => u !== unit);
+                        View.showMessage("撤退先がなく、部隊は壊滅しました...");
+                    }
                 }
             },
             { label: "戦い続ける", action: () => { } }
@@ -353,28 +394,21 @@ window.Controller = {
     },
 
     recruitUnit(aId, utId, cId) {
-        const player = Model.state.factions.find(f => f.isPlayer);
-        const army = Model.state.mapUnits.find(u => u.id === aId);
-        const ut = Data.FACTION_UNITS[player.master.id].find(x => x.id === utId) || Data.SPECIAL_UNITS[utId];
-        if (army && ut && army.army.length < Data.MAX_UNITS && player.gold >= ut.cost) {
-            player.gold -= ut.cost;
-            army.army.push({ ...ut, currentHp: ut.hp, rank: 0, xp: 0 });
+        const result = Model.recruitUnit(aId, utId);
+        if (result === true) {
             View.renderBaseMenu(Model.state.castles.find(c => c.id === cId), aId);
+        } else {
+            View.showMessage(result);
         }
     },
 
     enhanceUnit(aId, idx, type, cId) {
-        const player = Model.state.factions.find(f => f.isPlayer);
-        const army = Model.state.mapUnits.find(u => u.id === aId);
-        if (!army) return;
-        const unit = army.army[idx];
-        if (type === 'hp' && player.gold >= 100) {
-            if (unit.currentHp >= unit.hp) { View.showMessage("HPは既に満タンです"); return; }
-            player.gold -= 100; unit.hp += 10; unit.currentHp += 10;
-        } else if (type === 'atk' && player.gold >= 150) {
-            player.gold -= 150; unit.atk += 3;
+        const result = Model.enhanceUnit(aId, idx, type);
+        if (result === true) {
+            View.renderBaseMenu(Model.state.castles.find(c => c.id === cId), aId);
+        } else {
+            View.showMessage(result);
         }
-        View.renderBaseMenu(Model.state.castles.find(c => c.id === cId), aId);
     },
 
     handleMapClick(e) {
@@ -443,6 +477,7 @@ window.Controller = {
 
     handleMapRightClick(e) {
         e.preventDefault();
+        if (Model.state.strategicTurn !== 'player') return;
 
         const rect = View.canvas.getBoundingClientRect();
         const x = e.clientX - rect.left - View.mapOffsetX;

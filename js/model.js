@@ -39,6 +39,61 @@ window.Model = {
         const a = this.getCubeCoords(r1, c1);
         const b = this.getCubeCoords(r2, c2);
         return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y), Math.abs(a.z - b.z));
+    },
+
+    /**
+     * 部隊雇用
+     * @param {string} armyId - 雇用先の部隊ID
+     * @param {string} unitTypeId - 雇用するユニットの定義ID
+     * @returns {string|true} 成功ならtrue、失敗ならエラーメッセージ
+     */
+    recruitUnit(armyId, unitTypeId) {
+        const faction = this.state.factions.find(f => f.isPlayer);
+        const army = this.state.mapUnits.find(u => u.id === armyId);
+
+        let ut = null;
+        if (faction) {
+            ut = Data.FACTION_UNITS[faction.master.id].find(x => x.id === unitTypeId) || Data.SPECIAL_UNITS[unitTypeId];
+        }
+
+        if (!army || !ut) return "部隊データが見つかりません";
+        if (army.army.length >= Data.MAX_UNITS) return "部隊がいっぱいです";
+        if (faction.gold < ut.cost) return "資金が不足しています";
+
+        faction.gold -= ut.cost;
+        army.army.push({ ...ut, currentHp: ut.hp, rank: 0, xp: 0 });
+        return true;
+    },
+
+    /**
+     * ユニット強化
+     * @param {string} armyId - 部隊ID
+     * @param {number} unitIndex - 部隊内のインデックス
+     * @param {string} type - 'hp' or 'atk'
+     * @returns {string|true} 成功ならtrue、失敗ならエラーメッセージ
+     */
+    enhanceUnit(armyId, unitIndex, type) {
+        const faction = this.state.factions.find(f => f.isPlayer);
+        const army = this.state.mapUnits.find(u => u.id === armyId);
+        if (!army || !faction) return "データエラー";
+
+        const unit = army.army[unitIndex];
+        if (!unit) return "ユニットが見つかりません";
+
+        if (type === 'hp') {
+            if (faction.gold < 100) return "資金が足りません(100G必要)";
+            if (unit.currentHp >= unit.hp) return "HPは既に満タンです";
+            faction.gold -= 100;
+            unit.hp += 10;
+            unit.currentHp += 10;
+            return true;
+        } else if (type === 'atk') {
+            if (faction.gold < 150) return "資金が足りません(150G必要)";
+            faction.gold -= 150;
+            unit.atk += 3;
+            return true;
+        }
+        return "不正な強化タイプです";
     }
 };
 window.Model = Model;
