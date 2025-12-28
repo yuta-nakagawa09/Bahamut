@@ -104,26 +104,16 @@
             class="text-8xl mb-4 font-black tracking-tighter text-gray-200 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] font-cinzel">
             バハムート戦記
         </h1>
-        <p class="text-xl text-gray-500 mb-16 tracking-[0.5em] font-cinzel uppercase border-b-2 border-gray-800 pb-2">
-            大陸戦争の伝説
-        </p>
 
         <div class="flex gap-8 relative z-50">
             <button
                 onclick="console.log('Start Clicked'); if(window.View) View.changeScreen('settings'); else alert('View not loaded');"
-                class="px-16 py-4 bg-red-900/80 hover:bg-red-700 border-2 border-red-500 text-2xl tracking-widest transition-all font-bold shadow-[0_0_20px_rgba(220,38,38,0.5)] hover:scale-105 active:scale-95 text-white cursor-pointer pointer-events-auto">
+                class="px-12 py-3 bg-red-900/80 hover:bg-red-700 border-2 border-red-500 text-2xl tracking-widest transition-all font-bold shadow-[0_0_20px_rgba(220,38,38,0.5)] hover:scale-105 active:scale-95 text-white cursor-pointer pointer-events-auto">
                 新規ゲーム
             </button>
             <button onclick="if(window.Controller) Controller.loadGame(); else alert('Controller not loaded');"
-                class="px-16 py-4 bg-blue-900/80 hover:bg-blue-700 border-2 border-blue-500 text-2xl tracking-widest transition-all font-bold shadow-[0_0_20px_rgba(37,99,235,0.5)] hover:scale-105 active:scale-95 text-white cursor-pointer pointer-events-auto">
-                セーブゲーム
-            </button>
-        </div>
-
-        <div class="mt-12">
-            <button onclick="TestSuite.runAll()"
-                class="text-xs text-gray-700 hover:text-gray-500 border border-gray-800 px-2 py-1">
-                システムテスト
+                class="px-12 py-3 bg-blue-900/80 hover:bg-blue-700 border-2 border-blue-500 text-2xl tracking-widest transition-all font-bold shadow-[0_0_20px_rgba(37,99,235,0.5)] hover:scale-105 active:scale-95 text-white cursor-pointer pointer-events-auto">
+                ロードゲーム
             </button>
         </div>
     </div>
@@ -161,20 +151,20 @@
             class="bg-gray-900 border-b border-gray-700 p-2 flex justify-between items-start h-20 shrink-0 z-50 shadow-xl relative">
             <div class="flex items-center gap-6 h-full px-4">
                 <div class="flex gap-10">
-                    <div class="flex flex-col">
-                        <div class="text-[10px] text-blue-500 uppercase font-black tracking-widest mb-1">支配拠点数</div>
-                        <div id="castle-count-display" class="text-2xl text-white font-mono font-bold leading-none">0/0
+                    <div class="flex flex-col items-center">
+                        <div class="text-2xl text-blue-500 uppercase font-black tracking-widest mb-1">拠点数</div>
+                        <div id="castle-count-display" class="text-3xl text-white font-mono font-bold leading-none">0/0
                         </div>
                     </div>
-                    <div class="flex flex-col">
-                        <div class="text-[10px] text-green-500 uppercase font-black tracking-widest mb-1">展開部隊数</div>
-                        <div id="army-total-display" class="text-2xl text-white font-mono font-bold leading-none">0/0
+                    <div class="flex flex-col items-center">
+                        <div class="text-2xl text-green-500 uppercase font-black tracking-widest mb-1">部隊数</div>
+                        <div id="army-total-display" class="text-3xl text-white font-mono font-bold leading-none">0/0
                         </div>
                     </div>
-                    <div class="flex flex-col">
-                        <div class="text-[10px] text-yellow-500 uppercase font-black tracking-widest mb-1">国庫資金</div>
+                    <div class="flex flex-col items-center">
+                        <div class="text-2xl text-yellow-500 uppercase font-black tracking-widest mb-1">資金</div>
                         <div id="gold-amount"
-                            class="text-2xl text-yellow-400 font-mono font-black leading-none text-white">500G</div>
+                            class="text-3xl text-yellow-400 font-mono font-black leading-none text-white">500G</div>
                     </div>
                 </div>
             </div>
@@ -182,7 +172,7 @@
             <!-- Turn Indicator -->
             <div id="turn-indicator"
                 class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
-                <div id="turn-display" class="text-xs text-yellow-600 font-black uppercase tracking-[0.3em] mb-1">
+                <div id="turn-display" class="text-2xl text-yellow-600 font-black uppercase tracking-[0.3em] mb-1">
                     第1ターン
                 </div>
                 <p id="turn-text-map"
@@ -194,9 +184,9 @@
             <!-- System Menu -->
             <div id="save-load-group" class="flex gap-4 items-center px-4 h-full">
                 <button onclick="Controller.saveGame()"
-                    class="px-6 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-xs font-bold transition-all text-white relative z-50 pointer-events-auto">クイックセーブ</button>
+                    class="px-10 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-xl font-bold transition-all text-white relative z-50 pointer-events-auto rounded-lg">セーブ</button>
                 <button onclick="Controller.loadGame()"
-                    class="px-6 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-xs font-bold transition-all text-white relative z-50 pointer-events-auto">クイックロード</button>
+                    class="px-10 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-xl font-bold transition-all text-white relative z-50 pointer-events-auto rounded-lg">ロード</button>
             </div>
         </header>
 
@@ -211,7 +201,6 @@
                     class="absolute top-4 left-4 bottom-4 w-[675px] max-w-[98vw] bg-gray-900/90 border-2 border-gray-700 flex flex-col shrink-0 z-50 overflow-hidden rounded-xl shadow-2xl backdrop-blur-sm hidden">
                     <div class="p-4 bg-black/60 border-b border-gray-800 flex justify-between items-center shrink-0">
                         <div class="flex flex-col">
-                            <div class="text-[10px] text-gray-400 uppercase font-black tracking-[0.2em]">戦域戦略情報パネル</div>
                             <h2 id="base-menu-title"
                                 class="text-2xl text-yellow-500 font-black tracking-tighter uppercase leading-tight">
                                 拠点を選択してください
@@ -223,13 +212,11 @@
 
                     <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4 custom-scrollbar">
                         <button id="btn-create-army"
-                            class="w-full py-3 bg-purple-900 hover:bg-purple-700 border border-purple-400 text-lg font-black uppercase tracking-widest shadow-lg transition-all transform active:scale-95 disabled:opacity-30 disabled:grayscale text-white rounded relative z-50 pointer-events-auto">
-                            新規部隊を展開
+                            class="w-full py-2 bg-purple-900 hover:bg-purple-700 border border-purple-400 text-lg font-black uppercase tracking-widest shadow-lg transition-all transform active:scale-95 disabled:opacity-30 disabled:grayscale text-white rounded-lg relative z-50 pointer-events-auto">
+                            新規部隊追加
                         </button>
 
-                        <div class="h-px bg-gray-700/50 w-full my-1"></div>
-
-                        <h3 class="text-[10px] text-gray-500 uppercase font-black tracking-[0.3em]">駐留中の部隊一覧</h3>
+                        <p class="text-xl text-gray-400 mb-2 font-bold uppercase tracking-widest text-center">駐留部隊一覧</p>
                         <div id="base-menu-content" class="flex flex-col gap-3"></div>
                         <div id="no-unit-message"
                             class="py-12 text-center border-2 border-dashed border-gray-800 rounded-lg text-gray-600 text-xs font-black uppercase tracking-widest italic">
@@ -244,7 +231,7 @@
                 class="w-48 bg-gray-950 border-l border-gray-800 flex flex-col justify-start items-center pt-4 z-[55] shadow-xl">
                 <button id="btn-end-strategic-turn" onclick="Controller.endStrategicTurn()"
                     class="w-40 py-4 bg-gradient-to-b from-red-800 to-red-950 hover:from-red-700 hover:to-red-900 border-2 border-red-600 text-white font-black uppercase tracking-widest shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all transform active:scale-95 rounded-lg flex flex-col items-center gap-2 hidden group relative z-50 pointer-events-auto">
-                    <span class="text-sm writing-vertical-rl">ターン<br>終了</span>
+                    <span class="text-xl writing-vertical-rl">ターン終了</span>
                 </button>
             </aside>
         </div>
@@ -254,15 +241,13 @@
             class="h-16 bg-gray-950 border-t-2 border-gray-700 flex items-center justify-between px-8 shrink-0 z-[60]">
             <div class="flex items-center gap-6">
                 <div
-                    class="p-2 bg-yellow-900/10 border border-yellow-900/30 rounded text-yellow-700 text-[10px] font-black uppercase">
-                    作戦名：大陸統一作戦
+                    class="p-2 bg-yellow-900/10 border border-yellow-900/30 rounded text-yellow-700 text-xlfont-black uppercase">
+                    バハムート戦記
                 </div>
                 <div class="text-gray-700 text-[10px] font-bold uppercase tracking-widest">
-                    状況：作戦行動中
                 </div>
             </div>
             <div class="text-gray-700 text-[8px] font-bold uppercase tracking-widest text-right">
-                全ての戦略通信は<br>バハムート・リンクにより暗号化されています
             </div>
         </footer>
     </div>
@@ -294,11 +279,11 @@
     <!-- ENDING SCREEN -->
     <div id="screen-ending"
         class="hidden flex flex-col items-center justify-center h-screen bg-black z-[200] fixed inset-0 pointer-events-auto">
-        <h1 id="ending-title" class="text-8xl font-bold mb-12">ENDING</h1>
+        <h1 id="ending-title" class="text-8xl font-bold mb-12">エンディング</h1>
         <p id="ending-body" class="text-2xl text-gray-400 max-w-2xl text-center leading-loose">...</p>
         <button onclick="location.reload()"
             class="mt-12 px-10 py-4 border border-white text-white hover:bg-white hover:text-black transition-colors relative z-[201] pointer-events-auto cursor-pointer">
-            TITLE
+            タイトルに戻る
         </button>
     </div>
 

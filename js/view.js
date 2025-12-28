@@ -54,22 +54,19 @@ window.UI = {
     UnitListItem: (u, i, enhanceActions = null) => {
         return `
             <div class="bg-gray-800/80 border border-gray-600 rounded p-2 flex items-center gap-3 relative z-50 pointer-events-auto">
-                <div class="text-2xl">${u.emoji}</div>
+                <div class="text-4xl">${u.emoji}</div>
                 <div class="flex-1">
                     <div class="flex justify-between items-baseline mb-1">
-                        <span class="font-bold text-sm">${u.name}</span>
-                        <span class="text-xs text-gray-400">RANK ${Data.RANKS[u.rank || 0]}</span>
+                        <span class="font-bold text-xl">${u.name}</span>
+                        <span class="flex items-center gap-2 text-xl font-mono text-gray-300">
+                            HP:${u.currentHp}/${u.hp} ATK:${u.atk} XP:${u.xp} RANK ${Data.RANKS[u.rank || 0]}</span>
                     </div>
-                    <div class="flex items-center gap-2 text-xs font-mono text-gray-300">
-                        <span>HP:${u.currentHp}/${u.hp}</span>
-                        <span>ATK:${u.atk}</span>
-                    </div>
+                    ${enhanceActions ? `
+                    <div class="flex flex-row gap-2">
+                        <button onclick="${enhanceActions.hp}" class="font-bold bg-green-900 hover:bg-green-700 text-2xs px-2 py-1 rounded border border-green-600 text-green-200 pointer-events-auto">HP+10 (100G)</button>
+                        <button onclick="${enhanceActions.atk}" class="font-bold bg-red-900 hover:bg-red-700 text-2xs px-2 py-1 rounded border border-red-600 text-red-200 pointer-events-auto">ATK+3 (150G)</button>
+                    </div>` : ''}
                 </div>
-                ${enhanceActions ? `
-                <div class="flex flex-col gap-1">
-                    <button onclick="${enhanceActions.hp}" class="bg-green-900 hover:bg-green-700 text-[10px] px-2 py-1 rounded border border-green-600 text-green-200 pointer-events-auto">HP+10 (100G)</button>
-                    <button onclick="${enhanceActions.atk}" class="bg-red-900 hover:bg-red-700 text-[10px] px-2 py-1 rounded border border-red-600 text-red-200 pointer-events-auto">ATK+3 (150G)</button>
-                </div>` : ''}
             </div>`;
     },
 
@@ -80,11 +77,11 @@ window.UI = {
         const max = Data.MAX_UNITS;
 
         const btn = document.createElement('button');
-        btn.className = `flex-shrink-0 w-20 h-24 border-2 rounded-xl flex flex-col items-center justify-center transition-all shadow-lg relative ${isActive ? 'bg-gray-700/80 border-white scale-105 z-10' : 'bg-gray-900/60 border-gray-700 hover:bg-gray-800 opacity-70'} relative z-50 pointer-events-auto`;
+        btn.className = `flex-shrink-0 w-20 h-28 border-2 rounded-xl flex flex-col items-center justify-center transition-all shadow-lg relative ${isActive ? 'bg-gray-700/80 border-white scale-105 z-10' : 'bg-gray-900/60 border-gray-700 hover:bg-gray-800 opacity-70'} relative z-50 pointer-events-auto`;
         btn.innerHTML = `
             <div class="text-3xl mb-1">${unit.emoji}</div>
-            <div class="text-[10px] font-bold uppercase truncate w-full text-center px-1 mb-1" style="color:${color}">${unit.isMaster ? '主軍' : '部隊'}</div>
-            <div class="text-[10px] font-mono font-bold ${count >= max ? 'text-red-400' : 'text-cyan-400'}">${count}/${max}</div>
+            <div class="text-xl font-bold uppercase truncate w-full text-center px-1 mb-1" style="color:${color}">${unit.isMaster ? '主軍' : '部隊'}</div>
+            <div class="text-xl font-mono font-bold ${count >= max ? 'text-red-400' : 'text-cyan-400'}">${count}/${max}</div>
             ${isActive ? '<div class="absolute -bottom-2 text-yellow-500 text-xs">▲</div>' : ''}
         `;
         btn.onclick = onclick;
@@ -94,18 +91,16 @@ window.UI = {
     // ユニット雇用パネル
     RecruitPanel: (options, activeUnit, castle, recruitItemHTML) => {
         return `
-            <div class="bg-black/40 p-4 rounded-xl border border-blue-900/30 mb-6">
-                <p class="text-xl text-blue-400 mb-4 font-bold border-b border-blue-900/50 pb-2 uppercase tracking-widest text-center">ユニット雇用</p>
-                <div class="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto custom-scrollbar p-1">
-                    ${options.map(ut => recruitItemHTML(ut, activeUnit, castle)).join('')}
-                </div>
+            <p class="text-xl text-gray-400 mb-2 font-bold uppercase tracking-widest text-center">ユニット雇用</p>
+            <div class="flex flex-col gap-3">
+                ${options.map(ut => recruitItemHTML(ut, activeUnit, castle)).join('')}
             </div>`;
     },
 
     // ユニットリストパネル
     UnitListPanel: (unit, castle, unitListItemCallback) => {
         return `
-            <p class="text-sm text-gray-400 mb-2 font-bold uppercase tracking-widest text-center">部隊編成・強化</p>
+            <p class="text-xl text-gray-400 mb-2 font-bold uppercase tracking-widest text-center">部隊編成・強化</p>
             <div class="flex flex-col gap-3">
                 ${unit.army.map((u, i) => unitListItemCallback(u, i, castle)).join('')}
             </div>`;
@@ -417,7 +412,7 @@ window.View = {
 
         // 2. タイトル設定（拠点名 + HQ + アクティブ部隊情報）
         const isHQ = Model.state.factions.some(f => f.hqId === castle.id && f.isAlive);
-        let titleHTML = castle.name + (isHQ ? ' <span class="bg-yellow-600 text-white text-sm px-3 py-1 rounded-full align-middle ml-4 border border-yellow-400 font-bold shadow-lg">👑本拠地</span>' : '');
+        let titleHTML = castle.name + (isHQ ? ' <span class="bg-yellow-600 text-white text-xl px-3 py-1 rounded-full align-middle ml-4 border border-yellow-400 font-bold shadow-lg">👑本拠地</span>' : '');
 
         const faction = Model.state.factions.find(f => f.id === castle.owner);
         const color = faction ? faction.color : '#fff';
@@ -427,7 +422,7 @@ window.View = {
         titleHTML += `
                 <span class="ml-6 inline-flex items-center gap-3 align-middle bg-gray-900/50 px-4 py-1 rounded-lg border border-gray-600 shadow-inner">
             <span class="text-3xl">${ownerEmoji}</span>
-                    <span class="text-lg font-bold" style="color:${color}">${ownerName}</span>
+                    <span class="text-2xl font-bold" style="color:${color}">${ownerName}</span>
                 </span>
             `;
 
@@ -491,13 +486,14 @@ window.View = {
                     const canAfford = playerFaction.gold >= ut.cost;
                     const isFull = activeUnit.army.length >= Data.MAX_UNITS;
                     return `
-                        <div onclick="View.showMessage('【${ut.name}】 HP:${ut.hp} / ATK:${ut.atk} / RNG:${ut.range} / MOVE:${ut.move}')" 
-                             class="recruit-item flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/10 cursor-pointer transition-colors relative z-50 pointer-events-auto hover:bg-white/10">
+                        <div class="recruit-item flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/10 cursor-pointer transition-colors relative z-50 pointer-events-auto hover:bg-white/10">
                             <div class="flex items-center gap-3">
                                 <span class="text-4xl shadow-md p-1 bg-black/20 rounded">${ut.emoji}</span>
                                 <div>
-                                    <div class="text-lg font-bold text-white">${ut.name}</div>
-                                    <div class="text-xs text-blue-400 font-bold uppercase">スペック確認</div>
+                                    <div class="text-xl font-bold text-white">${ut.name}
+                                    </div>
+                                    <div class="flex items-center gap-2 text-xl font-mono text-gray-300">
+                                        HP:${ut.hp} / ATK:${ut.atk} / RNG:${ut.range} / MOVE:${ut.move}</div>
                                 </div>
                             </div>
                             <button onclick="event.stopPropagation(); Controller.recruitUnit('${activeUnit.id}', '${ut.id}', '${castle.id}')" 
@@ -530,13 +526,14 @@ window.View = {
         const isFull = unit.army.length >= Data.MAX_UNITS;
         const dis = isFull || !can || castle.owner !== playerFaction.id;
         const lbl = isFull ? "満員" : `${ut.cost}G`;
-        return `<div class="recruit-item flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/10 cursor-pointer transition-colors" 
-            onclick="View.showMessage('【${ut.name}】 HP:${ut.hp} / ATK:${ut.atk} / RNG:${ut.range} / MOVE:${ut.move}')">
+        return `<div class="recruit-item flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/10 cursor-pointer transition-colors>
             <div class="flex items-center gap-6">
                 <span class="text-6xl">${ut.emoji}</span>
                 <div>
-                    <div class="text-3xl font-bold text-white">${ut.name}</div>
-                    <div class="text-sm text-blue-400 font-bold uppercase font-mono">スペックを表示 (Click)</div>
+                    <div class="text-3xl font-bold text-white">${ut.name}
+                    </div>
+                    <div class="flex items-center gap-2 text-xl font-mono text-gray-300">
+                        HP:${ut.hp} / ATK:${ut.atk} / RNG:${ut.range} / MOVE:${ut.move}</div>
                 </div>
             </div>
             <button onclick="event.stopPropagation(); Controller.recruitUnit('${unit.id}', '${ut.id}', '${castle.id}')" 
