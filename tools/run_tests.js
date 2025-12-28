@@ -48,6 +48,8 @@ loadScript('data.js');
 console.log("- Data loaded");
 loadScript('model.js');
 console.log("- Model loaded");
+loadScript('battle.js');
+console.log("- BattleSystem loaded");
 
 // We might want to mock Controller too if we're unit testing logic,
 // but let's try to mock dependencies and load basic Controller methods if needed.

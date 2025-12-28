@@ -27,6 +27,7 @@ window.Controller = {
                 for (let j = i + 1; j < Model.state.mapUnits.length; j++) {
                     const u1 = Model.state.mapUnits[i], u2 = Model.state.mapUnits[j];
                     if (u1.owner !== u2.owner && Math.hypot(u1.x - u2.x, u1.y - u2.y) < 30) {
+                        const attacker = u1.isMoving ? u1 : (u2.isMoving ? u2 : null);
                         u1.isMoving = false; u2.isMoving = false;
 
                         const playerFaction = Model.state.factions.find(f => f.isPlayer);
@@ -35,7 +36,7 @@ window.Controller = {
                             Model.state.battleUnitB = (u1.owner === playerFaction.id) ? u2 : u1;
                             this.startBattle();
                         } else {
-                            this.autoResolveBattle(u1, u2);
+                            BattleSystem.autoResolve(u1, u2, attacker);
                         }
                         return;
                     }
@@ -496,301 +497,31 @@ window.Controller = {
     },
 
     startBattle() {
-        if (this.aiTimer) clearTimeout(this.aiTimer);
-        window.gameState = Model.state;
-        View.changeScreen('battle');
-        this.initBattleGrid();
+        BattleSystem.start();
     },
 
     initBattleGrid() {
-        const cols = 7, rows = 6;
-        Model.state.battle.grid = [];
-        for (let r = 0; r < rows; r++) {
-            for (let c = 0; c < cols; c++) {
-                // DOM要素(el)はView.renderBattleGridCoreで生成される
-                Model.state.battle.grid.push({ r, c, el: null });
-            }
-        }
-
-        // Viewに描画依頼
-        View.renderBattleGridCore(Model.state.battle.grid);
-
-        const pU = Model.state.battleUnitA.army.map((u, i) => ({ ...u, r: 1 + i, c: 0, owner: 'player' }));
-        const eU = Model.state.battleUnitB.army.map((u, i) => ({ ...u, r: 1 + i, c: 6, owner: 'enemy' }));
-
-        Model.state.battle.units = [...pU, ...eU];
-        Model.state.battle.movedUnits = new Set();
-        Model.state.battle.selectedUnit = null;
-        Model.state.battle.tempMoved = false;
-        Model.state.battle.turn = 'player';
-        Model.state.battle.active = true;
-
-        View.updateBattleUI();
+        // Obsolete (Moved to BattleSystem)
     },
 
     // View.jsのdrawHexから呼ばれる
+    // View.jsのdrawHexから呼ばれる
     handleBattleClick(r, c) {
-        console.log(`Battle Click: ${r} (type:${typeof r}), ${c} (type:${typeof c})`);
-        const b = Model.state.battle;
-        console.log(`Turn: ${b.turn}, Active: ${b.active}`);
-
-        if (b.turn !== 'player' || !b.active) return;
-
-        const target = b.units.find(u => u.r === r && u.c === c);
-        console.log('Target unit:', target);
-
-        // 移動後の攻撃または待機
-        if (b.selectedUnit && b.tempMoved) {
-            const s = b.selectedUnit;
-            const d = Model.getHexDist(s.r, s.c, r, c);
-
-            // 敵をクリック：攻撃
-            if (target && target.owner === 'enemy' && d <= s.range) {
-                if (s.range > 1) {
-                    // 遠距離ユニットは移動後に攻撃できない仕様の場合
-                    // View.showMessage("遠距離攻撃は移動前のみ可能です");
-                    // ここでは移動後攻撃可とするか、仕様による
-                    this.battleAttack(s, target);
-                } else {
-                    this.battleAttack(s, target);
-                }
-            } else if (s.r === r && s.c === c) {
-                // 自分自身をクリック：待機
-                b.movedUnits.add(s);
-                b.selectedUnit = null;
-                b.tempMoved = false;
-            } else {
-                // 攻撃範囲外をクリック：移動して待機（行動終了）とする
-                b.movedUnits.add(s);
-                b.selectedUnit = null;
-                b.tempMoved = false;
-                View.showMessage("待機しました");
-            }
-            View.updateBattleUI();
-            return;
-        }
-
-        // 未行動の味方を選択
-        if (target && target.owner === 'player') {
-            if (!b.movedUnits.has(target)) {
-                b.selectedUnit = target;
-                b.tempMoved = false;
-            }
-            View.updateBattleUI();
-            return;
-        }
-
-        // 移動または遠距離攻撃
-        if (b.selectedUnit) {
-            const s = b.selectedUnit, d = Model.getHexDist(s.r, s.c, r, c);
-            if (target && target.owner === 'enemy') {
-                if (d <= s.range) this.battleAttack(s, target);
-            }
-            else if (!target && d <= s.move) {
-                // 移動 (仮移動)
-                // 移動先に誰もいない場合のみ
-                const existing = b.units.find(u => u.r === r && u.c === c);
-                if (!existing) {
-                    s.r = r; s.c = c; b.tempMoved = true;
-                } else {
-                    View.showMessage("そこには移動できません");
-                }
-            }
-            else {
-                b.selectedUnit = null;
-            }
-        }
-        View.updateBattleUI();
-        this.checkBattleEnd();
+        BattleSystem.handleClick(r, c);
     },
 
     // 右クリックなど（必要なら）
+    // 右クリックなど（必要なら）
     handleBattleUnitRightClick(r, c) {
-        // キャンセル処理など
-    },
-
-    battleAttack(atk, def) {
-        // ダメージ計算
-        // 基本: ATK - 0 (防御概念なし) * ランダム要素
-        const dmg = Math.floor(atk.atk * (0.8 + Math.random() * 0.4));
-        def.currentHp -= dmg;
-        View.showMessage(`${atk.name}の攻撃！ ${def.name}に${dmg}ダメージ！`);
-
-        // 攻撃経験値 (とどめ以外でも入る)
-        atk.xp = (atk.xp || 0) + 10;
-        if (atk.xp >= Data.RANK_UP_XP && atk.rank < 5) {
-            atk.rank++; atk.xp = 0; atk.hp += 10; atk.atk += 2; atk.currentHp += 10;
-            View.showMessage(`${atk.name}はランクアップした！`);
-        }
-
-        // 反撃 (射程内なら)
-        const dist = Model.getHexDist(atk.r, atk.c, def.r, def.c);
-        if (def.currentHp > 0 && dist <= def.range) {
-            const counterDmg = Math.floor(def.atk * 0.7 * (0.8 + Math.random() * 0.4));
-            atk.currentHp -= counterDmg;
-            setTimeout(() => View.showMessage(`反撃！ ${atk.name}に${counterDmg}ダメージ！`), 500);
-
-            // 反撃経験値
-            def.xp = (def.xp || 0) + 5;
-            if (def.xp >= Data.RANK_UP_XP && def.rank < 5) {
-                def.rank++; def.xp = 0; def.hp += 10; def.atk += 2; def.currentHp += 10;
-            }
-        }
-
-        // 死亡判定
-        if (def.currentHp <= 0) {
-            Model.state.battle.units = Model.state.battle.units.filter(u => u !== def);
-            // 撃破経験値ボーナス
-            atk.xp = (atk.xp || 0) + 20;
-            if (atk.xp >= Data.RANK_UP_XP && atk.rank < 5) {
-                atk.rank++; atk.xp = 0; atk.hp += 10; atk.atk += 2; atk.currentHp += 10;
-                View.showMessage(`${atk.name}はランクアップした！`);
-            }
-        }
-        if (atk.currentHp <= 0) {
-            Model.state.battle.units = Model.state.battle.units.filter(u => u !== atk);
-        }
-
-        Model.state.battle.movedUnits.add(atk);
-        Model.state.battle.selectedUnit = null;
-        Model.state.battle.tempMoved = false;
-
-        View.updateBattleUI();
-        this.checkBattleEnd();
-    },
-
-    checkBattleEnd() {
-        const pUnits = Model.state.battle.units.filter(u => u.owner === 'player');
-        const eUnits = Model.state.battle.units.filter(u => u.owner === 'enemy');
-
-        if (pUnits.length === 0 || eUnits.length === 0) {
-            Model.state.battle.active = false;
-            // 結果反映
-            if (eUnits.length === 0) {
-                View.showMessage("戦闘勝利！");
-                Model.state.battleUnitB.army = []; // 全滅
-                Model.state.mapUnits = Model.state.mapUnits.filter(u => u !== Model.state.battleUnitB);
-            } else {
-                View.showMessage("戦闘敗北...");
-                Model.state.battleUnitA.army = []; // 全滅
-                Model.state.mapUnits = Model.state.mapUnits.filter(u => u !== Model.state.battleUnitA);
-            }
-
-            // 戦闘結果（経験値、ランク、HPなど）を元のArmyデータに書き戻す
-            // 生存ユニットを再構築する
-            if (Model.state.battleUnitA) {
-                const aliveA = Model.state.battle.units.filter(u => u.owner === 'player');
-                Model.state.battleUnitA.army = aliveA.map(u => {
-                    const { r, c, owner, ...rest } = u;
-                    rest.currentHp = rest.hp; // 全回復
-                    return rest;
-                });
-            }
-            if (Model.state.battleUnitB) {
-                const aliveB = Model.state.battle.units.filter(u => u.owner === 'enemy');
-                Model.state.battleUnitB.army = aliveB.map(u => {
-                    const { r, c, owner, ...rest } = u;
-                    rest.currentHp = rest.hp; // 全回復
-                    return rest;
-                });
-            }
-
-            Model.state.globalBattleCooldown = 150;
-            setTimeout(() => {
-                View.changeScreen('map');
-                // 敵ターン中に戦闘が終わった場合、プレイヤーターンへ移行（復帰）
-                if (Model.state.strategicTurn !== 'player') {
-                    setTimeout(() => this.startPlayerTurn(), 1000);
-                }
-            }, 1500);
-        }
+        // 必要なら BattleSystem に委譲
     },
 
     battleEndTurnOrder() {
-        // ターン終了時に選択解除
-        Model.state.battle.selectedUnit = null;
-        Model.state.battle.tempMoved = false;
-        View.updateBattleUI();
-
-        Model.state.battle.turn = 'enemy';
-        View.showMessage("敵のターン");
-        this.battleEnemyAI();
+        BattleSystem.endTurn();
     },
 
-    battleEnemyAI() {
-        // 簡易AI
-        const aiUnits = Model.state.battle.units.filter(u => u.owner === 'enemy');
-        let delay = 0;
-
-        aiUnits.forEach(u => {
-            setTimeout(() => {
-                if (u.currentHp <= 0) return;
-
-                // ターゲット選定
-                const targets = Model.state.battle.units.filter(t => t.owner === 'player');
-                if (targets.length === 0) return;
-
-                // 1. 攻撃可能な敵がいるか
-                let done = false;
-                for (let t of targets) {
-                    const d = Model.getHexDist(u.r, u.c, t.r, t.c);
-                    if (d <= u.range) {
-                        this.battleAttack(u, t);
-                        done = true;
-                        break;
-                    }
-                }
-
-                if (!done) {
-                    // 2. 移動：一番近い敵へ近づく
-                    const target = targets.reduce((p, c) => Model.getHexDist(u.r, u.c, c.r, c.c) < Model.getHexDist(u.r, u.c, p.r, p.c) ? c : p);
-
-                    let nextR = u.r, nextC = u.c;
-                    if (target.r > u.r) nextR++; else if (target.r < u.r) nextR--;
-                    if (target.c > u.c) nextC++; else if (target.c < u.c) nextC--;
-
-                    // 移動先に誰かいないかチェック
-                    const occupied = Model.state.battle.units.find(unit => unit.r === nextR && unit.c === nextC);
-                    if (!occupied) {
-                        u.r = nextR;
-                        u.c = nextC;
-                    }
-
-                    // 移動後攻撃確認
-                    const d = Model.getHexDist(u.r, u.c, target.r, target.c);
-                    if (d <= u.range) {
-                        this.battleAttack(u, target);
-                    } else {
-                        View.updateBattleUI();
-                    }
-                }
-            }, delay);
-            delay += 1000;
-        });
-
-        setTimeout(() => {
-            Model.state.battle.turn = 'player';
-            Model.state.battle.movedUnits.clear();
-            View.showMessage("自軍ターン");
-            View.updateBattleUI();
-        }, delay + 1000);
-    },
-
-    autoResolveBattle(u1, u2) {
-        // オート戦闘計算
-        let dmg1 = 0, dmg2 = 0;
-        u1.army.forEach(u => dmg1 += u.atk);
-        u2.army.forEach(u => dmg2 += u.atk);
-
-        u1.army.forEach(u => u.currentHp -= Math.floor(dmg2 / u1.army.length * 0.5));
-        u2.army.forEach(u => u.currentHp -= Math.floor(dmg1 / u2.army.length * 0.5));
-
-        u1.army = u1.army.filter(u => u.currentHp > 0);
-        u2.army = u2.army.filter(u => u.currentHp > 0);
-
-        if (u1.army.length === 0) Model.state.mapUnits = Model.state.mapUnits.filter(u => u !== u1);
-        if (u2.army.length === 0) Model.state.mapUnits = Model.state.mapUnits.filter(u => u !== u2);
-    }
+    // Battle Methods moved to BattleSystem.js
+    // battleAttack, checkBattleEnd, battleEnemyAI, autoResolveBattle were removed
 };
 
 /**

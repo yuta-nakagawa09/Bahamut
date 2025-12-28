@@ -114,16 +114,22 @@ window.TestRunner = {
         // --- Controller/Logic Integration Tests ---
 
         await this.test('Logic: Unit Movement Check', () => {
-            // Setup for Controller logic check if possible without UI
-            // Controller functions often depend on View.showMessage, so we might need to Mock View
-            const originalShowMessage = View.showMessage;
-            let lastMessage = "";
-            View.showMessage = (msg) => { lastMessage = msg; };
+            // TODO: Add movement logic test
+        });
 
-            // ... test implementation ...
+        await this.test('Battle: Auto-Resolve Logic', () => {
+            // Mock Units
+            const u1 = { army: [{ atk: 10, currentHp: 20, hp: 20 }, { atk: 10, currentHp: 20, hp: 20 }] };
+            const u2 = { army: [{ atk: 5, currentHp: 30, hp: 30 }] };
 
-            // Restore
-            View.showMessage = originalShowMessage;
+            // u1 total dmg = 20. u2 takes 20/u2.len * 0.5 = 10 dmg -> Survives
+            // u2 total dmg = 5. u1 takes 5/u1.len * 0.5 = 1.25 -> Survives
+
+            BattleSystem.autoResolve(u1, u2);
+
+            // Should be fully healed if survived
+            this.expect(u1.army[0].currentHp).toBe(20);
+            this.expect(u2.army[0].currentHp).toBe(30);
         });
 
         const passed = this.results.filter(r => r.status === 'pass').length;
