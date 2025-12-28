@@ -54,13 +54,13 @@ window.StrategicAI = {
             const current = Model.state.castles.reduce((prev, curr) => Math.hypot(curr.x - enemy.x, curr.y - enemy.y) < Math.hypot(prev.x - enemy.x, prev.y - enemy.y) ? curr : prev);
 
             // 防衛ロジック優先
-            // 本拠地周辺(200px以内)に敵がいるか？
-            const enemiesNearHQ = Model.state.mapUnits.filter(u => u.owner !== faction.id && Math.hypot(u.x - hq.x, u.y - hq.y) < 200);
+            // 本拠地周辺に敵がいるか？
+            const enemiesNearHQ = Model.state.mapUnits.filter(u => u.owner !== faction.id && Math.hypot(u.x - hq.x, u.y - hq.y) < Data.AI.DEFENSE.DIST);
             const alliesAtHQ = Model.state.mapUnits.filter(u => u.owner === faction.id && Math.hypot(u.x - hq.x, u.y - hq.y) < 50);
             const distFromHQ = Math.hypot(enemy.x - hq.x, enemy.y - hq.y);
 
             // 自分が本拠地にいない、かつ 本拠地が危ない(敵がいて味方が少ない)なら戻る
-            if (distFromHQ > 50 && enemiesNearHQ.length > 0 && alliesAtHQ.length < 2) {
+            if (distFromHQ > 50 && enemiesNearHQ.length > 0 && alliesAtHQ.length < Data.AI.DEFENSE.ALLY_THRESHOLD) {
                 enemy.targetX = hq.x;
                 enemy.targetY = hq.y;
                 enemy.isMoving = true;
@@ -69,10 +69,10 @@ window.StrategicAI = {
 
             // 以下、通常の侵攻ロジック
             // 防衛待機: 本拠地にいて特に危機がないなら、確率で待機
-            if (current === hq && alliesAtHQ.length < 2 && Math.random() < 0.7) return;
+            if (current === hq && alliesAtHQ.length < Data.AI.DEFENSE.ALLY_THRESHOLD && Math.random() < 0.7) return;
 
             // 侵攻
-            if (current.neighbors && current.neighbors.length > 0 && Math.random() > 0.3) {
+            if (current.neighbors && current.neighbors.length > 0 && Math.random() > Data.AI.INVADE_CHANCE) {
                 const targets = current.neighbors
                     .map(id => Model.state.castles.find(c => c.id === id))
                     .sort((a, b) => {
@@ -102,7 +102,7 @@ window.StrategicAI = {
         if (hq && currentUnits.length < Data.MAX_ARMIES && faction.gold >= (Data.ARMY_COST + 300)) {
             // isHqOccupied チェックを削除: 重なっても部隊を作成する
             // 資金に余裕があれば積極的に作る
-            const urge = (currentUnits.length === 0) ? 1.0 : (faction.gold > 2000 ? 0.9 : 0.7);
+            const urge = (currentUnits.length === 0) ? Data.AI.RECRUIT_URGE.HIGH : (faction.gold > 2000 ? Data.AI.RECRUIT_URGE.MED : Data.AI.RECRUIT_URGE.LOW);
 
             if (Math.random() < urge) {
                 // 基本ユニット

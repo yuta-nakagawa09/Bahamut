@@ -312,6 +312,47 @@ window.TestRunner = {
             View.showMessage = originalShowMessage;
         });
 
+        await this.test('Battle: Damage and XP Logic', () => {
+            const originalShowMessage = View.showMessage;
+            View.showMessage = () => { };
+
+            // Setup Units
+            const atk = { id: 'u1', name: 'Atk', atk: 100, hp: 100, currentHp: 100, range: 1, xp: 0, rank: 0, r: 0, c: 0, owner: 'player' };
+            const def = { id: 'u2', name: 'Def', atk: 100, hp: 100, currentHp: 100, range: 1, xp: 0, rank: 0, r: 0, c: 1, owner: 'enemy' };
+
+            // Setup mock state
+            Model.state.battle = {
+                units: [atk, def],
+                movedUnits: new Set(),
+                selectedUnit: atk,
+                tempMoved: false,
+                active: true
+            };
+
+            // Mock checkEnd to avoid side effects
+            const originalCheckEnd = BattleSystem.checkEnd;
+            BattleSystem.checkEnd = () => { };
+            const originalUpdateUI = View.updateBattleUI;
+            View.updateBattleUI = () => { };
+
+            BattleSystem.attack(atk, def);
+
+            // Verify XP
+            this.expect(atk.xp).toBe(Data.BATTLE.XP.ATTACK);
+
+            // Verify Damage
+            const dmg = 100 - def.currentHp;
+            const minDmg = Math.floor(100 * Data.BATTLE.DAMAGE_BASE);
+            const maxDmg = Math.floor(100 * (Data.BATTLE.DAMAGE_BASE + Data.BATTLE.DAMAGE_RANDOM));
+            this.expect(dmg >= minDmg).toBe(true);
+            this.expect(dmg <= maxDmg).toBe(true);
+
+            // Restore
+            View.showMessage = originalShowMessage;
+            BattleSystem.checkEnd = originalCheckEnd;
+            View.updateBattleUI = originalUpdateUI;
+        });
+
         const passed = this.results.filter(r => r.status === 'pass').length;
         const duration = (performance.now() - startTime).toFixed(2);
         console.groupEnd();

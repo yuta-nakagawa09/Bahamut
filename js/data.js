@@ -9,6 +9,31 @@ window.Data = {
     RANK_UP_XP: 50,
     RANKS: ['E', 'D', 'C', 'B', 'A', 'S'],
 
+    BATTLE: {
+        GRID_SIZE: 90,
+        DAMAGE_BASE: 0.8,
+        DAMAGE_RANDOM: 0.4,
+        COUNTER_RATE: 0.7,
+        XP: {
+            ATTACK: 10,
+            KILL: 20,
+            COUNTER: 5
+        }
+    },
+
+    AI: {
+        RECRUIT_URGE: {
+            HIGH: 1.0,
+            MED: 0.9,
+            LOW: 0.7
+        },
+        DEFENSE: {
+            DIST: 200,
+            ALLY_THRESHOLD: 2
+        },
+        INVADE_CHANCE: 0.3
+    },
+
     MASTERS: [
         { id: 'knight', name: 'ジーク', alignment: 'LAW', color: '#4466ff', emoji: '🏰', desc: '聖騎士。防御と近接戦闘に優れるバランス型。' },
         { id: 'mage', name: 'アーシェ', alignment: 'NEUTRAL', color: '#44ff66', emoji: '🧝', desc: '女王。遠距離魔法と機動力を持つエルフ軍。' },

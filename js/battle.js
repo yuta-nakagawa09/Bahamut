@@ -111,12 +111,12 @@ window.BattleSystem = {
     attack(atk, def) {
         // ダメージ計算
         // 基本: ATK - 0 (防御概念なし) * ランダム要素
-        const dmg = Math.floor(atk.atk * (0.8 + Math.random() * 0.4));
+        const dmg = Math.floor(atk.atk * (Data.BATTLE.DAMAGE_BASE + Math.random() * Data.BATTLE.DAMAGE_RANDOM));
         def.currentHp -= dmg;
         View.showMessage(`${atk.name}の攻撃！ ${def.name}に${dmg}ダメージ！`);
 
         // 攻撃経験値 (とどめ以外でも入る)
-        atk.xp = (atk.xp || 0) + 10;
+        atk.xp = (atk.xp || 0) + Data.BATTLE.XP.ATTACK;
         if (atk.xp >= Data.RANK_UP_XP && atk.rank < 5) {
             atk.rank++; atk.xp = 0; atk.hp += 10; atk.atk += 2; atk.currentHp += 10;
             View.showMessage(`${atk.name}はランクアップした！`);
@@ -125,12 +125,12 @@ window.BattleSystem = {
         // 反撃 (射程内なら)
         const dist = Model.getHexDist(atk.r, atk.c, def.r, def.c);
         if (def.currentHp > 0 && dist <= def.range) {
-            const counterDmg = Math.floor(def.atk * 0.7 * (0.8 + Math.random() * 0.4));
+            const counterDmg = Math.floor(def.atk * Data.BATTLE.COUNTER_RATE * (Data.BATTLE.DAMAGE_BASE + Math.random() * Data.BATTLE.DAMAGE_RANDOM));
             atk.currentHp -= counterDmg;
             setTimeout(() => View.showMessage(`反撃！ ${atk.name}に${counterDmg}ダメージ！`), 500);
 
             // 反撃経験値
-            def.xp = (def.xp || 0) + 5;
+            def.xp = (def.xp || 0) + Data.BATTLE.XP.COUNTER;
             if (def.xp >= Data.RANK_UP_XP && def.rank < 5) {
                 def.rank++; def.xp = 0; def.hp += 10; def.atk += 2; def.currentHp += 10;
             }
@@ -140,7 +140,7 @@ window.BattleSystem = {
         if (def.currentHp <= 0) {
             Model.state.battle.units = Model.state.battle.units.filter(u => u !== def);
             // 撃破経験値ボーナス
-            atk.xp = (atk.xp || 0) + 20;
+            atk.xp = (atk.xp || 0) + Data.BATTLE.XP.KILL;
             if (atk.xp >= Data.RANK_UP_XP && atk.rank < 5) {
                 atk.rank++; atk.xp = 0; atk.hp += 10; atk.atk += 2; atk.currentHp += 10;
                 View.showMessage(`${atk.name}はランクアップした！`);

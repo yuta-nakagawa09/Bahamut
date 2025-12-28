@@ -671,9 +671,8 @@ window.View = {
             // y = size * 3/2 * r
 
             // 以前のController.initBattleGridのロジック:
-            // const x = c * hexSize + (r % 2 ? hexSize / 2 : 0);
             // const y = r * hexSize * 0.75;
-            const hexSize = 90;
+            const hexSize = Data.BATTLE.GRID_SIZE;
             const px = c * hexSize + (r % 2 ? hexSize / 2 : 0);
             const py = r * hexSize * 0.75;
 
@@ -683,7 +682,7 @@ window.View = {
         });
 
         // コンテナサイズ調整
-        const cols = 7; const rows = 6; const hexSize = 90;
+        const cols = 7; const rows = 6; const hexSize = Data.BATTLE.GRID_SIZE;
         grid.style.width = `${(cols + 0.5) * hexSize}px`;
         grid.style.height = `${(rows * 0.75 + 0.25) * hexSize}px`;
     }
