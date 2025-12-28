@@ -167,12 +167,16 @@ window.BattleSystem = {
             // 結果反映
             if (eUnits.length === 0) {
                 View.showMessage("戦闘勝利！");
-                if (Model.state.battleUnitB) Model.state.battleUnitB.army = []; // 全滅
-                Model.state.mapUnits = Model.state.mapUnits.filter(u => u !== Model.state.battleUnitB);
+                if (Model.state.battleUnitB) {
+                    Model.state.battleUnitB.army = []; // 全滅
+                    Model.state.mapUnits = Model.state.mapUnits.filter(u => u.id !== Model.state.battleUnitB.id);
+                }
             } else {
                 View.showMessage("戦闘敗北...");
-                if (Model.state.battleUnitA) Model.state.battleUnitA.army = []; // 全滅
-                Model.state.mapUnits = Model.state.mapUnits.filter(u => u !== Model.state.battleUnitA);
+                if (Model.state.battleUnitA) {
+                    Model.state.battleUnitA.army = []; // 全滅
+                    Model.state.mapUnits = Model.state.mapUnits.filter(u => u.id !== Model.state.battleUnitA.id);
+                }
             }
 
             // 戦闘結果（経験値、ランク、HPなど）を元のArmyデータに書き戻す

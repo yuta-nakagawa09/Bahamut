@@ -118,6 +118,25 @@ window.View = {
     mapOffsetX: 0,
     mapOffsetY: 0,
 
+    renderMasterSelect() {
+        const container = document.getElementById('master-select-container');
+        if (!container) return;
+
+        container.innerHTML = Data.MASTERS.map(m => {
+            let colorName = 'blue';
+            if (m.id === 'mage') colorName = 'green';
+            if (m.id === 'demon') colorName = 'red';
+
+            return `
+            <div onclick="Controller.createGame('${m.id}')"
+                class="group p-10 border-4 border-gray-700 hover:border-${colorName}-500 transition-all cursor-pointer rounded-2xl bg-gray-800/80 shadow-2xl hover:scale-105 flex flex-col items-center w-[300px] shrink-0 relative z-50 pointer-events-auto">
+                <div class="text-9xl mb-8 transition-transform group-hover:scale-110">${m.emoji}</div>
+                <div class="text-4xl font-bold mb-4 text-white group-hover:text-${colorName}-400">${m.name}</div>
+                <p class="text-center text-gray-400">${m.desc}</p>
+            </div>`;
+        }).join('');
+    },
+
     changeScreen(screenId) {
         document.querySelectorAll('div[id^="screen-"]').forEach(el => el.classList.add('hidden'));
         const target = document.getElementById(`screen-${screenId}`);

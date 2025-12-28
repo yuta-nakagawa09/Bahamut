@@ -62,13 +62,13 @@ window.Model = {
      * @returns {string|true} 成功ならtrue、失敗ならエラーメッセージ
      */
     recruitUnit(armyId, unitTypeId) {
-        const faction = this.state.factions.find(f => f.isPlayer);
         const army = this.state.mapUnits.find(u => u.id === armyId);
+        if (!army) return "部隊データが見つかりません";
 
-        let ut = null;
-        if (faction) {
-            ut = Data.FACTION_UNITS[faction.master.id].find(x => x.id === unitTypeId) || Data.SPECIAL_UNITS[unitTypeId];
-        }
+        const faction = this.state.factions.find(f => f.id === army.owner);
+        if (!faction) return "勢力データが見つかりません";
+
+        let ut = Data.FACTION_UNITS[faction.master.id].find(x => x.id === unitTypeId) || Data.SPECIAL_UNITS[unitTypeId];
 
         if (!army || !ut) return "部隊データが見つかりません";
         if (army.army.length >= Data.MAX_UNITS) return "部隊がいっぱいです";
@@ -87,9 +87,11 @@ window.Model = {
      * @returns {string|true} 成功ならtrue、失敗ならエラーメッセージ
      */
     enhanceUnit(armyId, unitIndex, type) {
-        const faction = this.state.factions.find(f => f.isPlayer);
         const army = this.state.mapUnits.find(u => u.id === armyId);
-        if (!army || !faction) return "データエラー";
+        if (!army) return "部隊データが見つかりません";
+
+        const faction = this.state.factions.find(f => f.id === army.owner);
+        if (!faction) return "勢力データが見つかりません";
 
         const unit = army.army[unitIndex];
         if (!unit) return "ユニットが見つかりません";

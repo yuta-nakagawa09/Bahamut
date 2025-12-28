@@ -4,6 +4,7 @@
 window.Controller = {
     init() {
         setInterval(() => this.updateLogic(), 50);
+        View.renderMasterSelect();
     },
 
     updateLogic() {
@@ -255,105 +256,10 @@ window.Controller = {
         View.clearBaseMenu();
         Model.state.selectedMapUnit = null;
 
-        setTimeout(() => this.enemyTurn(), 1000);
+        setTimeout(() => StrategicAI.runEnemyTurn(), 1000);
     },
 
-    async enemyTurn() {
-        if (Model.state.currentScreen !== 'map') return; // 戦闘中などは中断
-
-        const enemies = Model.state.factions.filter(f => !f.isPlayer && f.isAlive);
-
-        for (const faction of enemies) {
-            View.showMessage(`${faction.name}軍 フェーズ`);
-            this.processFactionAI(faction);
-            // 演出待ち
-            await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-
-        // 全敵の思考・移動完了を待ってプレイヤーターンへ (簡易的にsetTimeout)
-        this.aiTimer = setTimeout(() => {
-            if (Model.state.currentScreen === 'map') this.startPlayerTurn();
-        }, 1000);
-    },
-
-    processFactionAI(faction) {
-        // 収入
-        const income = 100 + Model.state.castles.filter(c => c.owner === faction.id).length * 200;
-        faction.gold += income;
-
-        const hq = Model.state.castles.find(c => c.id === faction.hqId);
-
-        // 0. 新規部隊編成 (Create Army)
-        const myUnits = Model.state.mapUnits.filter(u => u.owner === faction.id); // 現在の部隊リスト
-
-        // 本拠地があり、部隊枠があり、金が十分なら作成
-        if (hq && myUnits.length < Data.MAX_ARMIES && faction.gold >= (Data.ARMY_COST + 300)) {
-            const isHqOccupied = Model.state.mapUnits.some(u => Math.hypot(u.x - hq.x, u.y - hq.y) < 20);
-            // 部隊数が0なら必ず作る、そうでなければ50%
-            const urge = (myUnits.length === 0) ? 1.0 : 0.5;
-
-            if (!isHqOccupied && Math.random() < urge) {
-                // 基本ユニット
-                const ut = Data.FACTION_UNITS[faction.master.id][0];
-                if (faction.gold >= Data.ARMY_COST + ut.cost) {
-                    faction.gold -= (Data.ARMY_COST + ut.cost);
-                    const newUnit = {
-                        id: `e-${faction.id}-${Date.now()}`,
-                        owner: faction.id,
-                        x: hq.x, y: hq.y,
-                        targetX: hq.x, targetY: hq.y,
-                        emoji: ut.emoji,
-                        army: [{ ...ut, currentHp: ut.hp, rank: 0, xp: 0 }],
-                        isMaster: false, hasActed: true, isMoving: false, // 作成ターンは行動終了
-                    };
-                    Model.state.mapUnits.push(newUnit);
-                    View.showMessage(`${faction.name}軍が増援部隊を編成しました`);
-                }
-            }
-        }
-
-        // ユニット行動AI (新規作成ユニットはこのターンの行動対象外=myUnitsに含まれないのでOK)
-        myUnits.forEach(enemy => {
-            enemy.hasActed = false; // ターン開始リセット
-
-            // 1. 回復・補充
-            // 金があるなら確率高めで実行 (300G以上、かつ確率50%〜90%)
-            if (faction.gold >= 300 && enemy.army.length < Data.MAX_UNITS) {
-                const ut = Data.FACTION_UNITS[faction.master.id][0];
-                const chance = (faction.gold > 1000) ? 0.9 : 0.5;
-                if (faction.gold >= ut.cost && Math.random() < chance) {
-                    faction.gold -= ut.cost;
-                    enemy.army.push({ ...ut, currentHp: ut.hp, rank: 0, xp: 0 });
-                }
-            }
-
-            // 2. 移動：一番近い敵拠点または敵ユニットを目指す
-            const current = Model.state.castles.reduce((prev, curr) => Math.hypot(curr.x - enemy.x, curr.y - enemy.y) < Math.hypot(prev.x - enemy.x, prev.y - enemy.y) ? curr : prev);
-            const unitsAtHQ = Model.state.mapUnits.filter(u => Math.hypot(u.x - hq.x, u.y - hq.y) < 20 && u.owner === faction.id);
-
-            // 防衛ロジック: 本拠地が危ないなら戻る
-            if (current === hq && unitsAtHQ.length < 2 && Math.random() < 0.7) return;
-
-            // 侵攻ロジック
-            if (current.neighbors && current.neighbors.length > 0 && Math.random() > 0.3) {
-                const targets = current.neighbors
-                    .map(id => Model.state.castles.find(c => c.id === id))
-                    .sort((a, b) => {
-                        // 優先順位： 敵の拠点 > 中立 > 味方（通過）
-                        const scoreA = (a.owner !== faction.id) ? (a.owner === 'player' ? 2 : 1) : 0;
-                        const scoreB = (b.owner !== faction.id) ? (b.owner === 'player' ? 2 : 1) : 0;
-                        return scoreB - scoreA;
-                    });
-
-                if (targets.length > 0) {
-                    const target = targets[0];
-                    enemy.targetX = target.x;
-                    enemy.targetY = target.y;
-                    enemy.isMoving = true;
-                }
-            }
-        });
-    },
+    // AI Logic moved to ai.js
 
     startPlayerTurn() {
         Model.state.turnCount++;

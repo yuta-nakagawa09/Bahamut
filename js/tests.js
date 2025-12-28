@@ -132,6 +132,186 @@ window.TestRunner = {
             this.expect(u2.army[0].currentHp).toBe(30);
         });
 
+        await this.test('Battle: Auto-Resolve Retreat', () => {
+            // Mock Data for Retreat
+            const factionId = 'mock-faction';
+            const mockCastle = { id: 'c1', owner: factionId, x: 10, y: 10 };
+            const mockFaction = { id: factionId, isPlayer: false };
+
+            // Setup Model State
+            Model.state.factions = [mockFaction];
+            Model.state.castles = [mockCastle];
+
+            // Attacker (at 5,5) -> Attacks Defender (at 6,6)
+            const attacker = {
+                owner: factionId,
+                x: 5, y: 5, targetX: 6, targetY: 6,
+                army: [{ atk: 5, currentHp: 20, hp: 20 }]
+            };
+            const defender = {
+                owner: 'other',
+                x: 6, y: 6,
+                army: [{ atk: 5, currentHp: 20, hp: 20 }]
+            };
+
+            // Draw condition (both survive)
+            BattleSystem.autoResolve(attacker, defender, attacker);
+
+            // Attacker should retreat to nearest castle (10, 10)
+            this.expect(attacker.x).toBe(10);
+            this.expect(attacker.y).toBe(10);
+        });
+
+        await this.test('AI: Unit Recruitment Logic', () => {
+            // Mock a rich faction with no units
+            const fId = 'ai-faction';
+            const mId = 'demon';
+            const faction = { id: fId, gold: 5000, hqId: 'hq1', master: { id: mId }, name: 'AI' };
+            const hq = { id: 'hq1', x: 0, y: 0, owner: fId };
+
+            Model.state.factions = [faction];
+            Model.state.castles = [hq];
+            Model.state.mapUnits = []; // No units -> urge = 1.0 (100%)
+
+            // View.showMessage needs to be mocked to avoid errors
+            const originalShowMessage = View.showMessage;
+            View.showMessage = () => { };
+
+            StrategicAI.processFaction(faction);
+
+            // Should have created a new unit
+            const newUnits = Model.state.mapUnits.filter(u => u.owner === fId);
+            this.expect(newUnits.length).toBeGreaterThan(0);
+
+            // Part 2: Reinforcement Check
+            // Now we have a unit (newUnits[0]). Let's give AI money and see if it recruits more.
+            // We need to ensure recruit check passes (gold > 300, chance check)
+            // Force chance to pass by ensuring Math.random calls in ai.js logic? 
+            // Ideally we mock Math.random, but for now let's just call recruitUnit directly to verify the Model fix works for non-player.
+
+            const army = newUnits[0];
+            const initialSize = army.army.length;
+            const unitTypeId = Data.FACTION_UNITS[mId][0].id; // basic unit
+
+            // Directly call Model.recruitUnit as AI would (verifying the fix works for non-player)
+            const result = Model.recruitUnit(army.id, unitTypeId);
+
+            this.expect(result).toBeTruthy();
+            this.expect(army.army.length).toBe(initialSize + 1);
+
+            // Restore
+            View.showMessage = originalShowMessage;
+        });
+
+        await this.test('AI: Defense Priority Movement', () => {
+            // Mock Setup
+            const fId = 'ai-def';
+            const aiHQ = { id: 'hq-ai', x: 0, y: 0, owner: fId, neighbors: [] }; // HQ at 0,0
+            const otherCastle = { id: 'c-other', x: 1000, y: 1000, owner: 'player', neighbors: [] }; // Far away target
+
+            const aiFaction = { id: fId, gold: 0, hqId: 'hq-ai', master: { id: 'demon' }, name: 'AI Def' };
+
+            // AI Unit is far away (near otherCastle)
+            const aiUnit = {
+                id: 'u-ai', owner: fId, x: 900, y: 900,
+                targetX: 900, targetY: 900,
+                hasActed: true, isMoving: false, army: [{}]
+            };
+
+            // Enemy Unit is threatening HQ (near 0,0)
+            const enemyUnit = {
+                id: 'u-enemy', owner: 'player', x: 50, y: 50, // Within 200px danger zone
+                army: [{}]
+            };
+
+            Model.state.factions = [aiFaction, { id: 'player', isPlayer: true }];
+            Model.state.castles = [aiHQ, otherCastle];
+            Model.state.mapUnits = [aiUnit, enemyUnit];
+
+            // Mock View
+            const originalShowMessage = View.showMessage;
+            View.showMessage = () => { };
+
+            // Run AI
+            StrategicAI.processFaction(aiFaction);
+
+            // Expectation: AI Unit should target HQ (0,0) to defend
+            this.expect(aiUnit.targetX).toBe(aiHQ.x);
+            this.expect(aiUnit.targetY).toBe(aiHQ.y);
+            this.expect(aiUnit.isMoving).toBe(true);
+
+            // Restore
+            View.showMessage = originalShowMessage;
+        });
+
+        await this.test('Battle: Manual Battle Defeat Removal', () => {
+            // Mock Map Units
+            const playerUnit = { id: 'p1', owner: 'player', army: [] };
+            const enemyUnit = { id: 'e1', owner: 'enemy-faction', army: [] };
+
+            Model.state.mapUnits = [playerUnit, enemyUnit]; // Both exist on map initially
+
+            // Mock Battle State
+            Model.state.battleUnitA = playerUnit;
+            Model.state.battleUnitB = enemyUnit;
+
+            // Simulate Battle: Player survives (units list has player), Enemy dead (empty list)
+            Model.state.battle = {
+                active: true,
+                units: [{ owner: 'player', hp: 10, currentHp: 10 }] // Only player remains
+            };
+
+            // Mock View and setTimeout
+            const originalShowMessage = View.showMessage;
+            View.showMessage = () => { };
+            const originalChangeScreen = View.changeScreen;
+            View.changeScreen = () => { };
+
+            // Execute checkEnd
+            BattleSystem.checkEnd();
+
+            // Expectation: Battle inactive, Enemy unit removed from mapUnits
+            this.expect(Model.state.battle.active).toBe(false);
+            const remainingUnits = Model.state.mapUnits.map(u => u.id);
+            this.expect(remainingUnits.includes('p1')).toBe(true);
+            this.expect(remainingUnits.includes('e1')).toBe(false); // Should be removed
+
+            // Restore
+            View.showMessage = originalShowMessage;
+            View.changeScreen = originalChangeScreen;
+        });
+
+        await this.test('View: Master Select Rendering', () => {
+            // Mock View methods that might cause DOM errors
+            const originalShowMessage = View.showMessage;
+            View.showMessage = () => { };
+
+            // Setup DOM container
+            const containerId = 'master-select-container';
+            // In mock DOM, createElement doesn't auto-register to getElementById unless appended
+            let container = document.createElement('div');
+            container.id = containerId;
+            document.body.appendChild(container); // This registers it in pseudoDOM
+
+            // Run Render
+            View.renderMasterSelect();
+
+            // Verify using String check instead of DOM structure check
+            const html = container.innerHTML;
+
+            // Check if all masters are rendered
+            Data.MASTERS.forEach(m => {
+                this.expect(html.includes(m.name)).toBe(true);
+                this.expect(html.includes(m.emoji)).toBe(true);
+                // Check if onclick handler is set correctly in string
+                this.expect(html.includes(`Controller.createGame('${m.id}')`)).toBe(true);
+            });
+
+            // Cleanup
+            container.remove();
+            View.showMessage = originalShowMessage;
+        });
+
         const passed = this.results.filter(r => r.status === 'pass').length;
         const duration = (performance.now() - startTime).toFixed(2);
         console.groupEnd();
@@ -140,9 +320,9 @@ window.TestRunner = {
         console.log(`%cPASS: ${passed}  %cFAIL: ${this.results.length - passed}`, 'color: #4ade80; font-weight: bold;', 'color: #f87171; font-weight: bold;');
 
         if (passed === this.results.length) {
-            View.showMessage(`全テスト通過 (${passed}/${passed})`);
+            console.log(`全テスト通過 (${passed}/${passed})`);
         } else {
-            View.showMessage(`テスト失敗あり (${this.results.length - passed}個)`);
+            console.error(`テスト失敗あり (${this.results.length - passed}個)`);
         }
     }
 };
