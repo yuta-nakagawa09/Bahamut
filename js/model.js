@@ -27,6 +27,12 @@ window.Model = {
         globalBattleCooldown: 0
     },
 
+    /**
+     * オフセット座標からキューブ座標へ変換
+     * @param {number} r - Row (y)
+     * @param {number} c - Col (x)
+     * @returns {{x:number, y:number, z:number}} Cube coordinates
+     */
     getCubeCoords(r, c) {
         const x = c - (r - (r & 1)) / 2;
         const z = r;
@@ -34,6 +40,14 @@ window.Model = {
         return { x, y, z };
     },
 
+    /**
+     * ヘックス間の距離計算
+     * @param {number} r1 - Start Row
+     * @param {number} c1 - Start Col
+     * @param {number} r2 - End Row
+     * @param {number} c2 - End Col
+     * @returns {number} Distance in hex steps
+     */
     getHexDist(r1, c1, r2, c2) {
         if (r1 === undefined || c1 === undefined || r2 === undefined || c2 === undefined) return 999;
         const a = this.getCubeCoords(r1, c1);
