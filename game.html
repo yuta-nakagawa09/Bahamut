@@ -265,21 +265,6 @@
 
                     <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4 custom-scrollbar">
                         <!-- 基本統計 -->
-                        <div id="castle-stat-panel"
-                            class="grid grid-cols-2 gap-2 text-xs font-bold uppercase tracking-widest text-gray-300">
-                        </div>
-
-                        <!-- 資金情報とお金 -->
-                        <div
-                            class="bg-black/40 p-3 border border-gray-700/50 rounded flex justify-between items-center">
-                            <span class="text-[10px] text-gray-500 uppercase font-black">利用可能資金</span>
-                            <span id="menu-gold-display"
-                                class="text-xl text-yellow-400 font-mono font-black italic">0G</span>
-                        </div>
-
-                        <!-- 特殊ユニット -->
-                        <div id="unique-unit-info-panel"
-                            class="p-3 bg-yellow-900/10 border border-yellow-700/20 rounded hidden"></div>
 
                         <!-- アクションバウト -->
                         <button id="btn-create-army"
@@ -799,38 +784,44 @@
                 document.getElementById('base-menu').classList.add('hidden');
                 document.getElementById('base-menu-title').innerText = "拠点を選択してください";
                 document.getElementById('base-menu-content').innerHTML = "";
-                document.getElementById('castle-stat-panel').innerHTML = "";
-                document.getElementById('menu-gold-display').innerText = "0G";
-                document.getElementById('unique-unit-info-panel').classList.add('hidden');
                 document.getElementById('no-unit-message').classList.remove('hidden');
             },
 
-            renderBaseMenu(castle) {
+            renderBaseMenu(castle, targetUnitId = null) {
                 const castleOwner = Model.state.factions.find(f => f.id === castle.owner);
                 const playerFaction = Model.state.factions.find(f => f.isPlayer);
-                const sP = Model.state.mapUnits.filter(u => u.owner === playerFaction.id && Math.hypot(u.x - castle.x, u.y - castle.y) < 45);
-                const sE = Model.state.mapUnits.filter(u => u.owner !== playerFaction.id && Math.hypot(u.x - castle.x, u.y - castle.y) < 45);
 
+                // 1. 部隊情報の取得とアクティブ部隊の決定
+                const allUnits = Model.state.mapUnits.filter(u => Math.hypot(u.x - castle.x, u.y - castle.y) < 45);
+                let activeUnit = null;
+                if (allUnits.length > 0) {
+                    activeUnit = allUnits.find(u => u.id === targetUnitId);
+                    if (!activeUnit) {
+                        if (Model.state.selectedMapUnit && allUnits.includes(Model.state.selectedMapUnit)) {
+                            activeUnit = Model.state.selectedMapUnit;
+                        } else {
+                            activeUnit = allUnits.find(u => u.owner === playerFaction.id) || allUnits[0];
+                        }
+                    }
+                }
+
+                // 2. タイトル設定（拠点名 + HQ + アクティブ部隊情報）
                 const isHQ = Model.state.factions.some(f => f.hqId === castle.id && f.isAlive);
-                document.getElementById('base-menu-title').innerHTML = castle.name + (isHQ ? ' <span class="bg-yellow-600 text-white text-sm px-3 py-1 rounded-full align-middle ml-4 border border-yellow-400 font-bold shadow-lg">👑本拠地</span>' : '');
-                const ownerGold = castleOwner ? Math.floor(castleOwner.gold) : 0;
-                document.getElementById('menu-gold-display').innerText = `${ownerGold}G (${castleOwner ? castleOwner.name : '中立'})`;
+                let titleHTML = castle.name + (isHQ ? ' <span class="bg-yellow-600 text-white text-sm px-3 py-1 rounded-full align-middle ml-4 border border-yellow-400 font-bold shadow-lg">👑本拠地</span>' : '');
 
-                const ownerDisplay = castleOwner ? `<span style="color:${castleOwner.color}">${castleOwner.master.name}</span>` : '<span class="text-gray-500">中立</span>';
-                const ownerType = castle.owner === playerFaction.id ? '（自軍領）' : (castle.owner === 'neutral' ? '' : '（敵対勢力）');
-                const count = Model.state.mapUnits.filter(u => u.owner === castle.owner && Math.hypot(u.x - castle.x, u.y - castle.y) < 45).length;
+                const faction = Model.state.factions.find(f => f.id === castle.owner);
+                const color = faction ? faction.color : '#fff';
+                const ownerName = faction ? faction.master.name : '中立';
+                const ownerEmoji = faction ? faction.master.emoji : '';
 
-                document.getElementById('castle-stat-panel').innerHTML = `
-                    <div>支配勢力: ${ownerDisplay}${ownerType}</div>
-                    <div>駐留部隊数: <span class="text-white">${count}</span></div>
-                `;
+                titleHTML += `
+                        <span class="ml-6 inline-flex items-center gap-3 align-middle bg-gray-900/50 px-4 py-1 rounded-lg border border-gray-600 shadow-inner">
+                    <span class="text-3xl">${ownerEmoji}</span>
+                            <span class="text-lg font-bold" style="color:${color}">${ownerName}</span>
+                        </span>
+                    `;
 
-                const uniquePanel = document.getElementById('unique-unit-info-panel');
-                if (castle.uniqueUnit) {
-                    const u = Model.SPECIAL_UNITS[castle.uniqueUnit];
-                    uniquePanel.classList.remove('hidden');
-                    uniquePanel.innerHTML = `<div class="text-7xl">${u.emoji}</div><div><div class="text-yellow-500 font-bold text-3xl">拠点固有兵: ${u.name}</div><div class="text-xl text-gray-200 mt-2 uppercase font-bold text-white">HP:${u.hp} / ATK:${u.atk} / MOVE:${u.move} / RNG:${u.range} / COST:${u.cost}G</div></div>`;
-                } else { uniquePanel.classList.add('hidden'); }
+                document.getElementById('base-menu-title').innerHTML = titleHTML;
 
                 const createBtn = document.getElementById('btn-create-army');
                 createBtn.disabled = castle.owner !== playerFaction.id || playerFaction.gold < Model.ARMY_COST || Model.state.mapUnits.filter(u => u.owner === playerFaction.id).length >= Model.MAX_ARMIES;
@@ -840,54 +831,86 @@
                 const noMsg = document.getElementById('no-unit-message');
                 menuContent.innerHTML = '';
 
-                if (castle.owner === playerFaction.id) {
-                    if (sP.length > 0) {
-                        noMsg.classList.add('hidden');
-                        sP.forEach(unit => {
-                            const factionUnits = Model.FACTION_UNITS[playerFaction.master.id];
-                            let options = [...factionUnits];
-                            if (castle.uniqueUnit) {
-                                const spec = Model.SPECIAL_UNITS[castle.uniqueUnit];
-                                if (spec) options.push(spec);
-                            }
+                if (allUnits.length === 0) {
+                    noMsg.classList.remove('hidden');
+                    noMsg.innerText = "駐留部隊なし";
+                    return;
+                }
+                noMsg.classList.add('hidden');
 
-                            const recruitHTML = `
-                                <div class="bg-black/50 p-6 rounded-xl border border-blue-900/30 mb-6">
-                                    <p class="text-2xl text-blue-400 mb-6 font-bold border-b border-blue-900/50 pb-2 uppercase tracking-widest text-center">ユニット雇用</p>
-                                    <div class="grid grid-cols-1 gap-4">${options.map(ut => this.recruitItemHTML(ut, unit, castle)).join('')}</div>
-                                </div>`;
+                // 1. 部隊選択タブ
+                const tabContainer = document.createElement('div');
+                tabContainer.className = "flex gap-3 overflow-x-auto pb-2 mb-2 custom-scrollbar";
 
-                            const unitsHTML = `
-                                <p class="text-sm text-gray-400 mb-4 font-bold uppercase tracking-widest text-center">部隊編成・強化</p>
-                                <div class="flex flex-col gap-6">
-                                    ${unit.army.map((u, i) => UI.UnitListItem(u, i, {
-                                hp: `Controller.enhanceUnit('${unit.id}', ${i}, 'hp', '${castle.id}')`,
-                                atk: `Controller.enhanceUnit('${unit.id}', ${i}, 'atk', '${castle.id}')`
-                            })).join('')}
-                                </div>`;
+                allUnits.forEach(u => {
+                    const isActive = (u === activeUnit);
+                    const isPlayerUnit = (u.owner === playerFaction.id);
+                    const faction = Model.state.factions.find(f => f.id === u.owner);
+                    const color = faction ? faction.color : '#aaaaaa';
+                    const count = u.army.length;
+                    const max = Model.MAX_UNITS;
 
-                            const card = document.createElement('div');
-                            card.innerHTML = UI.ArmyCard(unit, true, unit.isMaster ? '主軍' : '別働隊', recruitHTML + unitsHTML);
-                            menuContent.appendChild(card);
-                        });
+                    const btn = document.createElement('button');
+                    // スタイル調整: アクティブ時は明るく強調
+                    btn.className = `flex-shrink-0 w-20 h-24 border-2 rounded-xl flex flex-col items-center justify-center transition-all shadow-lg relative ${isActive ? 'bg-gray-700/80 border-white scale-105 z-10' : 'bg-gray-900/60 border-gray-700 hover:bg-gray-800 opacity-70'}`;
+                    btn.innerHTML = `
+                        <div class="text-3xl mb-1">${u.emoji}</div>
+                        <div class="text-[10px] font-bold uppercase truncate w-full text-center px-1 mb-1" style="color:${color}">${u.isMaster ? '主軍' : '部隊'}</div>
+                        <div class="text-[10px] font-mono font-bold ${count >= max ? 'text-red-400' : 'text-cyan-400'}">${count}/${max}</div>
+                        ${isActive ? '<div class="absolute -bottom-2 text-yellow-500 text-xs">▲</div>' : ''}
+                    `;
+                    btn.onclick = () => {
+                        // 自軍部隊なら選択状態も更新
+                        if (isPlayerUnit) {
+                            Model.state.selectedMapUnit = u;
+                        }
+                        this.renderBaseMenu(castle, u.id);
+                    };
+                    tabContainer.appendChild(btn);
+                });
+                menuContent.appendChild(tabContainer);
+
+                // 2. 詳細表示 (activeUnitの内容)
+                if (activeUnit) {
+                    const isPlayerUnit = (activeUnit.owner === playerFaction.id);
+                    const faction = Model.state.factions.find(f => f.id === activeUnit.owner);
+
+                    let contentHTML = '';
+
+                    if (isPlayerUnit) {
+                        // 自軍: 雇用パネル + 部隊リスト
+                        const factionUnits = Model.FACTION_UNITS[playerFaction.master.id];
+                        let options = [...factionUnits];
+                        if (castle.uniqueUnit) {
+                            const spec = Model.SPECIAL_UNITS[castle.uniqueUnit];
+                            if (spec) options.push(spec);
+                        }
+
+                        const recruitHTML = `
+                            <div class="bg-black/40 p-4 rounded-xl border border-blue-900/30 mb-6">
+                                <p class="text-xl text-blue-400 mb-4 font-bold border-b border-blue-900/50 pb-2 uppercase tracking-widest text-center">ユニット雇用</p>
+                                <div class="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto custom-scrollbar p-1">${options.map(ut => this.recruitItemHTML(ut, activeUnit, castle)).join('')}</div>
+                            </div>`;
+
+                        const unitsHTML = `
+                            <p class="text-sm text-gray-400 mb-2 font-bold uppercase tracking-widest text-center">部隊編成・強化</p>
+                            <div class="flex flex-col gap-3">
+                                ${activeUnit.army.map((u, i) => UI.UnitListItem(u, i, {
+                            hp: `Controller.enhanceUnit('${activeUnit.id}', ${i}, 'hp', '${castle.id}')`,
+                            atk: `Controller.enhanceUnit('${activeUnit.id}', ${i}, 'atk', '${castle.id}')`
+                        })).join('')}
+                            </div>`;
+
+                        contentHTML = recruitHTML + unitsHTML;
                     } else {
-                        noMsg.classList.remove('hidden');
-                        noMsg.innerText = "駐留部隊なし";
+                        // 敵軍: 部隊リストのみ
+                        contentHTML = `<div class="flex flex-col gap-3">${activeUnit.army.map((u, i) => UI.UnitListItem(u, i)).join('')}</div>`;
                     }
-                } else {
-                    if (sE.length > 0) {
-                        noMsg.classList.add('hidden');
-                        sE.forEach(unit => {
-                            const owner = Model.state.factions.find(f => f.id === unit.owner);
-                            const unitsHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">${unit.army.map((u, i) => UI.UnitListItem(u, i)).join('')}</div>`;
-                            const card = document.createElement('div');
-                            card.innerHTML = UI.ArmyCard(unit, false, owner ? owner.name : '敵軍', unitsHTML);
-                            menuContent.appendChild(card);
-                        });
-                    } else {
-                        noMsg.classList.remove('hidden');
-                        noMsg.innerText = "防衛部隊はいません";
-                    }
+
+                    // コンテンツのみ追加 (カードヘッダーなし)
+                    const contentWrapper = document.createElement('div');
+                    contentWrapper.innerHTML = contentHTML;
+                    menuContent.appendChild(contentWrapper);
                 }
             },
 
