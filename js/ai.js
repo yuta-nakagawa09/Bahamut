@@ -119,7 +119,7 @@ window.StrategicAI = {
                         isMaster: false, hasActed: true, isMoving: false, // 作成ターンは行動終了
                     };
                     Model.state.mapUnits.push(newUnit);
-                    View.showMessage(`${faction.name}軍が増援部隊を編成しました`);
+                    View.showMessage(`${faction.name}軍が新規部隊を編成しました`);
                 }
             }
         }

@@ -166,7 +166,7 @@ window.BattleSystem = {
             Model.state.battle.active = false;
             // 結果反映
             if (eUnits.length === 0) {
-                View.showMessage("戦闘勝利！");
+                View.showMessage("戦闘勝利");
                 if (Model.state.battleUnitB) {
                     Model.state.battleUnitB.army = []; // 全滅
                     Model.state.mapUnits = Model.state.mapUnits.filter(u => u.id !== Model.state.battleUnitB.id);

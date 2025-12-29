@@ -177,13 +177,24 @@ window.View = {
 
     renderSettings() {
         const list = document.getElementById('map-select-list');
-        list.innerHTML = Data.MAP_TEMPLATES.map(t => `
-            <div onclick="Controller.selectMapAndNext('${t.id}')" 
-                    class="p-6 border-2 transition-all cursor-pointer rounded-xl ${Model.state.selectedMapId === t.id ? 'border-yellow-500 bg-yellow-900/20' : 'border-gray-700 hover:border-gray-500 bg-black/40'} relative z-50 pointer-events-auto">
-                <div class="text-2xl font-bold mb-2 ${Model.state.selectedMapId === t.id ? 'text-yellow-500' : 'text-white'}">${t.name}</div>
-                <p class="text-sm text-gray-400">${t.desc}</p>
-            </div>
-        `).join('');
+        if (!list) return;
+
+        list.innerHTML = Data.MAP_TEMPLATES.map(t => {
+            // Assign icons based on ID (could be moved to Data later)
+            let emoji = '🗺️';
+            if (t.id === 'islands') emoji = '🏝️';
+            if (t.id === 'ring') emoji = '⭕';
+
+            const isSelected = Model.state.selectedMapId === t.id;
+
+            return `
+            <div onclick="Controller.selectMapAndNext('${t.id}')"
+                class="group p-10 border-4 ${isSelected ? 'border-yellow-500' : 'border-gray-700 hover:border-yellow-500'} transition-all cursor-pointer rounded-2xl bg-gray-800/80 shadow-2xl hover:scale-105 flex flex-col items-center w-[300px] shrink-0 relative z-50 pointer-events-auto">
+                <div class="text-9xl mb-8 transition-transform group-hover:scale-110">${emoji}</div>
+                <div class="text-4xl font-bold mb-4 ${isSelected ? 'text-yellow-400' : 'text-white group-hover:text-yellow-400'}">${t.name}</div>
+                <p class="text-center text-gray-400">${t.desc}</p>
+            </div>`;
+        }).join('');
     },
 
     renderMapFlow() {
@@ -199,7 +210,7 @@ window.View = {
         txt.innerText = text;
         box.style.opacity = '1';
         if (window.msgTimer) clearTimeout(window.msgTimer);
-        window.msgTimer = setTimeout(() => { box.style.opacity = '0'; }, 3500);
+        window.msgTimer = setTimeout(() => { box.style.opacity = '0'; }, 1000);
     },
 
     openModal(title, body, buttons) {
@@ -315,9 +326,9 @@ window.View = {
             }
 
             ctx.fillStyle = 'white';
-            ctx.font = 'bold 16px DotGothic16';
+            ctx.font = 'bold 24px DotGothic16';
             ctx.textAlign = 'center';
-            ctx.fillText(c.name, c.x, c.y + 45);
+            ctx.fillText(c.name, c.x, c.y + 60);
         });
 
         // Units
@@ -346,13 +357,13 @@ window.View = {
                 // 頭上に▼とタイプ
                 ctx.fillStyle = '#FFD700';
                 ctx.textAlign = 'center';
-                ctx.font = '16px monospace';
+                ctx.font = '24px monospace';
                 const yOffset = Math.sin(Date.now() / 200) * 5; // アニメーション
                 ctx.fillText('▼', 0, -50 + yOffset);
 
-                ctx.font = 'bold 12px DotGothic16';
+                ctx.font = '24px DotGothic16';
                 ctx.fillStyle = 'white';
-                ctx.fillText(u.isMaster ? '★主軍' : `部隊 ${Model.state.mapUnits.filter(m => m.owner === u.owner).indexOf(u) + 1}`, 0, -65 + yOffset);
+                ctx.fillText(u.isMaster ? '★主軍' : `部隊 ${Model.state.mapUnits.filter(m => m.owner === u.owner).indexOf(u) + 1}`, 0, -75 + yOffset);
             }
 
             // 本体
@@ -412,23 +423,16 @@ window.View = {
 
         // 2. タイトル設定（拠点名 + HQ + アクティブ部隊情報）
         const isHQ = Model.state.factions.some(f => f.hqId === castle.id && f.isAlive);
-        let titleHTML = castle.name + (isHQ ? ' <span class="bg-yellow-600 text-white text-xl px-3 py-1 rounded-full align-middle ml-4 border border-yellow-400 font-bold shadow-lg">👑本拠地</span>' : '');
-
         const faction = Model.state.factions.find(f => f.id === castle.owner);
         const color = faction ? faction.color : '#fff';
         const ownerName = faction ? faction.master.name : '中立';
         const ownerEmoji = faction ? faction.master.emoji : '';
 
-        titleHTML += `
-                <span class="ml-6 inline-flex items-center gap-3 align-middle bg-gray-900/50 px-4 py-1 rounded-lg border border-gray-600 shadow-inner">
-            <span class="text-3xl">${ownerEmoji}</span>
-                    <span class="text-2xl font-bold" style="color:${color}">${ownerName}</span>
-                </span>
+        let titleHTML = `
+            <span>${castle.name}</span>
+            <span>${isHQ ? '👑本拠地' : ''}</span>
+            <span style="color:${color}">${ownerEmoji}${ownerName}</span>
             `;
-
-        if (activeUnit) {
-            // タイトルへの部隊情報追記は削除 (ユーザー要望)
-        }
         document.getElementById('base-menu-title').innerHTML = titleHTML;
 
         const createBtn = document.getElementById('btn-create-army');
@@ -482,22 +486,44 @@ window.View = {
                     if (spec) options.push(spec);
                 }
 
+
+                // <div class="recruit-item flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/10 cursor-pointer transition-colors relative z-50 pointer-events-auto hover:bg-white/10">
+                // <div class="recruit-item flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/10 cursor-pointer transition-colors relative z-50 pointer-events-auto hover:bg-white/10">
+                //     <div class="flex items-center gap-3">
+                //         <span class="text-4xl shadow-md p-1 bg-black/20 rounded">${ut.emoji}</span>
+                //         <div>
+                //             <div class="text-xl font-bold text-white">${ut.name}
+                //             </div>
+                //             <div class="text-xl font-bold text-white">
+                //                 HP:${ut.hp} / ATK:${ut.atk} / RNG:${ut.range} / MOVE:${ut.move}</div>
+                //         </div>
+                //     </div>
+                //     <button onclick="event.stopPropagation(); Controller.recruitUnit('${activeUnit.id}', '${ut.id}', '${castle.id}')" 
+                //         class="px-5 py-2 min-w-[100px] bg-blue-900 border border-blue-400 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-lg font-bold shadow-md active:translate-y-1 text-white" 
+                //         ${!canAfford || isFull ? 'disabled' : ''}>${isFull ? "満員" : `${ut.cost}G`}</button>
+                // </div>`;
+                // <div class="flex justify-between items-baseline mb-1">
+                //     <span class="font-bold text-xl">${u.name}</span>
+                //     <span class="flex items-center gap-2 text-xl font-mono text-gray-300">
+                //         HP:${u.currentHp}/${u.hp} ATK:${u.atk} XP:${u.xp} RANK ${Data.RANKS[u.rank || 0]}</span>
+                // </div>
+
                 const recruitHTML = UI.RecruitPanel(options, activeUnit, castle, (ut, activeUnit, castle) => {
                     const canAfford = playerFaction.gold >= ut.cost;
                     const isFull = activeUnit.army.length >= Data.MAX_UNITS;
                     return `
-                        <div class="recruit-item flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/10 cursor-pointer transition-colors relative z-50 pointer-events-auto hover:bg-white/10">
+                        <div class="recruit-item flex justify-between items-center bg-white/5 p-1 rounded-lg border border-white/10 pointer-events-auto relative z-50 gap-3">
                             <div class="flex items-center gap-3">
-                                <span class="text-4xl shadow-md p-1 bg-black/20 rounded">${ut.emoji}</span>
-                                <div>
+                                <div class="text-4xl">${ut.emoji}</div>
+                                <div class="flex gap-3">
                                     <div class="text-xl font-bold text-white">${ut.name}
                                     </div>
-                                    <div class="flex items-center gap-2 text-xl font-mono text-gray-300">
+                                    <div class="text-xl text-gray-300">
                                         HP:${ut.hp} / ATK:${ut.atk} / RNG:${ut.range} / MOVE:${ut.move}</div>
                                 </div>
                             </div>
                             <button onclick="event.stopPropagation(); Controller.recruitUnit('${activeUnit.id}', '${ut.id}', '${castle.id}')" 
-                                class="px-5 py-2 min-w-[100px] bg-blue-900 border border-blue-400 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-lg font-bold shadow-md active:translate-y-1 text-white" 
+                                class="px-5 py-1 min-w-[100px] bg-blue-900 border border-blue-400 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-lg font-bold shadow-md active:translate-y-1 text-white rounded-lg" 
                                 ${!canAfford || isFull ? 'disabled' : ''}>${isFull ? "満員" : `${ut.cost}G`}</button>
                         </div>`;
                 });
@@ -520,27 +546,7 @@ window.View = {
         }
     },
 
-    recruitItemHTML(ut, unit, castle) {
-        const playerFaction = Model.state.factions.find(f => f.isPlayer);
-        const can = playerFaction.gold >= ut.cost;
-        const isFull = unit.army.length >= Data.MAX_UNITS;
-        const dis = isFull || !can || castle.owner !== playerFaction.id;
-        const lbl = isFull ? "満員" : `${ut.cost}G`;
-        return `<div class="recruit-item flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/10 cursor-pointer transition-colors>
-            <div class="flex items-center gap-6">
-                <span class="text-6xl">${ut.emoji}</span>
-                <div>
-                    <div class="text-3xl font-bold text-white">${ut.name}
-                    </div>
-                    <div class="flex items-center gap-2 text-xl font-mono text-gray-300">
-                        HP:${ut.hp} / ATK:${ut.atk} / RNG:${ut.range} / MOVE:${ut.move}</div>
-                </div>
-            </div>
-            <button onclick="event.stopPropagation(); Controller.recruitUnit('${unit.id}', '${ut.id}', '${castle.id}')" 
-                class="px-10 py-4 bg-blue-900 border-2 border-blue-400 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-2xl font-bold shadow-2xl active:translate-y-1 text-white" 
-                ${dis ? 'disabled' : ''}>${lbl}</button>
-        </div>`;
-    },
+
 
     // バトル画面関連
     initBattleGrid() {

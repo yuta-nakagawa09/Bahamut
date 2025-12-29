@@ -108,11 +108,11 @@
         <div class="flex gap-8 relative z-50">
             <button
                 onclick="console.log('Start Clicked'); if(window.View) View.changeScreen('settings'); else alert('View not loaded');"
-                class="px-12 py-3 bg-red-900/80 hover:bg-red-700 border-2 border-red-500 text-2xl tracking-widest transition-all font-bold shadow-[0_0_20px_rgba(220,38,38,0.5)] hover:scale-105 active:scale-95 text-white cursor-pointer pointer-events-auto">
+                class="px-12 py-3 bg-red-900/80 hover:bg-red-700 border-2 border-red-500 text-2xl tracking-widest transition-all font-bold shadow-[0_0_20px_rgba(220,38,38,0.5)] hover:scale-105 active:scale-95 text-white cursor-pointer pointer-events-auto rounded-lg">
                 新規ゲーム
             </button>
             <button onclick="if(window.Controller) Controller.loadGame(); else alert('Controller not loaded');"
-                class="px-12 py-3 bg-blue-900/80 hover:bg-blue-700 border-2 border-blue-500 text-2xl tracking-widest transition-all font-bold shadow-[0_0_20px_rgba(37,99,235,0.5)] hover:scale-105 active:scale-95 text-white cursor-pointer pointer-events-auto">
+                class="px-12 py-3 bg-blue-900/80 hover:bg-blue-700 border-2 border-blue-500 text-2xl tracking-widest transition-all font-bold shadow-[0_0_20px_rgba(37,99,235,0.5)] hover:scale-105 active:scale-95 text-white cursor-pointer pointer-events-auto rounded-lg">
                 ロードゲーム
             </button>
         </div>
@@ -120,12 +120,11 @@
 
     <!-- SETTINGS SCREEN (Map Select) -->
     <div id="screen-settings" class="hidden flex flex-col items-center justify-center h-full bg-gray-900 relative z-10">
-        <h2 class="text-4xl mb-12 font-bold text-yellow-500 border-b-2 border-yellow-700 pb-2 px-10">SELECT THEATER</h2>
-        <div class="flex gap-8 mb-12" id="map-flow-list"></div>
-        <!-- Grid for direct selection fallback -->
-        <div class="grid grid-cols-3 gap-6 w-3/4 max-w-4xl" id="map-select-list"></div>
+        <h2 class="text-5xl mb-16 font-black text-white border-b-4 border-white pb-4 px-20 tracking-wider">マップ選択</h2>
+        <!-- Using flex container like master select -->
+        <div id="map-select-list" class="flex gap-10 overflow-x-auto p-10 w-full justify-center"></div>
         <button onclick="View.changeScreen('title')"
-            class="mt-12 text-gray-500 hover:text-white border-b border-transparent hover:border-white transition-all relative z-50 pointer-events-auto">
+            class="mt-12 px-12 py-3 bg-gray-900/80 hover:bg-gray-700 border-2 border-gray-500 text-2xl tracking-widest transition-all font-bold shadow-[0_0_20px_rgba(107,114,128,0.5)] hover:scale-105 active:scale-95 text-white cursor-pointer pointer-events-auto rounded-lg">
             戻る
         </button>
     </div>
@@ -133,13 +132,12 @@
     <!-- MASTER SELECT SCREEN -->
     <div id="screen-master-select"
         class="hidden flex flex-col items-center justify-center h-full bg-gray-900 relative z-10">
-        <h2 class="text-5xl mb-16 font-black text-white border-b-4 border-white pb-4 px-20 tracking-wider">CHOOSE YOUR
-            MASTER</h2>
+        <h2 class="text-5xl mb-16 font-black text-white border-b-4 border-white pb-4 px-20 tracking-wider">マスター選択</h2>
         <div id="master-select-container" class="flex gap-10 overflow-x-auto p-10 w-full justify-center">
             <!-- Masters will be injected here by View.renderMasterSelect() -->
         </div>
         <button onclick="View.changeScreen('title')"
-            class="mt-12 text-gray-500 hover:text-white border-b border-transparent hover:border-white transition-all relative z-50 pointer-events-auto">
+            class="mt-12 px-12 py-3 bg-gray-900/80 hover:bg-gray-700 border-2 border-gray-500 text-2xl tracking-widest transition-all font-bold shadow-[0_0_20px_rgba(107,114,128,0.5)] hover:scale-105 active:scale-95 text-white cursor-pointer pointer-events-auto rounded-lg">
             戻る
         </button>
     </div>
@@ -163,8 +161,7 @@
                     </div>
                     <div class="flex flex-col items-center">
                         <div class="text-2xl text-yellow-500 uppercase font-black tracking-widest mb-1">資金</div>
-                        <div id="gold-amount"
-                            class="text-3xl text-yellow-400 font-mono font-black leading-none text-white">500G</div>
+                        <div id="gold-amount" class="text-3xl text-white font-mono font-bold leading-none">500G</div>
                     </div>
                 </div>
             </div>
@@ -175,10 +172,9 @@
                 <div id="turn-display" class="text-2xl text-yellow-600 font-black uppercase tracking-[0.3em] mb-1">
                     第1ターン
                 </div>
-                <p id="turn-text-map"
-                    class="text-3xl font-black italic uppercase tracking-tighter text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                <div id="turn-text-map" class="text-3xl text-white font-mono font-bold leading-none">
                     自軍フェーズ
-                </p>
+                </div>
             </div>
 
             <!-- System Menu -->
