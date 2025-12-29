@@ -351,7 +351,7 @@ window.View = {
 
         // 1. 部隊選択タブ
         const tabContainer = document.createElement('div');
-        tabContainer.className = "flex gap-3 overflow-x-auto pb-2 mb-2 custom-scrollbar";
+        tabContainer.className = "flex gap-3 pb-1 mb-1";
 
         allUnits.forEach(u => {
             const isActive = (u === activeUnit);
