@@ -98,7 +98,7 @@ window.Model = {
 
         if (type === 'hp') {
             if (faction.gold < 100) return "資金が足りません(100G必要)";
-            if (unit.currentHp >= unit.hp) return "HPは既に満タンです";
+            // if (unit.currentHp >= unit.hp) return "HPは既に満タンです"; // 最大HP強化なので満タンでもOKにする
             faction.gold -= 100;
             unit.hp += 10;
             unit.currentHp += 10;

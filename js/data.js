@@ -51,7 +51,7 @@ window.Data = {
         ],
         'demon': [
             { id: 'imp', name: '小悪魔', emoji: '👿', hp: 28, atk: 18, range: 1, move: 4, cost: 150 },
-            { id: 'dragon', name: '竜', emoji: '🐉', hp: 95, atk: 32, range: 1, move: 6, cost: 1000 }
+            { id: 'dragon', name: '竜', emoji: '🐉', hp: 75, atk: 25, range: 1, move: 6, cost: 1000 }
         ]
     },
 
@@ -95,7 +95,7 @@ window.Data = {
                 { id: 'c4', name: '西の砦', x: 200, y: 200, owner: 'neutral', captureBonus: 400, uniqueUnit: 'dwarf', neighbors: ['c1', 'c6', 'c7'] },
                 { id: 'c5', name: '南東の平原', x: 700, y: 400, owner: 'neutral', captureBonus: 400, uniqueUnit: 'berserker', neighbors: ['c3', 'c2', 'c10'] },
                 { id: 'c6', name: '南西の森', x: 200, y: 400, owner: 'neutral', captureBonus: 400, uniqueUnit: 'fenrir', neighbors: ['c4', 'c2'] },
-                { id: 'c7', name: '中央塔', x: 450, y: 300, owner: 'neutral', captureBonus: 800, uniqueUnit: 'dragon', neighbors: ['c3', 'c4', 'c8', 'c9'] },
+                { id: 'c7', name: '中央塔', x: 450, y: 300, owner: 'neutral', captureBonus: 800, uniqueUnit: 'ancient-dragon', neighbors: ['c3', 'c4', 'c8', 'c9'] },
                 { id: 'c8', name: '北の関門', x: 450, y: 180, owner: 'neutral', captureBonus: 300, uniqueUnit: 'golem', neighbors: ['c1', 'c7'] },
                 { id: 'c9', name: '南の関門', x: 450, y: 420, owner: 'neutral', captureBonus: 300, uniqueUnit: 'golem', neighbors: ['c2', 'c7'] },
                 { id: 'c10', name: '離れ小島', x: 800, y: 500, owner: 'neutral', captureBonus: 500, uniqueUnit: 'griffin', neighbors: ['c5'] }
@@ -113,7 +113,17 @@ window.Data = {
         'pirate': { id: 'pirate', name: '海賊', emoji: '🏴‍☠️', hp: 50, atk: 24, range: 1, move: 4, cost: 450, origin: '諸島/港' },
         'dwarf': { id: 'dwarf', name: 'ドワーフ兵', emoji: '⚒️', hp: 70, atk: 26, range: 1, move: 2, cost: 600, origin: '西の砦' },
         'berserker': { id: 'berserker', name: '狂戦士', emoji: '🪓', hp: 45, atk: 35, range: 1, move: 4, cost: 700, origin: '東の平原' },
-        'fenrir': { id: 'fenrir', name: '魔狼', emoji: '🐺', hp: 55, atk: 24, range: 1, move: 6, cost: 650, origin: '南西の森' }
+        'fenrir': { id: 'fenrir', name: '魔狼', emoji: '🐺', hp: 55, atk: 24, range: 1, move: 6, cost: 650, origin: '南西の森' },
+        'ninja': { id: 'ninja', name: '忍者', emoji: '🥷', hp: 35, atk: 25, range: 2, move: 5, cost: 700, origin: '隠れ里' },
+        'witch': { id: 'witch', name: '魔女', emoji: '🧙‍♀️', hp: 30, atk: 26, range: 3, move: 3, cost: 650, origin: '魔法の泉' },
+        'skeleton': { id: 'skeleton', name: '骸骨兵', emoji: '💀', hp: 30, atk: 15, range: 1, move: 2, cost: 150, origin: '忘却の地' },
+        'siren': { id: 'siren', name: 'セイレーン', emoji: '🧜‍♀️', hp: 40, atk: 20, range: 2, move: 4, cost: 500, origin: '北の岩礁' },
+        'merman': { id: 'merman', name: 'マーマン', emoji: '🧜‍♂️', hp: 50, atk: 22, range: 1, move: 4, cost: 450, origin: '南珊瑚' },
+        'kraken': { id: 'kraken', name: 'クラーケン', emoji: '🦑', hp: 120, atk: 35, range: 2, move: 2, cost: 1500, origin: '海底神殿' },
+        'thief': { id: 'thief', name: '盗賊', emoji: '🦹', hp: 30, atk: 18, range: 1, move: 5, cost: 300, origin: '商人の島' },
+        'ancient-dragon': { id: 'ancient-dragon', name: '古竜', emoji: '🐲', hp: 150, atk: 40, range: 2, move: 4, cost: 2000, origin: '中央塔' },
+        'golem': { id: 'golem', name: 'ゴーレム', emoji: '🗿', hp: 100, atk: 30, range: 1, move: 2, cost: 900, origin: '関門' },
+        'griffin': { id: 'griffin', name: 'グリフォン', emoji: '🦅', hp: 70, atk: 28, range: 1, move: 6, cost: 850, origin: '離れ小島' }
     }
 };
 window.Data = Data;

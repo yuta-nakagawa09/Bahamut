@@ -69,8 +69,20 @@ window.Controller = {
                         const defeatedFaction = Model.state.factions.find(fac => fac.hqId === c.id);
                         if (defeatedFaction && defeatedFaction.isAlive) {
                             defeatedFaction.isAlive = false;
+
+                            // ユニット消滅
                             Model.state.mapUnits = Model.state.mapUnits.filter(mu => mu.owner !== defeatedFaction.id);
-                            if (f.isPlayer) View.showMessage(`${defeatedFaction.name} を滅ぼした！`);
+
+                            // 拠点併合
+                            Model.state.castles.forEach(castle => {
+                                if (castle.owner === defeatedFaction.id) {
+                                    castle.owner = u.owner;
+                                }
+                            });
+
+                            View.openModal("勢力滅亡", `${defeatedFaction.name} は ${f.name} によって滅ぼされました。\n残存拠点は全て ${f.name} に併合されました。`, [
+                                { label: "確認", action: () => { } }
+                            ]);
                         }
                     }
                 }
