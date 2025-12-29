@@ -11,20 +11,18 @@ window.StrategicAI = {
 
         for (const faction of enemies) {
             View.showMessage(`${faction.name}軍 フェーズ`);
-            this.processFaction(faction);
+            await this.processFaction(faction);
             // 演出待ち
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
 
-        // 全敵の思考・移動完了を待ってプレイヤーターンへ (簡易的にsetTimeout)
-        this.aiTimer = setTimeout(() => {
-            if (Model.state.currentScreen === 'map' && window.Controller) {
-                Controller.startPlayerTurn();
-            }
-        }, 1000);
+        View.showMessage("自軍ターン");
+        if (Model.state.currentScreen === 'map' && window.Controller) {
+            Controller.startPlayerTurn();
+        }
     },
 
-    processFaction(faction) {
+    async processFaction(faction) {
         // 収入
         const castleIncome = Model.state.castles.filter(c => c.owner === faction.id).reduce((sum, c) => sum + (c.income || 0), 0);
         const income = 100 + castleIncome;
@@ -35,8 +33,11 @@ window.StrategicAI = {
         // ここを先に実行することで、新規部隊作成よりも部隊強化を優先させる
         const myUnitsSnapshot = Model.state.mapUnits.filter(u => u.owner === faction.id);
 
-        myUnitsSnapshot.forEach(enemy => {
+        for (const enemy of myUnitsSnapshot) {
             enemy.hasActed = false; // ターン開始リセット
+
+            // 死んでるユニットはスキップ
+            if (!Model.state.mapUnits.includes(enemy)) continue;
 
             // 1-1. 回復・補充
             // 金があるなら確率高めで実行 (300G以上、かつ確率50%〜90%)
@@ -65,12 +66,13 @@ window.StrategicAI = {
                 enemy.targetX = hq.x;
                 enemy.targetY = hq.y;
                 enemy.isMoving = true;
-                return;
+                await this.waitForAction(enemy);
+                continue;
             }
 
             // 以下、通常の侵攻ロジック
             // 防衛待機: 本拠地にいて特に危機がないなら、確率で待機
-            if (current === hq && alliesAtHQ.length < Data.AI.DEFENSE.ALLY_THRESHOLD && Math.random() < 0.7) return;
+            // if (current === hq && alliesAtHQ.length < Data.AI.DEFENSE.ALLY_THRESHOLD && Math.random() < 0.7) continue;
 
             // 侵攻
             if (current.neighbors && current.neighbors.length > 0 && Math.random() > Data.AI.INVADE_CHANCE) {
@@ -88,9 +90,10 @@ window.StrategicAI = {
                     enemy.targetX = target.x;
                     enemy.targetY = target.y;
                     enemy.isMoving = true;
+                    await this.waitForAction(enemy);
                 }
             }
-        });
+        }
 
         // 2. 新規部隊編成 (Create Army)
         // 既存部隊の行動（特に補充）で資金が使われた後に行う
@@ -99,30 +102,65 @@ window.StrategicAI = {
         // 一応最新の状態を取得。
         const currentUnits = Model.state.mapUnits.filter(u => u.owner === faction.id);
 
-        // 本拠地があり、部隊枠があり、金が十分なら作成
-        if (hq && currentUnits.length < Data.MAX_ARMIES && faction.gold >= (Data.ARMY_COST + 300)) {
-            // isHqOccupied チェックを削除: 重なっても部隊を作成する
-            // 資金に余裕があれば積極的に作る
-            const urge = (currentUnits.length === 0) ? Data.AI.RECRUIT_URGE.HIGH : (faction.gold > 2000 ? Data.AI.RECRUIT_URGE.MED : Data.AI.RECRUIT_URGE.LOW);
+        // 最大部隊数制限 (MAX_ARMIES)
+        if (currentUnits.length < Data.MAX_ARMIES && faction.gold >= Data.ARMY_COST) {
+            // 本拠地または所有拠点に空きがあるか確認
+            const spawnPoints = Model.state.castles
+                .filter(c => c.owner === faction.id)
+                .filter(c => !Model.state.mapUnits.some(u => Math.hypot(u.x - c.x, u.y - c.y) < Data.UI.CASTLE_DETECT_RADIUS));
 
-            if (Math.random() < urge) {
-                // 基本ユニット
-                const ut = Data.FACTION_UNITS[faction.master.id][0];
-                if (faction.gold >= Data.ARMY_COST + ut.cost) {
-                    faction.gold -= (Data.ARMY_COST + ut.cost);
-                    const newUnit = {
-                        id: `e-${faction.id}-${Date.now()}`,
-                        owner: faction.id,
-                        x: hq.x, y: hq.y,
-                        targetX: hq.x, targetY: hq.y,
-                        emoji: ut.emoji,
-                        army: [{ ...ut, currentHp: ut.hp, rank: 0, xp: 0 }],
-                        isMaster: false, hasActed: true, isMoving: false, // 作成ターンは行動終了
-                    };
-                    Model.state.mapUnits.push(newUnit);
-                    View.showMessage(`${faction.name}軍が新規部隊を編成しました`);
+            if (spawnPoints.length > 0) {
+                // 本拠地優先、なければランダム
+                let spawn = spawnPoints.find(c => c.id === faction.hqId);
+                if (!spawn) spawn = spawnPoints[Math.floor(Math.random() * spawnPoints.length)];
+
+                // Controller経由だとUI依存があるので、Modelで直接作成する
+                // Controller.createNewArmy -> Model.createNewArmy
+                const newUnit = Model.createNewArmy(faction.id, spawn.x, spawn.y);
+                if (newUnit) {
+                    // 基本ユニットを1体追加
+                    const basicUnit = Data.FACTION_UNITS[faction.master.id][0];
+                    Model.recruitUnit(newUnit.id, basicUnit.id);
+                    faction.gold -= Data.ARMY_COST;
+                    // 新規部隊はこのターンは行動しない（isMovingセットしない）
                 }
             }
         }
+    },
+
+    // アクション(移動・戦闘)完了待ち
+    async waitForAction(unit) {
+        return new Promise(resolve => {
+            const check = () => {
+                // ユニットが消滅していたら終了
+                if (!Model.state.mapUnits.includes(unit)) {
+                    resolve();
+                    return;
+                }
+
+                // 戦闘中なら戦闘終了まで待つ
+                if (Model.state.battle && Model.state.battle.active) {
+                    // 戦闘が終わるまで polling
+                    if (!Model.state.battle.active) {
+                        // 戦闘終了直後、少しウェイトを入れる
+                        setTimeout(resolve, 500);
+                        return;
+                    }
+                }
+                // 移動中なら完了まで待つ
+                else if (unit.isMoving) {
+                    // まだ移動中
+                }
+                // 移動も戦闘もしていないなら完了
+                else {
+                    resolve();
+                    return;
+                }
+
+                requestAnimationFrame(check);
+            };
+            check();
+        });
     }
 };
+

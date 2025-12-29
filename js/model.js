@@ -110,6 +110,26 @@ window.Model = {
             return true;
         }
         return "不正な強化タイプです";
+    },
+
+    // 新規部隊作成
+    createNewArmy(factionId, x, y) {
+        const faction = this.state.factions.find(f => f.id === factionId);
+        if (!faction) return null;
+
+        const newUnit = {
+            id: `e-${faction.id}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+            owner: faction.id,
+            x: x, y: y,
+            targetX: x, targetY: y,
+            emoji: faction.master.emoji,
+            army: [],
+            isMaster: false,
+            hasActed: true,
+            isMoving: false
+        };
+        this.state.mapUnits.push(newUnit);
+        return newUnit;
     }
 };
 window.Model = Model;

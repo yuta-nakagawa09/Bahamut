@@ -6,6 +6,7 @@
 // 1. Mock Browser Environment
 global.window = global;
 global.performance = { now: () => Date.now() };
+global.requestAnimationFrame = (cb) => setTimeout(cb, 16);
 
 // Basic DOM Mock for Testing View logic
 const pseudoDOM = {};
