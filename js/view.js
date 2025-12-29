@@ -205,7 +205,7 @@ window.View = {
         txt.innerText = text;
         box.style.opacity = '1';
         if (window.msgTimer) clearTimeout(window.msgTimer);
-        window.msgTimer = setTimeout(() => { box.style.opacity = '0'; }, 1000);
+        window.msgTimer = setTimeout(() => { box.style.opacity = '0'; }, 3000);
     },
 
     openModal(title, body, buttons) {
@@ -489,10 +489,7 @@ window.View = {
                     if (spec) options.push(spec);
                 }
 
-                if (castle.uniqueUnit) {
-                    const spec = Data.SPECIAL_UNITS[castle.uniqueUnit];
-                    if (spec) options.push(spec);
-                }
+
 
                 const recruitHTML = UI.RecruitPanel(options, activeUnit, castle, (ut, activeUnit, castle) => {
                     const canAfford = playerFaction.gold >= ut.cost;

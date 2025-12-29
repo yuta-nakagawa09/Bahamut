@@ -239,18 +239,12 @@
             </aside>
         </div>
 
-        <!-- FOOTER -->
-        <footer
-            class="h-16 bg-gray-950 border-t-2 border-gray-700 flex items-center justify-between px-8 shrink-0 z-[60]">
-            <div class="flex items-center gap-6">
-                <div
-                    class="p-2 bg-yellow-900/10 border border-yellow-900/30 rounded text-yellow-700 text-xlfont-black uppercase">
-                    バハムート戦記
+        <footer class="h-16 bg-gray-950 border-t-2 border-gray-700 flex items-center px-8 shrink-0 z-[60]">
+            <div id="message-box" class="opacity-0 transition-opacity duration-300 flex items-center">
+                <div class="text-white">
+                    <span class="text-yellow-500 mr-2">▶</span>
+                    <span id="message-text" class="text-lg font-bold tracking-widest font-mono">Message</span>
                 </div>
-                <div class="text-gray-700 text-[10px] font-bold uppercase tracking-widest">
-                </div>
-            </div>
-            <div class="text-gray-700 text-[8px] font-bold uppercase tracking-widest text-right">
             </div>
         </footer>
     </div>
@@ -290,13 +284,7 @@
         </button>
     </div>
 
-    <!-- Message Overlay -->
-    <div id="message-box"
-        class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-0 transition-opacity duration-300 z-[9000]">
-        <div class="bg-black/80 border-l-4 border-yellow-500 text-white px-8 py-4 rounded-r shadow-2xl backdrop-blur">
-            <span id="message-text" class="text-xl font-bold tracking-widest">Message</span>
-        </div>
-    </div>
+
 
     <!-- Modal Layer -->
     <div id="modal-layer"
