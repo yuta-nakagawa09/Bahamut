@@ -1,111 +1,7 @@
 /**
  * VIEW: 表示制御
  */
-window.UI = {
-    // 基本的なボタンスタイル
-    Button: (label, onclick, type = 'primary', extraClass = '') => {
-        const base = "px-10 py-4 border-2 transition-all font-bold shadow-xl hover:scale-105 active:translate-y-1 text-white disabled:opacity-50 disabled:cursor-not-allowed";
-        const types = {
-            primary: "bg-red-900 hover:bg-red-700 border-white text-3xl",
-            secondary: "bg-blue-900 hover:bg-blue-700 border-white text-2xl",
-            neutral: "bg-gray-900 hover:bg-gray-700 border-gray-500 text-xl",
-            battle: "bg-blue-800 hover:bg-blue-600 border-white text-2xl rounded-lg",
-            action: "bg-purple-900 hover:bg-purple-700 border-purple-400 text-xl",
-            menu: "bg-green-900 hover:bg-green-700 border-white text-lg"
-        };
-        return `<button onclick="${onclick}" class="${base} ${types[type]} ${extraClass}">${label}</button>`;
-    },
-
-    // 選択用カード（マップ用・マスター用共通）
-    Card: (title, desc, icon, onclick, subtext = '', extraClass = '') => {
-        return `
-            <div onclick="${onclick}" 
-                 class="group p-10 border-4 border-gray-700 hover:border-yellow-500 transition-all cursor-pointer rounded-2xl bg-gray-900/80 shadow-2xl hover:scale-105 flex flex-col items-center w-[400px] shrink-0 relative z-50 pointer-events-auto ${extraClass}">
-                ${icon ? `<div class="text-9xl mb-8 transition-transform group-hover:scale-110">${icon}</div>` : ''}
-                <div class="text-4xl font-bold mb-4 text-white text-center group-hover:text-yellow-500 transition-colors">${title}</div>
-                <p class="text-xl text-gray-400 text-center leading-relaxed mb-6">${desc}</p>
-                ${subtext ? `<div class="text-yellow-500 font-bold uppercase tracking-widest text-sm animate-pulse">${subtext}</div>` : ''}
-            </div>`;
-    },
-
-    // 各種パネル
-    Panel: (content, extraClass = '') => {
-        return `<div class="bg-gray-800/80 border-2 border-gray-700 p-8 rounded-2xl shadow-2xl mb-4 text-white ${extraClass}">${content}</div>`;
-    },
-
-    // 部隊カード (BaseMenu内などで使用)
-    ArmyCard: (unit, isPlayer, factionName, extraContent = '') => {
-        const colorClass = isPlayer ? 'text-blue-300' : 'text-red-400';
-        const bgClass = isPlayer ? 'bg-gray-800/80 border-gray-700' : 'bg-red-900/20 border-red-700/50';
-        return `
-            <div class="${bgClass} border-2 p-8 rounded-2xl shadow-2xl mb-4 text-white">
-                <div class="flex justify-between items-center mb-8 border-b border-gray-600 pb-4">
-                    <div class="flex items-center gap-6">
-                        <span class="text-6xl">${unit.emoji}</span>
-                        <span class="text-3xl font-bold ${colorClass}">${factionName}</span>
-                    </div>
-                    <span class="text-xl font-bold font-mono">構成: ${unit.army.length} / ${Data.MAX_UNITS}</span>
-                </div>
-                ${extraContent}
-            </div>`;
-    },
-
-    // ユニット詳細行
-    UnitListItem: (u, i, enhanceActions = null) => {
-        return `
-            <div class="bg-gray-800/80 border border-gray-600 rounded p-2 flex items-center gap-3 relative z-50 pointer-events-auto">
-                <div class="text-4xl">${u.emoji}</div>
-                <div class="flex-1">
-                    <div class="flex justify-between items-baseline mb-1">
-                        <span class="font-bold text-xl">${u.name}</span>
-                        <span class="flex items-center gap-2 text-xl font-mono text-gray-300">
-                            HP:${u.currentHp}/${u.hp} ATK:${u.atk} XP:${u.xp} RANK ${Data.RANKS[u.rank || 0]}</span>
-                    </div>
-                    ${enhanceActions ? `
-                    <div class="flex flex-row gap-2">
-                        <button onclick="${enhanceActions.hp}" class="font-bold bg-green-900 hover:bg-green-700 text-2xs px-2 py-1 rounded border border-green-600 text-green-200 pointer-events-auto">HP+10 (100G)</button>
-                        <button onclick="${enhanceActions.atk}" class="font-bold bg-red-900 hover:bg-red-700 text-2xs px-2 py-1 rounded border border-red-600 text-red-200 pointer-events-auto">ATK+3 (150G)</button>
-                    </div>` : ''}
-                </div>
-            </div>`;
-    },
-
-    // 部隊選択タブボタン (Elementを返す)
-    createTabButton: (unit, isActive, faction, onclick) => {
-        const color = faction ? faction.color : '#aaaaaa';
-        const count = unit.army.length;
-        const max = Data.MAX_UNITS;
-
-        const btn = document.createElement('button');
-        btn.className = `flex-shrink-0 w-20 h-28 border-2 rounded-xl flex flex-col items-center justify-center transition-all shadow-lg relative ${isActive ? 'bg-gray-700/80 border-white scale-105 z-10' : 'bg-gray-900/60 border-gray-700 hover:bg-gray-800 opacity-70'} relative z-50 pointer-events-auto`;
-        btn.innerHTML = `
-            <div class="text-3xl mb-1">${unit.emoji}</div>
-            <div class="text-xl font-bold uppercase truncate w-full text-center px-1 mb-1" style="color:${color}">${unit.isMaster ? '主軍' : '部隊'}</div>
-            <div class="text-xl font-mono font-bold ${count >= max ? 'text-red-400' : 'text-cyan-400'}">${count}/${max}</div>
-            ${isActive ? '<div class="absolute -bottom-2 text-yellow-500 text-xs">▲</div>' : ''}
-        `;
-        btn.onclick = onclick;
-        return btn;
-    },
-
-    // ユニット雇用パネル
-    RecruitPanel: (options, activeUnit, castle, recruitItemHTML) => {
-        return `
-            <p class="text-xl text-gray-400 mb-2 font-bold uppercase tracking-widest text-center">ユニット雇用</p>
-            <div class="flex flex-col gap-3">
-                ${options.map(ut => recruitItemHTML(ut, activeUnit, castle)).join('')}
-            </div>`;
-    },
-
-    // ユニットリストパネル
-    UnitListPanel: (unit, castle, unitListItemCallback) => {
-        return `
-            <p class="text-xl text-gray-400 mb-2 font-bold uppercase tracking-widest text-center">部隊編成・強化</p>
-            <div class="flex flex-col gap-3">
-                ${unit.army.map((u, i) => unitListItemCallback(u, i, castle)).join('')}
-            </div>`;
-    }
-};
+// UIコンポーネントは js/ui.js に移動しました
 
 window.View = {
     canvas: null, ctx: null,
@@ -230,11 +126,11 @@ window.View = {
         const body = document.getElementById('ending-body');
 
         if (isWin) {
-            title.innerText = "VICTORY";
+            title.innerText = "完全制覇";
             title.className = "text-8xl font-bold mb-12 text-yellow-500 uppercase tracking-tighter drop-shadow-[0_0_30px_rgba(234,179,8,0.5)]";
             body.innerText = "敵勢力の拠点をすべて制圧し、バハムート大陸に真の平和が訪れた。あなたの名は伝説となり、永く語り継がれるだろう。";
         } else {
-            title.innerText = "DEFEAT";
+            title.innerText = "敗北...";
             title.className = "text-8xl font-bold mb-12 text-red-600 uppercase tracking-tighter drop-shadow-[0_0_30px_rgba(220,38,38,0.5)]";
             body.innerText = "全ての拠点を失い、希望は潰えた。大陸の歴史は勝者によって書き換えられ、あなたの名は闇へと消えていく...";
         }
@@ -403,7 +299,7 @@ window.View = {
         const playerFaction = Model.state.factions.find(f => f.isPlayer);
 
         // 1. 部隊情報の取得とアクティブ部隊の決定
-        const allUnits = Model.state.mapUnits.filter(u => Math.hypot(u.x - castle.x, u.y - castle.y) < 45);
+        const allUnits = Model.state.mapUnits.filter(u => Math.hypot(u.x - castle.x, u.y - castle.y) < Data.UI.UNIT_DETECT_RADIUS);
         let activeUnit = null;
         if (allUnits.length > 0) {
             activeUnit = allUnits.find(u => u.id === targetUnitId);
@@ -511,7 +407,7 @@ window.View = {
                         </div>`;
                 });
 
-                const unitsHTML = UI.UnitListPanel(activeUnit, castle, (u, i, castle) => UI.UnitListItem(u, i, {
+                const unitsHTML = UI.UnitListPanel(activeUnit, castle, (u, i) => UI.UnitListItem(u, i, {
                     hp: `Controller.enhanceUnit('${activeUnit.id}', ${i}, 'hp', '${castle.id}')`,
                     atk: `Controller.enhanceUnit('${activeUnit.id}', ${i}, 'atk', '${castle.id}')`
                 }));
@@ -607,12 +503,12 @@ window.View = {
 
         if (indicator) {
             if (b.turn === 'player') {
-                indicator.innerText = "PLAYER TURN";
+                indicator.innerText = "自軍ターン";
                 indicator.className = "mb-4 text-3xl font-black tracking-widest text-yellow-500 animate-pulse bg-black/50 px-4 py-1 rounded shadow-lg border border-yellow-500/30";
                 if (endBtn) endBtn.disabled = false;
                 if (retreatBtn) retreatBtn.disabled = false;
             } else {
-                indicator.innerText = "ENEMY TURN";
+                indicator.innerText = "敵軍ターン";
                 indicator.className = "mb-4 text-3xl font-black tracking-widest text-red-500 animate-pulse bg-black/50 px-4 py-1 rounded shadow-lg border border-red-500/30";
                 if (endBtn) endBtn.disabled = true;
                 if (retreatBtn) retreatBtn.disabled = true;
@@ -632,8 +528,8 @@ window.View = {
         div.addEventListener('click', (e) => {
             console.log(`Hex Clicked: ${r}, ${c}`);
             e.stopPropagation();
-            if (window.Controller) {
-                window.Controller.handleBattleClick(r, c);
+            if (window.BattleSystem) {
+                window.BattleSystem.handleClick(r, c);
             }
         });
         return div;

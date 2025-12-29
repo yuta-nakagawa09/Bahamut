@@ -317,8 +317,9 @@ window.TestRunner = {
             View.showMessage = () => { };
 
             // Setup Units
-            const atk = { id: 'u1', name: 'Atk', atk: 100, hp: 100, currentHp: 100, range: 1, xp: 0, rank: 0, r: 0, c: 0, owner: 'player' };
-            const def = { id: 'u2', name: 'Def', atk: 100, hp: 100, currentHp: 100, range: 1, xp: 0, rank: 0, r: 0, c: 1, owner: 'enemy' };
+            // Reduce ATK to ensure target doesn't die (avoid XP.KILL bonus)
+            const atk = { id: 'u1', name: 'Atk', atk: 10, hp: 100, currentHp: 100, range: 1, xp: 0, rank: 0, r: 0, c: 0, owner: 'player' };
+            const def = { id: 'u2', name: 'Def', atk: 10, hp: 100, currentHp: 100, range: 1, xp: 0, rank: 0, r: 0, c: 1, owner: 'enemy' };
 
             // Setup mock state
             Model.state.battle = {
@@ -342,8 +343,10 @@ window.TestRunner = {
 
             // Verify Damage
             const dmg = 100 - def.currentHp;
-            const minDmg = Math.floor(100 * Data.BATTLE.DAMAGE_BASE);
-            const maxDmg = Math.floor(100 * (Data.BATTLE.DAMAGE_BASE + Data.BATTLE.DAMAGE_RANDOM));
+            const minDmg = Math.floor(atk.atk * Data.BATTLE.DAMAGE_BASE);
+            const maxDmg = Math.floor(atk.atk * (Data.BATTLE.DAMAGE_BASE + Data.BATTLE.DAMAGE_RANDOM));
+
+            // console.log(`Test Battle: DMG=${dmg} (Expect ${minDmg}-${maxDmg})`);
             this.expect(dmg >= minDmg).toBe(true);
             this.expect(dmg <= maxDmg).toBe(true);
 

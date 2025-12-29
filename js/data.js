@@ -34,6 +34,13 @@ window.Data = {
         INVADE_CHANCE: 0.3
     },
 
+    UI: {
+        CLICK_RADIUS: 30,
+        CASTLE_DETECT_RADIUS: 40,
+        UNIT_DETECT_RADIUS: 45,
+        BATTLE_TRIGGER_PIXELS: 50
+    },
+
     MASTERS: [
         { id: 'knight', name: 'ジーク', alignment: 'LAW', color: '#4466ff', emoji: '🏰', desc: '聖騎士。防御と近接戦闘に優れるバランス型。' },
         { id: 'mage', name: 'アーシェ', alignment: 'NEUTRAL', color: '#44ff66', emoji: '🧝', desc: '女王。遠距離魔法と機動力を持つエルフ軍。' },

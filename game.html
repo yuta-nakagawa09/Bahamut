@@ -243,7 +243,7 @@
             <div id="message-box" class="opacity-0 transition-opacity duration-300 flex items-center">
                 <div class="text-white">
                     <span class="text-yellow-500 mr-2">▶</span>
-                    <span id="message-text" class="text-lg font-bold tracking-widest font-mono">Message</span>
+                    <span id="message-text" class="text-lg font-bold tracking-widest font-mono">メッセージ</span>
                 </div>
             </div>
         </footer>
@@ -262,7 +262,7 @@
         </div>
         <div id="battle-grid" class="relative scale-110"></div>
         <div class="mt-16 flex gap-10" id="battle-controls">
-            <button id="battle-end-turn-btn" onclick="Controller.battleEndTurnOrder()"
+            <button id="battle-end-turn-btn" onclick="BattleSystem.endTurn()"
                 class="px-12 py-4 bg-blue-800 hover:bg-blue-600 border-2 border-white transition-colors text-2xl font-bold rounded-lg shadow-xl pointer-events-auto text-white disabled:opacity-30 disabled:grayscale disabled:pointer-events-none">
                 ターン終了
             </button>
@@ -299,6 +299,7 @@
 
     <!-- SCRIPTS -->
     <script src="js/data.js"></script>
+    <script src="js/ui.js"></script>
     <script src="js/model.js"></script>
     <script src="js/view.js"></script>
     <script src="js/battle.js"></script>

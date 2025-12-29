@@ -48,8 +48,17 @@ class Element {
 }
 
 global.document = {
-    getElementById: (id) => pseudoDOM[id] || null,
-    createElement: (tag) => new Element(tag),
+    getElementById: (id) => {
+        if (!pseudoDOM[id]) {
+            // Auto-create for critical UI elements if missing in tests
+            if (id === 'message-box' || id === 'message-text' || id === 'modal-layer') {
+                const el = new Element('div');
+                el.id = id;
+                pseudoDOM[id] = el;
+            }
+        }
+        return pseudoDOM[id] || null;
+    }, createElement: (tag) => new Element(tag),
     body: new Element('body'),
     querySelectorAll: (sel) => [],
     querySelector: (sel) => null
@@ -80,6 +89,8 @@ function loadScript(filename) {
 console.log("Loading Game Modules...");
 loadScript('data.js');
 console.log("- Data loaded");
+loadScript('ui.js');
+console.log("- UI loaded");
 loadScript('model.js');
 console.log("- Model loaded");
 loadScript('view.js'); // NOW LOADING VIEW

@@ -27,7 +27,8 @@ window.Controller = {
             for (let i = 0; i < Model.state.mapUnits.length; i++) {
                 for (let j = i + 1; j < Model.state.mapUnits.length; j++) {
                     const u1 = Model.state.mapUnits[i], u2 = Model.state.mapUnits[j];
-                    if (u1.owner !== u2.owner && Math.hypot(u1.x - u2.x, u1.y - u2.y) < 50) {
+                    if (u1.owner !== u2.owner && Math.hypot(u1.x - u2.x, u1.y - u2.y) < Data.UI.BATTLE_TRIGGER_PIXELS) {
+                        // 戦闘開始 (アニメーション開始)
                         const attacker = u1.isMoving ? u1 : (u2.isMoving ? u2 : null);
                         u1.isMoving = false; u2.isMoving = false;
 
@@ -213,7 +214,7 @@ window.Controller = {
                     const faction = Model.state.factions.find(f => f.id === unit.owner);
 
                     // 現在地の拠点を特定
-                    const currentCastle = Model.state.castles.find(c => Math.hypot(c.x - unit.x, c.y - unit.y) < 40);
+                    const currentCastle = Model.state.castles.find(c => Math.hypot(c.x - unit.x, c.y - unit.y) < Data.UI.CASTLE_DETECT_RADIUS);
                     let escaped = false;
 
                     if (currentCastle && currentCastle.neighbors) {
@@ -347,12 +348,12 @@ window.Controller = {
         // 1. 移動可能な拠点への移動（自軍ユニットがいても移動優先）
         // 2. ユニット選択
 
-        const targetCastle = Model.state.castles.find(c => Math.hypot(c.x - x, c.y - y) < 40);
+        const targetCastle = Model.state.castles.find(c => Math.hypot(c.x - x, c.y - y) < Data.UI.CASTLE_DETECT_RADIUS);
         const u = Model.state.selectedMapUnit;
 
         // 移動ロジック（ユニット選択中かつ未行動）
         if (u && !u.isMoving && !u.hasActed && targetCastle) {
-            const currentCastle = Model.state.castles.find(c => Math.hypot(c.x - u.x, c.y - u.y) < 40);
+            const currentCastle = Model.state.castles.find(c => Math.hypot(c.x - u.x, c.y - u.y) < Data.UI.CASTLE_DETECT_RADIUS);
 
             let canMove = false;
             // 現在地があり、隣接している場合のみ移動可
@@ -376,7 +377,7 @@ window.Controller = {
         }
 
         // ユニット選択ロジック
-        const clickedUnits = Model.state.mapUnits.filter(u => Math.hypot(u.x - x, u.y - y) < 30);
+        const clickedUnits = Model.state.mapUnits.filter(u => Math.hypot(u.x - x, u.y - y) < Data.UI.CLICK_RADIUS);
         let targetUnit = null;
         const playerUnits = clickedUnits.filter(u => u.owner === Model.state.factions.find(f => f.isPlayer).id);
 
@@ -409,7 +410,7 @@ window.Controller = {
         const y = e.clientY - rect.top - View.mapOffsetY;
 
         // 右クリックで拠点メニューを開く
-        const clickedCastle = Model.state.castles.find(c => Math.hypot(c.x - x, c.y - y) < 30);
+        const clickedCastle = Model.state.castles.find(c => Math.hypot(c.x - x, c.y - y) < Data.UI.CLICK_RADIUS);
         if (clickedCastle) {
             View.toggleBaseMenu(clickedCastle);
             return;
