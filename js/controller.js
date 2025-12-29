@@ -27,7 +27,7 @@ window.Controller = {
             for (let i = 0; i < Model.state.mapUnits.length; i++) {
                 for (let j = i + 1; j < Model.state.mapUnits.length; j++) {
                     const u1 = Model.state.mapUnits[i], u2 = Model.state.mapUnits[j];
-                    if (u1.owner !== u2.owner && Math.hypot(u1.x - u2.x, u1.y - u2.y) < 30) {
+                    if (u1.owner !== u2.owner && Math.hypot(u1.x - u2.x, u1.y - u2.y) < 50) {
                         const attacker = u1.isMoving ? u1 : (u2.isMoving ? u2 : null);
                         u1.isMoving = false; u2.isMoving = false;
 
@@ -38,6 +38,7 @@ window.Controller = {
                             this.startBattle();
                         } else {
                             BattleSystem.autoResolve(u1, u2, attacker);
+                            Model.state.globalBattleCooldown = 60; // オート戦闘後も少しウェイトを入れる
                         }
                         return;
                     }
@@ -129,6 +130,7 @@ window.Controller = {
         Model.state.turnCount = 1;
         Model.state.strategicTurn = 'player';
         Model.state.gameCleared = false;
+        Model.state.globalBattleCooldown = 0;
 
         this.startGame();
     },
@@ -229,7 +231,7 @@ window.Controller = {
                     }
 
                     Model.state.battle.active = false;
-                    Model.state.globalBattleCooldown = 150;
+                    Model.state.globalBattleCooldown = 60;
                     View.changeScreen('map');
 
                     if (!escaped) {

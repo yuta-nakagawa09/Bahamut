@@ -88,6 +88,10 @@ window.BattleSystem = {
         if (b.selectedUnit) {
             const s = b.selectedUnit, d = Model.getHexDist(s.r, s.c, r, c);
             if (target && target.owner === 'enemy') {
+                if (b.tempMoved && s.range >= 2) {
+                    View.showMessage("遠距離ユニットは移動後に攻撃できません");
+                    return;
+                }
                 if (d <= s.range) this.attack(s, target);
             }
             else if (!target && d <= s.move) {
@@ -198,7 +202,7 @@ window.BattleSystem = {
                 });
             }
 
-            Model.state.globalBattleCooldown = 150;
+            Model.state.globalBattleCooldown = 30;
             setTimeout(() => {
                 View.changeScreen('map');
                 // 敵ターン中に戦闘が終わった場合、プレイヤーターンへ移行（復帰）
@@ -250,20 +254,52 @@ window.BattleSystem = {
                     // 2. 移動：一番近い敵へ近づく
                     const target = targets.reduce((p, c) => Model.getHexDist(u.r, u.c, c.r, c.c) < Model.getHexDist(u.r, u.c, p.r, p.c) ? c : p);
 
-                    let nextR = u.r, nextC = u.c;
-                    if (target.r > u.r) nextR++; else if (target.r < u.r) nextR--;
-                    if (target.c > u.c) nextC++; else if (target.c < u.c) nextC--;
+                    const startR = u.r;
+                    const startC = u.c;
+                    let moves = u.move || 3;
+                    while (moves > 0) {
+                        const distToTarget = Model.getHexDist(u.r, u.c, target.r, target.c);
+                        if (distToTarget <= u.range) break;
 
-                    // 移動先に誰かいないかチェック
-                    const occupied = Model.state.battle.units.find(unit => unit.r === nextR && unit.c === nextC);
-                    if (!occupied) {
-                        u.r = nextR;
-                        u.c = nextC;
+                        let bestNext = null;
+                        let bestDist = distToTarget;
+
+                        for (let dr = -1; dr <= 1; dr++) {
+                            for (let dc = -1; dc <= 1; dc++) {
+                                if (dr === 0 && dc === 0) continue;
+                                const nr = u.r + dr, nc = u.c + dc;
+                                if (nr < 0 || nc < 0) continue;
+
+                                if (Model.getHexDist(u.r, u.c, nr, nc) === 1) {
+                                    const occupied = Model.state.battle.units.find(unit => unit.r === nr && unit.c === nc);
+                                    if (!occupied) {
+                                        const d = Model.getHexDist(nr, nc, target.r, target.c);
+                                        if (d < bestDist) {
+                                            bestDist = d;
+                                            bestNext = { r: nr, c: nc };
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (bestNext) {
+                            u.r = bestNext.r;
+                            u.c = bestNext.c;
+                            moves--;
+                        } else {
+                            break;
+                        }
                     }
 
                     // 移動後攻撃確認
+                    const hasMoved = (u.r !== startR || u.c !== startC);
                     const d = Model.getHexDist(u.r, u.c, target.r, target.c);
-                    if (d <= u.range) {
+
+                    if (hasMoved && u.range >= 2) {
+                        // 遠距離ユニットは移動攻撃不可
+                        View.updateBattleUI();
+                    } else if (d <= u.range) {
                         this.attack(u, target);
                     } else {
                         View.updateBattleUI();
@@ -298,24 +334,42 @@ window.BattleSystem = {
         if (u2.army.length > 0) u2.army.forEach(u => u.currentHp = u.hp);
 
         // 引き分け時の撤退処理 (攻撃側を最寄りの自軍拠点へ戻す)
-        if (u1.army.length > 0 && u2.army.length > 0 && attacker && attacker.army.length > 0) {
-            const faction = Model.state.factions.find(f => f.id === attacker.owner);
+        // 引き分け時の撤退処理 (攻撃側またはu1を最寄りの自軍拠点へ戻す)
+        if (u1.army.length > 0 && u2.army.length > 0) {
+            const retreatUnit = attacker || u1;
+            const faction = Model.state.factions.find(f => f.id === retreatUnit.owner);
             if (faction) {
                 const castles = Model.state.castles.filter(c => c.owner === faction.id);
                 if (castles.length > 0) {
                     const nearest = castles.reduce((p, c) => {
-                        const d1 = Math.hypot(c.x - attacker.x, c.y - attacker.y);
-                        const d2 = Math.hypot(p.x - attacker.x, p.y - attacker.y);
+                        const d1 = Math.hypot(c.x - retreatUnit.x, c.y - retreatUnit.y);
+                        const d2 = Math.hypot(p.x - retreatUnit.x, p.y - retreatUnit.y);
                         return d1 < d2 ? c : p;
                     });
 
-                    attacker.x = nearest.x;
-                    attacker.y = nearest.y;
-                    attacker.targetX = nearest.x;
-                    attacker.targetY = nearest.y;
-                    // View.showMessage(`${faction.name}軍は撤退しました`); // 頻繁に出るとうざいのでコメントアウト推奨だが、動作確認のため出す？
+                    retreatUnit.x = nearest.x;
+                    retreatUnit.y = nearest.y;
+                    retreatUnit.targetX = nearest.x;
+                    retreatUnit.targetY = nearest.y;
+                    // View.showMessage(`${faction.name}軍は撤退しました`);
                 }
             }
+        }
+
+        // 結果表示
+        const f1 = Model.state.factions.find(f => f.id === u1.owner);
+        const f2 = Model.state.factions.find(f => f.id === u2.owner);
+        const n1 = f1 ? f1.name : '不明';
+        const n2 = f2 ? f2.name : '不明';
+
+        if (u1.army.length > 0 && u2.army.length > 0) {
+            View.showMessage(`[戦闘] ${n1} vs ${n2} : 引き分け`);
+        } else if (u1.army.length > 0) {
+            View.showMessage(`[戦闘] ${n1} が ${n2} を撃破！`);
+        } else if (u2.army.length > 0) {
+            View.showMessage(`[戦闘] ${n2} が ${n1} を撃破！`);
+        } else {
+            View.showMessage(`[戦闘] ${n1} と ${n2} は相打ちで全滅...`);
         }
 
         if (u1.army.length === 0) Model.state.mapUnits = Model.state.mapUnits.filter(u => u !== u1);
