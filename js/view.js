@@ -145,18 +145,15 @@ window.View = {
         if (screenId === 'map') {
             turnIndicator.classList.remove('hidden'); // マップ画面ではヘッダーに表示する
             this.initCanvas();
-            const endBtn = document.getElementById('btn-end-strategic-turn');
-            const saveLoad = document.getElementById('save-load-group');
+            const sideMenu = document.getElementById('menu-group');
             const menu = document.getElementById('base-menu');
             menu.classList.add('hidden'); // 初期状態ではメニューを隠す
             this.clearBaseMenu();
 
             if (isPlayerTurn) {
-                endBtn.classList.remove('hidden');
-                saveLoad.classList.remove('hidden');
+                sideMenu.classList.remove('hidden');
             } else {
-                endBtn.classList.add('hidden');
-                saveLoad.classList.add('hidden');
+                sideMenu.classList.add('hidden');
             }
         } else if (screenId === 'battle') {
             turnIndicator.classList.add('hidden');

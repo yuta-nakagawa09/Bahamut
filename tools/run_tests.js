@@ -58,8 +58,7 @@ global.document = {
 // Add required elements for View to function without crashing
 pseudoDOM['message-text'] = new Element('div');
 pseudoDOM['turn-indicator'] = new Element('div');
-pseudoDOM['btn-end-strategic-turn'] = new Element('div');
-pseudoDOM['save-load-group'] = new Element('div');
+pseudoDOM['menu-group'] = new Element('div');
 pseudoDOM['base-menu'] = new Element('div');
 pseudoDOM['screen-map'] = new Element('div');
 pseudoDOM['screen-battle'] = new Element('div');

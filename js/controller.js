@@ -249,8 +249,8 @@ window.Controller = {
         Model.state.strategicTurn = 'enemy';
         document.getElementById('turn-text-map').innerText = "敵軍フェーズ";
         document.getElementById('turn-text-map').style.color = "#f87171";
-        document.getElementById('btn-end-strategic-turn').classList.add('hidden');
-        document.getElementById('save-load-group').classList.add('hidden');
+        const menuGroup = document.getElementById('menu-group');
+        if (menuGroup) menuGroup.classList.add('hidden');
 
         // 拠点メニューが開いていたら閉じる
         View.clearBaseMenu();
@@ -276,8 +276,8 @@ window.Controller = {
         // UI更新
         document.getElementById('turn-text-map').innerText = "自軍フェーズ";
         document.getElementById('turn-text-map').style.color = "#fbbf24";
-        document.getElementById('btn-end-strategic-turn').classList.remove('hidden');
-        document.getElementById('save-load-group').classList.remove('hidden');
+        const menuGroup = document.getElementById('menu-group');
+        if (menuGroup) menuGroup.classList.remove('hidden');
     },
 
     createNewArmy(castle) {
