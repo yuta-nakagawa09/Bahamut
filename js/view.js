@@ -182,13 +182,11 @@ window.View = {
             if (t.id === 'islands') emoji = '🏝️';
             if (t.id === 'ring') emoji = '⭕';
 
-            const isSelected = Model.state.selectedMapId === t.id;
-
             return `
             <div onclick="Controller.selectMapAndNext('${t.id}')"
-                class="group p-10 border-4 ${isSelected ? 'border-yellow-500' : 'border-gray-700 hover:border-yellow-500'} transition-all cursor-pointer rounded-2xl bg-gray-800/80 shadow-2xl hover:scale-105 flex flex-col items-center w-[300px] shrink-0 relative z-50 pointer-events-auto">
+                class="group p-10 border-4 border-gray-700 hover:border-yellow-500 transition-all cursor-pointer rounded-2xl bg-gray-800/80 shadow-2xl hover:scale-105 flex flex-col items-center w-[300px] shrink-0 relative z-50 pointer-events-auto">
                 <div class="text-9xl mb-8 transition-transform group-hover:scale-110">${emoji}</div>
-                <div class="text-4xl font-bold mb-4 ${isSelected ? 'text-yellow-400' : 'text-white group-hover:text-yellow-400'}">${t.name}</div>
+                <div class="text-4xl font-bold mb-4 text-white group-hover:text-yellow-400">${t.name}</div>
                 <p class="text-center text-gray-400">${t.desc}</p>
             </div>`;
         }).join('');

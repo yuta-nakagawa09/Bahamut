@@ -72,11 +72,11 @@ window.Data = {
             id: 'islands', name: '群島諸国 (Islands)', desc: '細長いルートで構成された機動力が試されるマップ。',
             castles: [
                 { id: 'c1', name: '王都', x: 100, y: 300, owner: 'player', captureBonus: 0, uniqueUnit: null, neighbors: ['c3'] },
-                { id: 'c2', name: '影の島', x: 800, y: 300, owner: 'enemy', captureBonus: 2000, uniqueUnit: 'hell-hound', neighbors: ['c6'] },
-                { id: 'c5', name: '炎の運河', x: 650, y: 450, owner: 'enemy2', captureBonus: 300, uniqueUnit: 'sorcerer', neighbors: ['c4', 'c6'] },
+                { id: 'c2', name: '影の島', x: 800, y: 300, owner: 'enemy', captureBonus: 2000, uniqueUnit: 'hell-hound', neighbors: ['c5'] },
+                { id: 'c5', name: '炎の運河', x: 650, y: 450, owner: 'neutral', captureBonus: 300, uniqueUnit: 'sorcerer', neighbors: ['c2', 'c4'] },
                 { id: 'c3', name: '風の関所', x: 250, y: 150, owner: 'neutral', captureBonus: 300, uniqueUnit: 'crossbow', neighbors: ['c1', 'c4'] },
-                { id: 'c4', name: '中央島', x: 450, y: 300, owner: 'neutral', captureBonus: 600, uniqueUnit: 'guard', neighbors: ['c3', 'c5'] },
-                { id: 'c6', name: '境界の門', x: 700, y: 150, owner: 'neutral', captureBonus: 400, uniqueUnit: 'pirate', neighbors: ['c2', 'c5'] }
+                { id: 'c4', name: '中央島', x: 450, y: 300, owner: 'neutral', captureBonus: 600, uniqueUnit: 'guard', neighbors: ['c3', 'c5', 'c6'] },
+                { id: 'c6', name: '境界の門', x: 700, y: 150, owner: 'enemy2', captureBonus: 400, uniqueUnit: 'pirate', neighbors: ['c4'] }
             ]
         },
         {

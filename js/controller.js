@@ -118,11 +118,14 @@ window.Controller = {
     createGame(masterId) {
         const playerMaster = Data.MASTERS.find(m => m.id === masterId);
         const mapData = Data.MAP_TEMPLATES.find(m => m.id === Model.state.selectedMapId);
+        const hqPlayer = mapData.castles.find(c => c.owner === 'player');
+        const hqEnemy = mapData.castles.find(c => c.owner === 'enemy');
+        const hqEnemy2 = mapData.castles.find(c => c.owner === 'enemy2');
 
         Model.state.factions = [
-            { id: 'player', name: 'プレイヤー王国', color: playerMaster.color, master: playerMaster, isPlayer: true, gold: 1000, isAlive: true, hqId: 'c1' },
-            { id: 'enemy', name: '暗黒帝国', color: '#ff0000', master: Data.MASTERS[2], isPlayer: false, gold: 1000, isAlive: true, hqId: 'c2' },
-            { id: 'enemy2', name: '東方同盟', color: '#aa00aa', master: Data.MASTERS[1], isPlayer: false, gold: 1000, isAlive: true, hqId: 'c6' }
+            { id: 'player', name: 'プレイヤー王国', color: playerMaster.color, master: playerMaster, isPlayer: true, gold: 1000, isAlive: true, hqId: hqPlayer ? hqPlayer.id : 'c1' },
+            { id: 'enemy', name: '暗黒帝国', color: '#ff0000', master: Data.MASTERS[2], isPlayer: false, gold: 1000, isAlive: !!hqEnemy, hqId: hqEnemy ? hqEnemy.id : 'c2' },
+            { id: 'enemy2', name: '東方同盟', color: '#aa00aa', master: Data.MASTERS[1], isPlayer: false, gold: 1000, isAlive: !!hqEnemy2, hqId: hqEnemy2 ? hqEnemy2.id : 'c6' }
         ];
 
         Model.state.castles = JSON.parse(JSON.stringify(mapData.castles));

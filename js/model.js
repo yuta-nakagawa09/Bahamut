@@ -20,7 +20,7 @@ window.Model = {
             tempMoved: false,
             logs: []
         },
-        selectedMapId: 'classic',
+        selectedMapId: null,
         gameCleared: false,
         battleUnitA: null, // 戦闘開始時のマップ上のユニット参照
         battleUnitB: null,
