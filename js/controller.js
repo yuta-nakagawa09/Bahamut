@@ -284,7 +284,8 @@ window.Controller = {
         View.showMessage(`ターン開始：収入計算中...`);
 
         const player = Model.state.factions.find(f => f.isPlayer);
-        const income = 100 + Model.state.castles.filter(c => c.owner === player.id).length * 200;
+        const castleIncome = Model.state.castles.filter(c => c.owner === player.id).reduce((sum, c) => sum + (c.income || 0), 0);
+        const income = 100 + castleIncome;
         player.gold += income;
 
         Model.state.mapUnits.forEach(u => u.hasActed = false);

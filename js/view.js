@@ -423,10 +423,18 @@ window.View = {
         const ownerName = faction ? faction.master.name : '中立';
         const ownerEmoji = faction ? faction.master.emoji : '';
 
+        let infoText = '';
+        if (castle.owner === 'neutral') {
+            infoText = `<span class="text-yellow-400 ml-4">💰ボーナス: ${castle.captureBonus}G</span>`;
+        } else {
+            infoText = `<span class="text-green-400 ml-4">💰収入: ${castle.income || 0}G</span>`;
+        }
+
         let titleHTML = `
             <span>${castle.name}</span>
-            <span>${isHQ ? '👑本拠地' : ''}</span>
-            <span style="color:${color}">${ownerEmoji}${ownerName}</span>
+            <span class="ml-2">${isHQ ? '👑本拠地' : ''}</span>
+            <span style="color:${color}" class="ml-2">${ownerEmoji}${ownerName}</span>
+            ${infoText}
             `;
         document.getElementById('base-menu-title').innerHTML = titleHTML;
 

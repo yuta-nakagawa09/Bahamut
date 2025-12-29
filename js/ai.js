@@ -26,7 +26,8 @@ window.StrategicAI = {
 
     processFaction(faction) {
         // 収入
-        const income = 100 + Model.state.castles.filter(c => c.owner === faction.id).length * 200;
+        const castleIncome = Model.state.castles.filter(c => c.owner === faction.id).reduce((sum, c) => sum + (c.income || 0), 0);
+        const income = 100 + castleIncome;
         faction.gold += income;
         const hq = Model.state.castles.find(c => c.id === faction.hqId);
 

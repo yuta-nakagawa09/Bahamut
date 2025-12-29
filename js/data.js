@@ -59,46 +59,46 @@ window.Data = {
         {
             id: 'classic', name: 'バハムート大陸 (Classic)', desc: '標準的なバランスの初期マップです。',
             castles: [
-                { id: 'c1', name: '王都', x: 150, y: 200, owner: 'player', captureBonus: 0, uniqueUnit: null, neighbors: ['c3', 'c7', 'c8'] },
-                { id: 'c2', name: '暗黒城', x: 750, y: 550, owner: 'enemy', captureBonus: 2000, uniqueUnit: 'hell-hound', neighbors: ['c3', 'c5', 'c6', 'c9'] },
-                { id: 'c6', name: '東の塔', x: 750, y: 150, owner: 'enemy2', captureBonus: 800, uniqueUnit: 'sorcerer', neighbors: ['c2', 'c4', 'c9'] },
-                { id: 'c3', name: '自由都市', x: 450, y: 350, owner: 'neutral', captureBonus: 500, uniqueUnit: 'guard', neighbors: ['c1', 'c2', 'c4', 'c5', 'c9'] },
-                { id: 'c4', name: '北の砦', x: 450, y: 100, owner: 'neutral', captureBonus: 350, uniqueUnit: 'crossbow', neighbors: ['c3', 'c6', 'c8'] },
-                { id: 'c5', name: '南の村', x: 250, y: 550, owner: 'neutral', captureBonus: 200, uniqueUnit: 'militia', neighbors: ['c2', 'c3', 'c10'] },
-                { id: 'c7', name: '西の廃墟', x: 100, y: 450, owner: 'neutral', captureBonus: 400, uniqueUnit: 'ghost', neighbors: ['c1', 'c10'] },
-                { id: 'c8', name: '隠れ里', x: 300, y: 100, owner: 'neutral', captureBonus: 300, uniqueUnit: 'ninja', neighbors: ['c1', 'c4'] },
-                { id: 'c9', name: '魔法の泉', x: 600, y: 350, owner: 'neutral', captureBonus: 600, uniqueUnit: 'witch', neighbors: ['c3', 'c2', 'c6'] },
-                { id: 'c10', name: '忘却の地', x: 150, y: 600, owner: 'neutral', captureBonus: 500, uniqueUnit: 'skeleton', neighbors: ['c7', 'c5'] }
+                { id: 'c1', name: '王都', x: 150, y: 200, owner: 'player', captureBonus: 0, income: 500, uniqueUnit: null, neighbors: ['c3', 'c7', 'c8'] },
+                { id: 'c2', name: '暗黒城', x: 750, y: 550, owner: 'enemy', captureBonus: 2000, income: 500, uniqueUnit: 'hell-hound', neighbors: ['c3', 'c5', 'c6', 'c9'] },
+                { id: 'c6', name: '東の塔', x: 750, y: 150, owner: 'enemy2', captureBonus: 800, income: 300, uniqueUnit: 'sorcerer', neighbors: ['c2', 'c4', 'c9'] },
+                { id: 'c3', name: '自由都市', x: 450, y: 350, owner: 'neutral', captureBonus: 500, income: 400, uniqueUnit: 'guard', neighbors: ['c1', 'c2', 'c4', 'c5', 'c9'] },
+                { id: 'c4', name: '北の砦', x: 450, y: 100, owner: 'neutral', captureBonus: 350, income: 200, uniqueUnit: 'crossbow', neighbors: ['c3', 'c6', 'c8'] },
+                { id: 'c5', name: '南の村', x: 250, y: 550, owner: 'neutral', captureBonus: 200, income: 150, uniqueUnit: 'militia', neighbors: ['c2', 'c3', 'c10'] },
+                { id: 'c7', name: '西の廃墟', x: 100, y: 450, owner: 'neutral', captureBonus: 400, income: 100, uniqueUnit: 'ghost', neighbors: ['c1', 'c10'] },
+                { id: 'c8', name: '隠れ里', x: 300, y: 100, owner: 'neutral', captureBonus: 300, income: 200, uniqueUnit: 'ninja', neighbors: ['c1', 'c4'] },
+                { id: 'c9', name: '魔法の泉', x: 600, y: 350, owner: 'neutral', captureBonus: 600, income: 300, uniqueUnit: 'witch', neighbors: ['c3', 'c2', 'c6'] },
+                { id: 'c10', name: '忘却の地', x: 150, y: 600, owner: 'neutral', captureBonus: 500, income: 100, uniqueUnit: 'skeleton', neighbors: ['c7', 'c5'] }
             ]
         },
         {
             id: 'islands', name: '群島諸国 (Islands)', desc: '細長いルートで構成された機動力が試されるマップ。',
             castles: [
-                { id: 'c1', name: '王都', x: 100, y: 300, owner: 'player', captureBonus: 0, uniqueUnit: null, neighbors: ['c3', 'c10'] },
-                { id: 'c2', name: '影の島', x: 800, y: 300, owner: 'enemy', captureBonus: 2000, uniqueUnit: 'hell-hound', neighbors: ['c5', 'c9'] },
-                { id: 'c5', name: '炎の運河', x: 650, y: 450, owner: 'neutral', captureBonus: 300, uniqueUnit: 'sorcerer', neighbors: ['c2', 'c4', 'c8'] },
-                { id: 'c3', name: '風の関所', x: 250, y: 150, owner: 'neutral', captureBonus: 300, uniqueUnit: 'crossbow', neighbors: ['c1', 'c4', 'c7', 'c8'] },
-                { id: 'c4', name: '中央島', x: 450, y: 300, owner: 'neutral', captureBonus: 600, uniqueUnit: 'guard', neighbors: ['c3', 'c5', 'c6'] },
-                { id: 'c6', name: '境界の門', x: 700, y: 150, owner: 'enemy2', captureBonus: 400, uniqueUnit: 'pirate', neighbors: ['c4', 'c7'] },
-                { id: 'c7', name: '北の岩礁', x: 450, y: 50, owner: 'neutral', captureBonus: 200, uniqueUnit: 'siren', neighbors: ['c3', 'c6'] },
-                { id: 'c8', name: '南珊瑚', x: 350, y: 500, owner: 'neutral', captureBonus: 200, uniqueUnit: 'merman', neighbors: ['c3', 'c5'] },
-                { id: 'c9', name: '海底神殿', x: 900, y: 300, owner: 'neutral', captureBonus: 1000, uniqueUnit: 'kraken', neighbors: ['c2'] },
-                { id: 'c10', name: '商人の島', x: 50, y: 150, owner: 'neutral', captureBonus: 500, uniqueUnit: 'thief', neighbors: ['c1'] }
+                { id: 'c1', name: '王都', x: 100, y: 300, owner: 'player', captureBonus: 0, income: 500, uniqueUnit: null, neighbors: ['c3', 'c10'] },
+                { id: 'c2', name: '影の島', x: 800, y: 300, owner: 'enemy', captureBonus: 2000, income: 500, uniqueUnit: 'hell-hound', neighbors: ['c5', 'c9'] },
+                { id: 'c5', name: '炎の運河', x: 650, y: 450, owner: 'neutral', captureBonus: 300, income: 300, uniqueUnit: 'sorcerer', neighbors: ['c2', 'c4', 'c8'] },
+                { id: 'c3', name: '風の関所', x: 250, y: 150, owner: 'neutral', captureBonus: 300, income: 200, uniqueUnit: 'crossbow', neighbors: ['c1', 'c4', 'c7', 'c8'] },
+                { id: 'c4', name: '中央島', x: 450, y: 300, owner: 'neutral', captureBonus: 600, income: 400, uniqueUnit: 'guard', neighbors: ['c3', 'c5', 'c6'] },
+                { id: 'c6', name: '境界の門', x: 700, y: 150, owner: 'enemy2', captureBonus: 400, income: 250, uniqueUnit: 'pirate', neighbors: ['c4', 'c7'] },
+                { id: 'c7', name: '北の岩礁', x: 450, y: 50, owner: 'neutral', captureBonus: 200, income: 150, uniqueUnit: 'siren', neighbors: ['c3', 'c6'] },
+                { id: 'c8', name: '南珊瑚', x: 350, y: 500, owner: 'neutral', captureBonus: 200, income: 150, uniqueUnit: 'merman', neighbors: ['c3', 'c5'] },
+                { id: 'c9', name: '海底神殿', x: 900, y: 300, owner: 'neutral', captureBonus: 1000, income: 400, uniqueUnit: 'kraken', neighbors: ['c2'] },
+                { id: 'c10', name: '商人の島', x: 50, y: 150, owner: 'neutral', captureBonus: 500, income: 300, uniqueUnit: 'thief', neighbors: ['c1'] }
             ]
         },
         {
             id: 'ring', name: '環状大陸 (Ring)', desc: '拠点が輪のように繋がった特殊なマップ。',
             castles: [
-                { id: 'c1', name: '王都', x: 450, y: 80, owner: 'player', captureBonus: 0, uniqueUnit: null, neighbors: ['c3', 'c4', 'c8'] },
-                { id: 'c2', name: '暗黒城', x: 450, y: 520, owner: 'enemy', captureBonus: 2000, uniqueUnit: 'hell-hound', neighbors: ['c5', 'c6', 'c9'] },
-                { id: 'c3', name: '東の港', x: 700, y: 200, owner: 'enemy2', captureBonus: 400, uniqueUnit: 'pirate', neighbors: ['c1', 'c5', 'c7'] },
-                { id: 'c4', name: '西の砦', x: 200, y: 200, owner: 'neutral', captureBonus: 400, uniqueUnit: 'dwarf', neighbors: ['c1', 'c6', 'c7'] },
-                { id: 'c5', name: '南東の平原', x: 700, y: 400, owner: 'neutral', captureBonus: 400, uniqueUnit: 'berserker', neighbors: ['c3', 'c2', 'c10'] },
-                { id: 'c6', name: '南西の森', x: 200, y: 400, owner: 'neutral', captureBonus: 400, uniqueUnit: 'fenrir', neighbors: ['c4', 'c2'] },
-                { id: 'c7', name: '中央塔', x: 450, y: 300, owner: 'neutral', captureBonus: 800, uniqueUnit: 'ancient-dragon', neighbors: ['c3', 'c4', 'c8', 'c9'] },
-                { id: 'c8', name: '北の関門', x: 450, y: 180, owner: 'neutral', captureBonus: 300, uniqueUnit: 'golem', neighbors: ['c1', 'c7'] },
-                { id: 'c9', name: '南の関門', x: 450, y: 420, owner: 'neutral', captureBonus: 300, uniqueUnit: 'golem', neighbors: ['c2', 'c7'] },
-                { id: 'c10', name: '離れ小島', x: 800, y: 500, owner: 'neutral', captureBonus: 500, uniqueUnit: 'griffin', neighbors: ['c5'] }
+                { id: 'c1', name: '王都', x: 450, y: 80, owner: 'player', captureBonus: 0, income: 500, uniqueUnit: null, neighbors: ['c3', 'c4', 'c8'] },
+                { id: 'c2', name: '暗黒城', x: 450, y: 520, owner: 'enemy', captureBonus: 2000, income: 500, uniqueUnit: 'hell-hound', neighbors: ['c5', 'c6', 'c9'] },
+                { id: 'c3', name: '東の港', x: 700, y: 200, owner: 'enemy2', captureBonus: 400, income: 300, uniqueUnit: 'pirate', neighbors: ['c1', 'c5', 'c7'] },
+                { id: 'c4', name: '西の砦', x: 200, y: 200, owner: 'neutral', captureBonus: 400, income: 200, uniqueUnit: 'dwarf', neighbors: ['c1', 'c6', 'c7'] },
+                { id: 'c5', name: '南東の平原', x: 700, y: 400, owner: 'neutral', captureBonus: 400, income: 200, uniqueUnit: 'berserker', neighbors: ['c3', 'c2', 'c10'] },
+                { id: 'c6', name: '南西の森', x: 200, y: 400, owner: 'neutral', captureBonus: 400, income: 200, uniqueUnit: 'fenrir', neighbors: ['c4', 'c2'] },
+                { id: 'c7', name: '中央塔', x: 450, y: 300, owner: 'neutral', captureBonus: 800, income: 400, uniqueUnit: 'ancient-dragon', neighbors: ['c3', 'c4', 'c8', 'c9'] },
+                { id: 'c8', name: '北の関門', x: 450, y: 180, owner: 'neutral', captureBonus: 300, income: 150, uniqueUnit: 'golem', neighbors: ['c1', 'c7'] },
+                { id: 'c9', name: '南の関門', x: 450, y: 420, owner: 'neutral', captureBonus: 300, income: 150, uniqueUnit: 'golem', neighbors: ['c2', 'c7'] },
+                { id: 'c10', name: '離れ小島', x: 800, y: 500, owner: 'neutral', captureBonus: 500, income: 300, uniqueUnit: 'griffin', neighbors: ['c5'] }
             ]
         }
     ],
