@@ -333,7 +333,6 @@ window.BattleSystem = {
         if (u1.army.length > 0) u1.army.forEach(u => u.currentHp = u.hp);
         if (u2.army.length > 0) u2.army.forEach(u => u.currentHp = u.hp);
 
-        // 引き分け時の撤退処理 (攻撃側を最寄りの自軍拠点へ戻す)
         // 引き分け時の撤退処理 (攻撃側またはu1を最寄りの自軍拠点へ戻す)
         if (u1.army.length > 0 && u2.army.length > 0) {
             const retreatUnit = attacker || u1;
@@ -351,7 +350,6 @@ window.BattleSystem = {
                     retreatUnit.y = nearest.y;
                     retreatUnit.targetX = nearest.x;
                     retreatUnit.targetY = nearest.y;
-                    // View.showMessage(`${faction.name}軍は撤退しました`);
                 }
             }
         }

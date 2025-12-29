@@ -489,27 +489,10 @@ window.View = {
                     if (spec) options.push(spec);
                 }
 
-
-                // <div class="recruit-item flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/10 cursor-pointer transition-colors relative z-50 pointer-events-auto hover:bg-white/10">
-                // <div class="recruit-item flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/10 cursor-pointer transition-colors relative z-50 pointer-events-auto hover:bg-white/10">
-                //     <div class="flex items-center gap-3">
-                //         <span class="text-4xl shadow-md p-1 bg-black/20 rounded">${ut.emoji}</span>
-                //         <div>
-                //             <div class="text-xl font-bold text-white">${ut.name}
-                //             </div>
-                //             <div class="text-xl font-bold text-white">
-                //                 HP:${ut.hp} / ATK:${ut.atk} / RNG:${ut.range} / MOVE:${ut.move}</div>
-                //         </div>
-                //     </div>
-                //     <button onclick="event.stopPropagation(); Controller.recruitUnit('${activeUnit.id}', '${ut.id}', '${castle.id}')" 
-                //         class="px-5 py-2 min-w-[100px] bg-blue-900 border border-blue-400 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-lg font-bold shadow-md active:translate-y-1 text-white" 
-                //         ${!canAfford || isFull ? 'disabled' : ''}>${isFull ? "満員" : `${ut.cost}G`}</button>
-                // </div>`;
-                // <div class="flex justify-between items-baseline mb-1">
-                //     <span class="font-bold text-xl">${u.name}</span>
-                //     <span class="flex items-center gap-2 text-xl font-mono text-gray-300">
-                //         HP:${u.currentHp}/${u.hp} ATK:${u.atk} XP:${u.xp} RANK ${Data.RANKS[u.rank || 0]}</span>
-                // </div>
+                if (castle.uniqueUnit) {
+                    const spec = Data.SPECIAL_UNITS[castle.uniqueUnit];
+                    if (spec) options.push(spec);
+                }
 
                 const recruitHTML = UI.RecruitPanel(options, activeUnit, castle, (ut, activeUnit, castle) => {
                     const canAfford = playerFaction.gold >= ut.cost;

@@ -424,63 +424,12 @@ window.Controller = {
         BattleSystem.start();
     },
 
-    initBattleGrid() {
-        // Obsolete (Moved to BattleSystem)
-    },
-
-    // View.jsのdrawHexから呼ばれる
-    // View.jsのdrawHexから呼ばれる
-    handleBattleClick(r, c) {
-        BattleSystem.handleClick(r, c);
-    },
-
-    // 右クリックなど（必要なら）
-    // 右クリックなど（必要なら）
-    handleBattleUnitRightClick(r, c) {
-        // 必要なら BattleSystem に委譲
-    },
-
-    battleEndTurnOrder() {
-        BattleSystem.endTurn();
-    },
-
-    // Battle Methods moved to BattleSystem.js
-    // battleAttack, checkBattleEnd, battleEnemyAI, autoResolveBattle were removed
-};
-
-/**
- * TEST: 動作確認用テストスイート
- */
-window.TestSuite = {
-    runAll() {
-        console.log("Running Tests...");
-        try {
-            this.testDataIntegrity();
-            this.testModelHelpers();
-            this.testBattleCreation();
-            console.log("All Tests Passed!");
-            View.showMessage("システムチェック完了: 正常");
-        } catch (e) {
-            console.error("Test Failed:", e);
-            View.showMessage("エラー検出: " + e.message);
-        }
-    },
-    testDataIntegrity() {
-        if (!Data.MASTERS || Data.MASTERS.length === 0) throw new Error("Masters data missing");
-        if (!Data.MAP_TEMPLATES) throw new Error("Map templates missing");
-    },
-    testModelHelpers() {
-        const d = Model.getHexDist(0, 0, 1, 1);
-        if (typeof d !== 'number') throw new Error("Hex dist calc failed");
-    },
-    testBattleCreation() {
-        // Mock battle setup if needed
+    startBattle() {
+        BattleSystem.start();
     }
 };
 
-// Window Global Assigns (HTMLからの呼び出し用)
 window.Controller = Controller;
-window.TestSuite = TestSuite;
 
 // Initialize
 window.onload = () => {
