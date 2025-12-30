@@ -192,12 +192,12 @@ window.UI = {
     // バトル用ヘックス
     BattleHex: (x, y, r, c, onClick) => {
         const div = document.createElement('div');
-        // .battle-hex, .clip-hex
-        div.className = "battle-hex clip-hex";
+        // .battle-hex, .clip-hex, .hex-base
+        div.className = "battle-hex clip-hex hex-base";
         div.style.left = `${x}px`;
         div.style.top = `${y}px`;
-        div.style.clipPath = "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)";
-        div.style.backgroundColor = UI.BattleStyles.gridBase;
+        // clip-path moved to css .clip-hex
+        // background-color moved to css .hex-base
 
         div.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -229,7 +229,6 @@ window.UI = {
         if (turn === 'player') {
             return {
                 text: "自軍ターン",
-                // .turn-indicator-player
                 className: "turn-indicator-player",
                 endBtnDisabled: false,
                 retreatBtnDisabled: false
@@ -237,7 +236,6 @@ window.UI = {
         } else {
             return {
                 text: "敵軍ターン",
-                // .turn-indicator-enemy
                 className: "turn-indicator-enemy",
                 endBtnDisabled: true,
                 retreatBtnDisabled: true
@@ -262,12 +260,12 @@ window.UI = {
         }
     },
 
-    // バトル画面スタイル
+    // バトル画面スタイル定数 (Class名)
     BattleStyles: {
-        gridBase: "rgba(30, 41, 59, 0.6)",
-        gridMove: "rgba(30, 58, 138, 0.6)",
-        gridAttack: "rgba(127, 29, 29, 0.6)",
-        gridSelectedRing: ["ring-4", "ring-white"],
-        movedUnitOpacity: "0.4"
+        gridBaseClass: "hex-base",
+        gridMoveClass: "hex-move",
+        gridAttackClass: "hex-attack",
+        gridSelectedClass: "hex-selected",
+        movedUnitClass: "unit-moved"
     }
 };

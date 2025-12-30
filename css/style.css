@@ -851,3 +851,42 @@ body {
     letter-spacing: -0.05em;
     filter: drop-shadow(0 0 30px rgba(220, 38, 38, 0.5));
 }
+
+/* Tab Active Indicator */
+.tab-active-indicator {
+    position: absolute;
+    bottom: -0.5rem;
+    color: #eab308;
+    /* yellow-500 */
+    font-size: 0.75rem;
+    /* text-xs */
+}
+
+/* Battle Hex Styles */
+.clip-hex {
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
+.hex-base {
+    background-color: rgba(30, 41, 59, 0.6);
+    /* gridBase */
+}
+
+.hex-move {
+    background-color: rgba(30, 58, 138, 0.6) !important;
+    /* gridMove */
+}
+
+.hex-attack {
+    background-color: rgba(127, 29, 29, 0.6) !important;
+    /* gridAttack */
+}
+
+.hex-selected {
+    box-shadow: 0 0 0 4px white;
+    /* ring-4 ring-white equivalent */
+}
+
+.unit-moved {
+    opacity: 0.4;
+}

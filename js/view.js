@@ -86,18 +86,7 @@ window.View = {
         const footer = document.getElementById('modal-footer');
         footer.innerHTML = '';
         buttons.forEach(btn => {
-
-
-
-
-
-
-
-
-
-
-
-
+            if (!btn || !btn.label) return;
             const b = UI.createModalButton(btn.label, () => { modal.classList.add('hidden'); btn.action(); });
             footer.appendChild(b);
         });
@@ -358,8 +347,6 @@ window.View = {
                     if (spec) options.push(spec);
                 }
 
-
-
                 const recruitHTML = UI.RecruitPanel(options, activeUnit, castle, (ut, activeUnit, castle) => {
                     const canAfford = playerFaction.gold >= ut.cost;
                     const isFull = activeUnit.army.length >= Data.MAX_UNITS;
@@ -383,8 +370,6 @@ window.View = {
             menuContent.appendChild(contentWrapper);
         }
     },
-
-
 
     // バトル画面関連
     initBattleGrid() {
@@ -413,11 +398,15 @@ window.View = {
         // グリッドが初期化されていない場合は何もしない
         if (!b.grid || b.grid.length === 0) return;
 
+
         b.grid.forEach(cell => {
             if (cell.el) {
                 cell.el.innerHTML = '';
-                cell.el.classList.remove(...UI.BattleStyles.gridSelectedRing);
-                cell.el.style.backgroundColor = UI.BattleStyles.gridBase;
+                cell.el.classList.remove(UI.BattleStyles.gridSelectedClass, UI.BattleStyles.gridMoveClass, UI.BattleStyles.gridAttackClass);
+                // Background color is handled by base class .hex-base, so no need to set inline logic except clearing it if it was set inline previously?
+                // Previously: cell.el.style.backgroundColor = UI.BattleStyles.gridBase;
+                // Since inline style has higher specificity than class, we MUST clear inline style if it exists.
+                cell.el.style.backgroundColor = '';
             }
         });
         b.units.forEach(u => {
@@ -426,24 +415,22 @@ window.View = {
                 const div = document.createElement('div'); div.className = "relative flex flex-col items-center justify-center pointer-events-none w-full h-full";
                 const hpPct = u.currentHp / u.hp;
                 div.innerHTML = UI.BattleUnitHTML(u, u.rank || 0, hpPct);
-                if (b.movedUnits.has(u)) div.style.opacity = UI.BattleStyles.movedUnitOpacity;
+                if (b.movedUnits.has(u)) div.classList.add(UI.BattleStyles.movedUnitClass);
                 cell.el.appendChild(div);
             }
         });
         if (b.selectedUnit) {
             const s = b.selectedUnit;
             const sc = b.grid.find(g => g.r === s.r && g.c === s.c);
-            if (sc && sc.el) sc.el.classList.add(...UI.BattleStyles.gridSelectedRing);
+            if (sc && sc.el) sc.el.classList.add(UI.BattleStyles.gridSelectedClass);
             b.grid.forEach(cell => {
                 const d = Model.getHexDist(s.r, s.c, cell.r, cell.c);
                 if (cell.el) {
                     if (!b.tempMoved && d > 0 && d <= s.move && !b.units.some(u => u.r === cell.r && u.c === cell.c)) {
-                        cell.el.style.backgroundColor = UI.BattleStyles.gridMove;
+                        cell.el.classList.add(UI.BattleStyles.gridMoveClass);
                     }
                     if (!(s.range > 1 && b.tempMoved) && d > 0 && d <= s.range) {
-                        // 赤（攻撃範囲）は青（移動範囲）を上書きするかもしれないが、今回は別々に表示
-                        // もし射程内なら赤優先
-                        cell.el.style.backgroundColor = UI.BattleStyles.gridAttack;
+                        cell.el.classList.add(UI.BattleStyles.gridAttackClass);
                     }
                 }
             });
@@ -462,10 +449,6 @@ window.View = {
             if (retreatBtn) retreatBtn.disabled = styles.retreatBtnDisabled;
         }
     },
-
-    // バトルのグリッド描画用のヘルパー (Controllerから分割)
-
-
     // バトルの初期グリッド構築 (Controllerから移動)
     renderBattleGridCore(gridData) {
         const grid = document.getElementById('battle-grid');
