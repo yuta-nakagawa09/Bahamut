@@ -157,6 +157,54 @@ window.Model = {
         };
         this.state.mapUnits.push(newUnit);
         return newUnit;
+    },
+
+    /**
+     * ユニット単体の戦力を計算する
+     * @param {Object} unit - ユニットデータ (atk, currentHpを持つ)
+     * @returns {number}
+     */
+    getUnitPower(unit) {
+        return (unit.atk || 0) + (unit.currentHp || 0);
+    },
+
+    /**
+     * 指定された拠点の戦力合計を計算する
+     * 拠点上の全ユニットの攻撃力(atk)の合計を返す
+     * @param {Object} castle - 拠点データ
+     * @returns {number} 戦力合計値
+     */
+    getCastleTotalPower(castle) {
+        if (!castle) return 0;
+        const allUnits = this.state.mapUnits.filter(u => Math.hypot(u.x - castle.x, u.y - castle.y) < Data.UI.UNIT_DETECT_RADIUS);
+        return allUnits.reduce((acc, mapUnit) => {
+            return acc + mapUnit.army.reduce((uAcc, u) => uAcc + this.getUnitPower(u), 0);
+        }, 0);
+    },
+
+    /**
+     * 指定された勢力の総戦力を計算する
+     * @param {string} factionId - 勢力ID
+     * @returns {number} 総戦力
+     */
+    getFactionTotalPower(factionId) {
+        const factionUnits = this.state.mapUnits.filter(u => u.owner === factionId);
+        return factionUnits.reduce((acc, mapUnit) => {
+            return acc + mapUnit.army.reduce((uAcc, u) => uAcc + this.getUnitPower(u), 0);
+        }, 0);
+    },
+
+    /**
+     * 指定された勢力の収入を計算する
+     * 基本収入(100) + 所有拠点の収入合計
+     * @param {string} factionId - 勢力ID
+     * @returns {number} 収入値
+     */
+    calculateFactionIncome(factionId) {
+        const castleIncome = this.state.castles
+            .filter(c => c.owner === factionId)
+            .reduce((sum, c) => sum + (c.income || 0), 0);
+        return castleIncome;
     }
 };
 window.Model = Model;

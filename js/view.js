@@ -355,6 +355,10 @@ window.View = {
             infoText = UI.MenuBonus('income', castle.income || 0);
         }
 
+        // 戦力計算 (Modelに移譲)
+        const totalPower = Model.getCastleTotalPower(castle);
+        infoText += UI.MenuPower(totalPower);
+
         document.getElementById('base-menu-title').innerHTML = UI.MenuTitle(castle.name, isHQ, ownerName, ownerEmoji, color, infoText);
 
         const createBtn = document.getElementById('btn-create-army');

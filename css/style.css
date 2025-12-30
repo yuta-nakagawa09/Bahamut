@@ -362,16 +362,20 @@ body {
     height: 100%;
     padding-left: 1rem;
     padding-right: 1rem;
+    margin-left: auto;
+    /* Right align */
 }
 
 .map-stat-group {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 80px;
+    /* Fixed width for stability */
 }
 
 .map-stat-label {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     text-transform: uppercase;
     font-weight: 900;
     letter-spacing: 0.1em;
@@ -379,7 +383,7 @@ body {
 }
 
 .map-stat-value {
-    font-size: 1.875rem;
+    font-size: 1.5rem;
     /* text-3xl */
     color: white;
     font-family: monospace;
@@ -388,14 +392,15 @@ body {
 }
 
 .map-turn-indicator {
-    position: absolute;
-    inset: 0;
     display: flex;
     flex-direction: column;
-    align-items: center;
     justify-content: center;
-    pointer-events: none;
+    align-items: flex-start;
+    /* Left align text */
+    padding-left: 2rem;
     z-index: 10;
+    pointer-events: none;
+    /* Let clicks pass through if overlapping, though it shouldn't now */
 }
 
 /* Map Main Area */

@@ -57,8 +57,18 @@
     <div id="screen-map" class="hidden screen-map">
         <!-- HEADER (Status) -->
         <header class="map-header">
+            <!-- Turn Indicator -->
+            <div id="turn-indicator" class="map-turn-indicator">
+                <div id="turn-display" class="text-2xl text-yellow-600 font-black uppercase tracking-[0.3em] mb-1">
+                    第1ターン
+                </div>
+                <div id="turn-text-map" class="text-3xl text-white font-mono font-bold leading-none">
+                    自軍フェーズ
+                </div>
+            </div>
+
             <div class="map-stats-container">
-                <div class="flex gap-10">
+                <div class="flex gap-3">
                     <div class="map-stat-group">
                         <div class="map-stat-label text-blue-500">拠点数</div>
                         <div id="castle-count-display" class="map-stat-value">0/0
@@ -73,20 +83,17 @@
                         <div class="map-stat-label text-yellow-500">資金</div>
                         <div id="gold-amount" class="map-stat-value">500G</div>
                     </div>
+                    <!-- New Stats -->
+                    <div class="map-stat-group">
+                        <div class="map-stat-label text-cyan-400">総収入</div>
+                        <div id="income-display" class="map-stat-value">100G</div>
+                    </div>
+                    <div class="map-stat-group">
+                        <div class="map-stat-label text-red-400">総戦力</div>
+                        <div id="power-display" class="map-stat-value">0</div>
+                    </div>
                 </div>
             </div>
-
-            <!-- Turn Indicator -->
-            <div id="turn-indicator" class="map-turn-indicator">
-                <div id="turn-display" class="text-2xl text-yellow-600 font-black uppercase tracking-[0.3em] mb-1">
-                    第1ターン
-                </div>
-                <div id="turn-text-map" class="text-3xl text-white font-mono font-bold leading-none">
-                    自軍フェーズ
-                </div>
-            </div>
-
-            <!-- System Menu -->
         </header>
 
         <div class="flex flex-1 overflow-hidden relative">
@@ -99,7 +106,7 @@
                     <div class="p-2 bg-black/60 border-b border-gray-800 flex justify-between items-center shrink-0">
                         <div class="flex flex-col">
                             <h2 id="base-menu-title"
-                                class="text-2xl text-yellow-500 font-black tracking-tighter uppercase leading-tight">
+                                class="text-xl text-yellow-500 font-black tracking-tighter uppercase leading-tight">
                                 拠点を選択してください
                             </h2>
                         </div>

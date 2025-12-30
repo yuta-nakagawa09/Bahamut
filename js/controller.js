@@ -127,12 +127,25 @@ window.Controller = {
         const castleCountEl = document.getElementById('castle-count-display');
         const armyCountEl = document.getElementById('army-total-display');
         const goldEl = document.getElementById('gold-amount');
+        const incomeEl = document.getElementById('income-display'); // New
+        const powerEl = document.getElementById('power-display'); // New
         const turnDisplayEl = document.getElementById('turn-display');
         const turnTextMapEl = document.getElementById('turn-text-map');
 
         if (castleCountEl) castleCountEl.innerText = `${Model.state.castles.filter(c => c.owner === p.id).length}/${Model.state.castles.length}`;
         if (armyCountEl) armyCountEl.innerText = `${Model.state.mapUnits.filter(u => u.owner === p.id).length}/${Data.MAX_ARMIES}`;
         if (goldEl) goldEl.innerText = `${p.gold}G`;
+
+        // Update new stats
+        if (incomeEl) {
+            const income = Model.calculateFactionIncome(p.id);
+            incomeEl.innerText = `${income}G`;
+        }
+        if (powerEl) {
+            const power = Model.getFactionTotalPower(p.id);
+            powerEl.innerText = `${power}`;
+        }
+
         if (turnDisplayEl) turnDisplayEl.innerText = `第${Model.state.turnCount}ターン`;
         if (turnTextMapEl) {
             turnTextMapEl.innerText = (Model.state.strategicTurn === 'player') ? "自軍フェーズ" : "敵軍フェーズ";
@@ -365,8 +378,7 @@ window.Controller = {
         View.showMessage(`ターン開始：収入計算中...`);
 
         const player = Model.state.factions.find(f => f.isPlayer);
-        const castleIncome = Model.state.castles.filter(c => c.owner === player.id).reduce((sum, c) => sum + (c.income || 0), 0);
-        const income = 100 + castleIncome;
+        const income = Model.calculateFactionIncome(player.id);
         player.gold += income;
 
         Model.state.mapUnits.forEach(u => u.hasActed = false);
