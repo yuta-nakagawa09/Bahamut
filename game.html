@@ -15,11 +15,13 @@
 
     <!-- TITLE SCREEN -->
     <div id="screen-title" class="screen-title">
-        <h1 class="title-heading">
-            バハムート戦記
-        </h1>
+        <div class="title-scroll-container">
+            <h1 class="title-heading">
+                バハムート戦記
+            </h1>
+        </div>
 
-        <div class="flex gap-8 relative z-50">
+        <div class="flex gap-8 mt-12 relative z-50">
             <button
                 onclick="console.log('Start Clicked'); if(window.View) View.changeScreen('settings'); else alert('View not loaded');"
                 class="btn-base btn-primary">
