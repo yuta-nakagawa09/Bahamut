@@ -506,6 +506,10 @@ window.View = {
             indicator.innerText = styles.text;
             indicator.className = styles.className;
             if (endBtn) endBtn.disabled = styles.endBtnDisabled;
+
+            const autoBtn = document.getElementById('battle-auto-btn');
+            if (autoBtn) autoBtn.disabled = styles.endBtnDisabled;
+
             if (retreatBtn) retreatBtn.disabled = styles.retreatBtnDisabled;
         }
     },

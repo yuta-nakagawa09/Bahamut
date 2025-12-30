@@ -273,17 +273,22 @@ window.BattleSystem = {
     /**
      * 敵AIの行動を実行する
      */
-    runAI() {
-        // 簡易AI
-        const aiUnits = Model.state.battle.units.filter(u => u.owner === 'enemy');
+    /**
+     * AIの行動を実行する
+     * @param {string} side - 行動させる側 ('enemy' or 'player')
+     */
+    runAI(side = 'enemy') {
+        const aiUnits = Model.state.battle.units.filter(u => u.owner === side);
         let delay = 0;
 
         aiUnits.forEach(u => {
             setTimeout(() => {
                 if (u.currentHp <= 0) return;
+                // プレイヤーターンAIで、既に手動で移動・行動済みの場合はスキップ
+                if (side === 'player' && Model.state.battle.movedUnits.has(u)) return;
 
-                // ターゲット選定
-                const targets = Model.state.battle.units.filter(t => t.owner === 'player');
+                // ターゲット選定 (自分以外の勢力)
+                const targets = Model.state.battle.units.filter(t => t.owner !== side);
                 if (targets.length === 0) return;
 
                 // 1. 攻撃可能な敵がいるか
@@ -345,10 +350,13 @@ window.BattleSystem = {
 
                     if (hasMoved && u.range >= 2) {
                         // 遠距離ユニットは移動攻撃不可
+                        Model.state.battle.movedUnits.add(u);
                         View.updateBattleUI();
                     } else if (d <= u.range) {
                         this.attack(u, target);
                     } else {
+                        // 攻撃できずに待機
+                        Model.state.battle.movedUnits.add(u);
                         View.updateBattleUI();
                     }
                 }
@@ -357,10 +365,15 @@ window.BattleSystem = {
         });
 
         setTimeout(() => {
-            Model.state.battle.turn = 'player';
-            Model.state.battle.movedUnits.clear();
-            View.showMessage("自軍ターン");
-            View.updateBattleUI();
+            if (side === 'enemy') {
+                Model.state.battle.turn = 'player';
+                Model.state.battle.movedUnits.clear();
+                View.showMessage("自軍ターン");
+                View.updateBattleUI();
+            } else {
+                // プレイヤーAI終了後は自動でターン終了へ
+                this.endTurn();
+            }
         }, delay + 1000);
     },
 
