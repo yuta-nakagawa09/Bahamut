@@ -890,3 +890,67 @@ body {
 .unit-moved {
     opacity: 0.4;
 }
+
+/* Sidebar Buttons */
+.sidebar-btn-base {
+    width: 10rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    background-image: linear-gradient(to bottom, #1f2937, #030712);
+    border-width: 2px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+    border-radius: 0.5rem;
+    position: relative;
+    z-index: 50;
+    pointer-events: auto;
+    font-weight: 700;
+}
+
+.sidebar-btn-base:hover {
+    background-image: linear-gradient(to bottom, #374151, #111827);
+    transform: scale(1.05);
+}
+
+.sidebar-btn-base:active {
+    transform: scale(0.95);
+}
+
+.btn-turn-end {
+    border-color: rgba(127, 29, 29, 0.5);
+    color: white;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-turn-end:hover {
+    border-color: #ef4444;
+}
+
+.btn-save-load {
+    border-color: rgba(30, 58, 138, 0.5);
+    color: white;
+    font-size: 1.125rem;
+}
+
+.btn-save-load:hover {
+    border-color: #3b82f6;
+}
+
+.btn-back-title {
+    border-color: #4b5563;
+    color: #d1d5db;
+    font-size: 1.125rem;
+    margin-bottom: 1rem;
+}
+
+.btn-back-title:hover {
+    border-color: #9ca3af;
+    color: white;
+}

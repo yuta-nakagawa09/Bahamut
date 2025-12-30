@@ -221,35 +221,62 @@ window.Controller = {
     /**
      * ローカルストレージからゲームデータをロード
      */
+    /**
+     * ローカルストレージからゲームデータをロード
+     */
     loadGame() {
-        const d = localStorage.getItem('bahamut_save_v2');
-        if (d) {
-            const save = JSON.parse(d);
-            Model.state = save;
-            // Battle中のgridなどDOM要素を持たないデータの復元が必要
-            View.changeScreen(Model.state.currentScreen);
-            if (Model.state.currentScreen === 'battle') {
-                View.initBattleGrid();
-            }
-            View.showMessage("ロードしました");
-        } else {
-            View.showMessage("セーブデータがありません");
-        }
+        View.openModal("ロード確認", "ゲームをロードしますか？\n（現在の進行状況は失われます）", [
+            {
+                label: "はい", action: () => {
+                    const d = localStorage.getItem('bahamut_save_v2');
+                    if (d) {
+                        const save = JSON.parse(d);
+                        Model.state = save;
+                        // Battle中のgridなどDOM要素を持たないデータの復元が必要
+                        View.changeScreen(Model.state.currentScreen);
+                        if (Model.state.currentScreen === 'battle') {
+                            View.initBattleGrid();
+                        }
+                        View.showMessage("ロードしました");
+                    } else {
+                        View.showMessage("セーブデータがありません");
+                    }
+                }
+            },
+            { label: "キャンセル", action: () => { } }
+        ]);
     },
 
     /**
      * 現在の状態をローカルストレージにセーブ
      */
     saveGame() {
-        // DOM要素や循環参照を除く等の処置が必要だが、現在のModel構造はシリアライズ可能と仮定
-        // battle.grid内のelは保存しないように除外するか、再開時に再生成する
-        const save = JSON.parse(JSON.stringify(Model.state, (key, value) => {
-            if (key === 'el' || key === 'ctx' || key === 'canvas') return undefined; // DOM関連除外
-            if (key === 'movedUnits') return Array.from(value); // Set -> Array
-            return value;
-        }));
-        localStorage.setItem('bahamut_save_v2', JSON.stringify(save));
-        View.showMessage("セーブしました");
+        View.openModal("セーブ確認", "現在の状態をセーブしますか？\n（既存のセーブデータは上書きされます）", [
+            {
+                label: "はい", action: () => {
+                    // DOM要素や循環参照を除く等の処置が必要だが、現在のModel構造はシリアライズ可能と仮定
+                    // battle.grid内のelは保存しないように除外するか、再開時に再生成する
+                    const save = JSON.parse(JSON.stringify(Model.state, (key, value) => {
+                        if (key === 'el' || key === 'ctx' || key === 'canvas') return undefined; // DOM関連除外
+                        if (key === 'movedUnits') return Array.from(value); // Set -> Array
+                        return value;
+                    }));
+                    localStorage.setItem('bahamut_save_v2', JSON.stringify(save));
+                    View.showMessage("セーブしました");
+                }
+            },
+            { label: "キャンセル", action: () => { } }
+        ]);
+    },
+
+    /**
+     * タイトルに戻る確認モーダルを表示
+     */
+    confirmReturnToTitle() {
+        View.openModal("確認", "タイトル画面に戻りますか？\n（保存されていない進行状況は失われます）", [
+            { label: "はい", action: () => location.reload() },
+            { label: "いいえ", action: () => { } }
+        ]);
     },
 
     // -------------------------------------------------------------------------

@@ -126,19 +126,15 @@
             <!-- RIGHT SIDEBAR (End Turn) -->
             <aside id="command-sidebar" class="map-sidebar">
                 <div id="menu-group" class="flex flex-col gap-4 items-center px-4 h-full hidden py-6">
-                    <button onclick="Controller.endStrategicTurn()"
-                        class="w-40 py-3 bg-gradient-to-b from-gray-800 to-gray-950 hover:from-gray-700 hover:to-gray-900 border-2 border-red-900/50 hover:border-red-500 text-white font-black uppercase tracking-widest shadow-lg transition-all transform active:scale-95 rounded-lg flex items-center justify-center group relative z-50 pointer-events-auto">
+                    <button onclick="Controller.endStrategicTurn()" class="sidebar-btn-base btn-turn-end group">
                         <span class="text-xl writing-vertical-rl">ターン終了</span>
                     </button>
-                    <button onclick="Controller.saveGame()"
-                        class="w-40 py-3 bg-gradient-to-b from-gray-800 to-gray-950 hover:from-gray-700 hover:to-gray-900 border-2 border-blue-900/50 hover:border-blue-500 text-lg font-bold shadow-lg transition-all transform active:scale-95 text-white relative z-50 pointer-events-auto rounded-lg">セーブ</button>
-                    <button onclick="Controller.loadGame()"
-                        class="w-40 py-3 bg-gradient-to-b from-gray-800 to-gray-950 hover:from-gray-700 hover:to-gray-900 border-2 border-blue-900/50 hover:border-blue-500 text-lg font-bold shadow-lg transition-all transform active:scale-95 text-white relative z-50 pointer-events-auto rounded-lg">ロード</button>
-
                     <div class="flex-1"></div>
 
-                    <button onclick="if(confirm('タイトルに戻りますか？')) location.reload()"
-                        class="w-40 py-3 bg-transparent hover:bg-gray-800 border border-gray-800 hover:border-gray-500 text-gray-500 hover:text-white text-sm font-bold transition-all rounded-lg relative z-50 pointer-events-auto mb-4">
+                    <button onclick="Controller.saveGame()" class="sidebar-btn-base btn-save-load">セーブ</button>
+                    <button onclick="Controller.loadGame()" class="sidebar-btn-base btn-save-load">ロード</button>
+
+                    <button onclick="Controller.confirmReturnToTitle()" class="sidebar-btn-base btn-back-title">
                         タイトルに戻る
                     </button>
                 </div>
