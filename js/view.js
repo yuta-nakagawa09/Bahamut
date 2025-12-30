@@ -13,19 +13,7 @@ window.View = {
         const container = document.getElementById('master-select-container');
         if (!container) return;
 
-        container.innerHTML = Data.MASTERS.map(m => {
-            let colorName = 'blue';
-            if (m.id === 'mage') colorName = 'green';
-            if (m.id === 'demon') colorName = 'red';
-
-            return `
-            <div onclick="Controller.createGame('${m.id}')"
-                class="group p-10 border-4 border-gray-700 hover:border-${colorName}-500 transition-all cursor-pointer rounded-2xl bg-gray-800/80 shadow-2xl hover:scale-105 flex flex-col items-center w-[300px] shrink-0 relative z-50 pointer-events-auto">
-                <div class="text-9xl mb-8 transition-transform group-hover:scale-110">${m.emoji}</div>
-                <div class="text-4xl font-bold mb-4 text-white group-hover:text-${colorName}-400">${m.name}</div>
-                <p class="text-center text-gray-400">${m.desc}</p>
-            </div>`;
-        }).join('');
+        container.innerHTML = Data.MASTERS.map(m => UI.MasterSelectionCard(m)).join('');
     },
 
     changeScreen(screenId) {
@@ -72,20 +60,7 @@ window.View = {
         const list = document.getElementById('map-select-list');
         if (!list) return;
 
-        list.innerHTML = Data.MAP_TEMPLATES.map(t => {
-            // Assign icons based on ID (could be moved to Data later)
-            let emoji = '🗺️';
-            if (t.id === 'islands') emoji = '🏝️';
-            if (t.id === 'ring') emoji = '⭕';
-
-            return `
-            <div onclick="Controller.selectMapAndNext('${t.id}')"
-                class="group p-10 border-4 border-gray-700 hover:border-yellow-500 transition-all cursor-pointer rounded-2xl bg-gray-800/80 shadow-2xl hover:scale-105 flex flex-col items-center w-[300px] shrink-0 relative z-50 pointer-events-auto">
-                <div class="text-9xl mb-8 transition-transform group-hover:scale-110">${emoji}</div>
-                <div class="text-4xl font-bold mb-4 text-white group-hover:text-yellow-400">${t.name}</div>
-                <p class="text-center text-gray-400">${t.desc}</p>
-            </div>`;
-        }).join('');
+        list.innerHTML = Data.MAP_TEMPLATES.map(t => UI.MapSelectionCard(t)).join('');
     },
 
     renderMapFlow() {
@@ -111,10 +86,19 @@ window.View = {
         const footer = document.getElementById('modal-footer');
         footer.innerHTML = '';
         buttons.forEach(btn => {
-            const b = document.createElement('button');
-            b.className = "px-10 py-4 bg-blue-700 hover:bg-blue-600 border-2 border-white text-2xl transition-colors font-bold rounded-lg shadow-lg text-white pointer-events-auto cursor-pointer";
-            b.innerText = btn.label;
-            b.onclick = () => { modal.classList.add('hidden'); btn.action(); };
+
+
+
+
+
+
+
+
+
+
+
+
+            const b = UI.createModalButton(btn.label, () => { modal.classList.add('hidden'); btn.action(); });
             footer.appendChild(b);
         });
         modal.classList.remove('hidden');
@@ -125,15 +109,10 @@ window.View = {
         const title = document.getElementById('ending-title');
         const body = document.getElementById('ending-body');
 
-        if (isWin) {
-            title.innerText = "完全制覇";
-            title.className = "text-8xl font-bold mb-12 text-yellow-500 uppercase tracking-tighter drop-shadow-[0_0_30px_rgba(234,179,8,0.5)]";
-            body.innerText = "敵勢力の拠点をすべて制圧し、バハムート大陸に真の平和が訪れた。あなたの名は伝説となり、永く語り継がれるだろう。";
-        } else {
-            title.innerText = "敗北...";
-            title.className = "text-8xl font-bold mb-12 text-red-600 uppercase tracking-tighter drop-shadow-[0_0_30px_rgba(220,38,38,0.5)]";
-            body.innerText = "全ての拠点を失い、希望は潰えた。大陸の歴史は勝者によって書き換えられ、あなたの名は闇へと消えていく...";
-        }
+        const styles = UI.EndingStyles(isWin);
+        title.innerText = styles.titleText;
+        title.className = styles.titleClass;
+        body.innerText = styles.bodyText;
 
         this.changeScreen('ending');
     },
@@ -321,18 +300,12 @@ window.View = {
 
         let infoText = '';
         if (castle.owner === 'neutral') {
-            infoText = `<span class="text-yellow-400 ml-4">💰ボーナス: ${castle.captureBonus}G</span>`;
+            infoText = UI.MenuBonus('bonus', castle.captureBonus);
         } else {
-            infoText = `<span class="text-green-400 ml-4">💰収入: ${castle.income || 0}G</span>`;
+            infoText = UI.MenuBonus('income', castle.income || 0);
         }
 
-        let titleHTML = `
-            <span>${castle.name}</span>
-            <span class="ml-2">${isHQ ? '👑本拠地' : ''}</span>
-            <span style="color:${color}" class="ml-2">${ownerEmoji}${ownerName}</span>
-            ${infoText}
-            `;
-        document.getElementById('base-menu-title').innerHTML = titleHTML;
+        document.getElementById('base-menu-title').innerHTML = UI.MenuTitle(castle.name, isHQ, ownerName, ownerEmoji, color, infoText);
 
         const createBtn = document.getElementById('btn-create-army');
         createBtn.disabled = castle.owner !== playerFaction.id || playerFaction.gold < Data.ARMY_COST || Model.state.mapUnits.filter(u => u.owner === playerFaction.id).length >= Data.MAX_ARMIES;
@@ -390,21 +363,7 @@ window.View = {
                 const recruitHTML = UI.RecruitPanel(options, activeUnit, castle, (ut, activeUnit, castle) => {
                     const canAfford = playerFaction.gold >= ut.cost;
                     const isFull = activeUnit.army.length >= Data.MAX_UNITS;
-                    return `
-                        <div class="recruit-item flex justify-between items-center bg-white/5 p-1 rounded-lg border border-white/10 pointer-events-auto relative z-50 gap-3">
-                            <div class="flex items-center gap-3">
-                                <div class="text-4xl">${ut.emoji}</div>
-                                <div class="flex gap-3">
-                                    <div class="text-xl font-bold text-white">${ut.name}
-                                    </div>
-                                    <div class="text-xl text-gray-300">
-                                        HP:${ut.hp} / ATK:${ut.atk} / RNG:${ut.range} / MOVE:${ut.move}</div>
-                                </div>
-                            </div>
-                            <button onclick="event.stopPropagation(); Controller.recruitUnit('${activeUnit.id}', '${ut.id}', '${castle.id}')" 
-                                class="px-5 py-1 min-w-[100px] bg-blue-900 border border-blue-400 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-lg font-bold shadow-md active:translate-y-1 text-white rounded-lg" 
-                                ${!canAfford || isFull ? 'disabled' : ''}>${isFull ? "満員" : `${ut.cost}G`}</button>
-                        </div>`;
+                    return UI.RecruitItem(ut, activeUnit.id, castle.id, canAfford, isFull);
                 });
 
                 const unitsHTML = UI.UnitListPanel(activeUnit, castle, (u, i) => UI.UnitListItem(u, i, {
@@ -415,7 +374,7 @@ window.View = {
                 contentHTML = recruitHTML + unitsHTML;
             } else {
                 // 敵軍: 部隊リストのみ
-                contentHTML = `<div class="flex flex-col gap-3">${activeUnit.army.map((u, i) => UI.UnitListItem(u, i)).join('')}</div>`;
+                contentHTML = UI.EnemyUnitListContainer(activeUnit.army.map((u, i) => UI.UnitListItem(u, i)).join(''));
             }
 
             // コンテンツのみ追加 (カードヘッダーなし)
@@ -457,40 +416,34 @@ window.View = {
         b.grid.forEach(cell => {
             if (cell.el) {
                 cell.el.innerHTML = '';
-                cell.el.classList.remove('ring-4', 'ring-white');
-                cell.el.style.backgroundColor = "rgba(30, 41, 59, 0.6)"; // Reset to base color
+                cell.el.classList.remove(...UI.BattleStyles.gridSelectedRing);
+                cell.el.style.backgroundColor = UI.BattleStyles.gridBase;
             }
         });
         b.units.forEach(u => {
             const cell = b.grid.find(g => g.r === u.r && g.c === u.c);
             if (cell && cell.el) {
                 const div = document.createElement('div'); div.className = "relative flex flex-col items-center justify-center pointer-events-none w-full h-full";
-                div.innerHTML = `
-                    <div class="flex items-center gap-1 mb-1">
-                        <span class="text-4xl shadow-black drop-shadow-md">${u.emoji}</span>
-                        <span class="text-[10px] text-yellow-500 font-bold bg-black/50 px-1 rounded">${Data.RANKS[u.rank || 0]}</span>
-                    </div>
-                    <div class="w-12 h-1.5 bg-gray-900 border border-gray-600 rounded-full overflow-hidden shadow-sm">
-                        <div class="h-full bg-gradient-to-r from-green-600 to-green-400 transition-all duration-300" style="width:${Math.max(0, (u.currentHp / u.hp) * 100)}%"></div>
-                    </div>`;
-                if (b.movedUnits.has(u)) div.style.opacity = "0.4";
+                const hpPct = u.currentHp / u.hp;
+                div.innerHTML = UI.BattleUnitHTML(u, u.rank || 0, hpPct);
+                if (b.movedUnits.has(u)) div.style.opacity = UI.BattleStyles.movedUnitOpacity;
                 cell.el.appendChild(div);
             }
         });
         if (b.selectedUnit) {
             const s = b.selectedUnit;
             const sc = b.grid.find(g => g.r === s.r && g.c === s.c);
-            if (sc && sc.el) sc.el.classList.add('ring-4', 'ring-white');
+            if (sc && sc.el) sc.el.classList.add(...UI.BattleStyles.gridSelectedRing);
             b.grid.forEach(cell => {
                 const d = Model.getHexDist(s.r, s.c, cell.r, cell.c);
                 if (cell.el) {
                     if (!b.tempMoved && d > 0 && d <= s.move && !b.units.some(u => u.r === cell.r && u.c === cell.c)) {
-                        cell.el.style.backgroundColor = "rgba(30, 58, 138, 0.6)"; // Blue
+                        cell.el.style.backgroundColor = UI.BattleStyles.gridMove;
                     }
                     if (!(s.range > 1 && b.tempMoved) && d > 0 && d <= s.range) {
                         // 赤（攻撃範囲）は青（移動範囲）を上書きするかもしれないが、今回は別々に表示
                         // もし射程内なら赤優先
-                        cell.el.style.backgroundColor = "rgba(127, 29, 29, 0.6)"; // Red
+                        cell.el.style.backgroundColor = UI.BattleStyles.gridAttack;
                     }
                 }
             });
@@ -502,38 +455,16 @@ window.View = {
         const retreatBtn = document.getElementById('battle-retreat-btn');
 
         if (indicator) {
-            if (b.turn === 'player') {
-                indicator.innerText = "自軍ターン";
-                indicator.className = "mb-4 text-3xl font-black tracking-widest text-yellow-500 animate-pulse bg-black/50 px-4 py-1 rounded shadow-lg border border-yellow-500/30";
-                if (endBtn) endBtn.disabled = false;
-                if (retreatBtn) retreatBtn.disabled = false;
-            } else {
-                indicator.innerText = "敵軍ターン";
-                indicator.className = "mb-4 text-3xl font-black tracking-widest text-red-500 animate-pulse bg-black/50 px-4 py-1 rounded shadow-lg border border-red-500/30";
-                if (endBtn) endBtn.disabled = true;
-                if (retreatBtn) retreatBtn.disabled = true;
-            }
+            const styles = UI.TurnIndicatorStyles(b.turn);
+            indicator.innerText = styles.text;
+            indicator.className = styles.className;
+            if (endBtn) endBtn.disabled = styles.endBtnDisabled;
+            if (retreatBtn) retreatBtn.disabled = styles.retreatBtnDisabled;
         }
     },
 
     // バトルのグリッド描画用のヘルパー (Controllerから分割)
-    drawHex(x, y, r, c) {
-        const div = document.createElement('div');
-        div.className = "absolute w-24 h-24 flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors clip-hex z-50 pointer-events-auto";
-        div.style.left = `${x}px`;
-        div.style.top = `${y}px`;
-        // クリップパスはCSSで定義するか、スタイルで直接書く
-        div.style.clipPath = "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)";
-        div.style.backgroundColor = "rgba(30, 41, 59, 0.6)"; // slate-800/60
-        div.addEventListener('click', (e) => {
-            console.log(`Hex Clicked: ${r}, ${c}`);
-            e.stopPropagation();
-            if (window.BattleSystem) {
-                window.BattleSystem.handleClick(r, c);
-            }
-        });
-        return div;
-    },
+
 
     // バトルの初期グリッド構築 (Controllerから移動)
     renderBattleGridCore(gridData) {
@@ -558,7 +489,9 @@ window.View = {
             const px = c * hexSize + (r % 2 ? hexSize / 2 : 0);
             const py = r * hexSize * 0.75;
 
-            const el = this.drawHex(px, py, r, c);
+            const el = UI.BattleHex(px, py, r, c, (r, c) => {
+                if (window.BattleSystem) window.BattleSystem.handleClick(r, c);
+            });
             cell.el = el;
             grid.appendChild(el);
         });

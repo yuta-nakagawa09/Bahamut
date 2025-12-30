@@ -52,7 +52,7 @@ global.document = {
     getElementById: (id) => {
         if (!pseudoDOM[id]) {
             // Auto-create for critical UI elements if missing in tests
-            if (id === 'message-box' || id === 'message-text' || id === 'modal-layer') {
+            if (['message-box', 'message-text', 'modal-layer', 'base-menu-title', 'base-menu-content', 'base-menu'].includes(id)) {
                 const el = new Element('div');
                 el.id = id;
                 pseudoDOM[id] = el;
