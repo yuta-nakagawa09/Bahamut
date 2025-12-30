@@ -115,6 +115,11 @@ window.View = {
      */
     openModal(title, body, buttons) {
         const modal = document.getElementById('modal-layer');
+        // Restore generic modal structure if needed (e.g. after Info Modal)
+        if (!document.getElementById('modal-title')) {
+            modal.innerHTML = UI.GenericModalTemplate();
+        }
+
         document.getElementById('modal-title').innerText = title;
         document.getElementById('modal-body').innerText = body;
         const footer = document.getElementById('modal-footer');
@@ -541,7 +546,106 @@ window.View = {
 
         // コンテナサイズ調整
         const cols = 7; const rows = 6; const hexSize = Data.BATTLE.GRID_SIZE;
-        grid.style.width = `${(cols + 0.5) * hexSize}px`;
         grid.style.height = `${(rows * 0.75 + 0.25) * hexSize}px`;
+    },
+    /**
+     * モーダルを閉じる
+     */
+    closeModal() {
+        document.getElementById('modal-layer').classList.add('hidden');
+    },
+
+    /**
+     * 情報ウィンドウ（モーダル）を開く
+     */
+    openInfoModal() {
+        const modalHtml = UI.InfoModalTemplate();
+        const modalLayer = document.getElementById('modal-layer');
+        modalLayer.innerHTML = modalHtml;
+        modalLayer.classList.remove('hidden');
+
+        // Initial render
+        this.renderInfoFactionList();
+    },
+
+    /**
+     * 情報タブ切り替え
+     * @param {string} tabId 
+     */
+    switchInfoTab(tabId) {
+        document.querySelectorAll('.info-tab').forEach(el => el.classList.remove('active'));
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+
+        if (tabId === 'faction') this.renderInfoFactionList();
+        else if (tabId === 'castle') this.renderInfoCastleList();
+    },
+
+    /**
+     * 勢力一覧を描画
+     */
+    renderInfoFactionList() {
+        const factions = Model.state.factions;
+        const rows = [];
+
+        factions.forEach(f => {
+            if (!f.isAlive) return;
+            const castleCount = Model.state.castles.filter(c => c.owner === f.id).length;
+            const armyCount = Model.state.mapUnits.filter(u => u.owner === f.id).length;
+            const income = Model.calculateFactionIncome(f.id);
+            const power = Model.getFactionTotalPower(f.id);
+
+            rows.push({
+                color: f.color,
+                emoji: f.master.emoji,
+                name: f.name,
+                castleCount: castleCount,
+                armyCount: armyCount,
+                gold: f.gold,
+                income: income,
+                power: power
+            });
+        });
+
+        const html = UI.InfoFactionTable(rows);
+        document.getElementById('info-content-area').innerHTML = html;
+    },
+
+    /**
+     * 拠点一覧を描画
+     */
+    renderInfoCastleList() {
+        const castles = Model.state.castles;
+        const rows = [];
+
+        castles.forEach(c => {
+            const owner = Model.state.factions.find(f => f.id === c.owner);
+            const isNeutral = !owner;
+            const ownerNameDisplay = owner
+                ? `<span style="color:${owner.color}">${owner.master.emoji} ${owner.name}</span>`
+                : '<span style="color:#9ca3af">中立</span>';
+            const type = (c.id === 'c1' || c.id === 'c2' || c.id === 'c6') ? '★本拠地' : '拠点';
+
+            let incomeText = '';
+            if (c.owner === 'neutral') {
+                incomeText = `制圧: ${c.captureBonus}G`;
+            } else {
+                incomeText = `収入: ${c.income}G`;
+            }
+
+            const power = Model.getCastleTotalPower(c);
+            const uniqueUnit = c.uniqueUnit ? Data.SPECIAL_UNITS[c.uniqueUnit].name : '-';
+
+            rows.push({
+                name: c.name,
+                type: type,
+                ownerNameDisplay: ownerNameDisplay,
+                incomeText: incomeText,
+                power: power,
+                uniqueUnit: uniqueUnit
+            });
+        });
+
+        const html = UI.InfoCastleTable(rows);
+        document.getElementById('info-content-area').innerHTML = html;
     }
 }; window.UI = UI; window.View = View;

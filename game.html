@@ -133,7 +133,10 @@
             <!-- RIGHT SIDEBAR (End Turn) -->
             <aside id="command-sidebar" class="map-sidebar">
                 <div id="menu-group" class="flex flex-col gap-4 items-center px-4 h-full hidden py-6">
-                    <button onclick="Controller.endStrategicTurn()" class="sidebar-btn-base btn-turn-end group">
+                    <button onclick="View.openInfoModal()" class="sidebar-btn-base btn-save-load mb-4">
+                        情報
+                    </button>
+                    <button onclick="Controller.endStrategicTurn()" class="sidebar-btn-base btn-turn-end group mb-4">
                         <span class="text-xl writing-vertical-rl">ターン終了</span>
                     </button>
                     <div class="flex-1"></div>

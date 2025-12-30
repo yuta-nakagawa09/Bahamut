@@ -391,5 +391,110 @@ window.UI = {
         gridAttackClass: "hex-attack",
         gridSelectedClass: "hex-selected",
         movedUnitClass: "unit-moved"
+    },
+
+    // -------------------------------------------------------------------------
+    // 情報ウィンドウ (Info Modal)
+    // -------------------------------------------------------------------------
+    /**
+     * 情報モーダルのテンプレートHTML
+     * @returns {string} HTML文字列
+     */
+    InfoModalTemplate: () => {
+        return `
+            <div class="info-modal-container" onclick="event.stopPropagation()">
+                <div class="info-tabs">
+                    <div id="tab-faction" class="info-tab active" onclick="View.switchInfoTab('faction')">勢力一覧</div>
+                    <div id="tab-castle" class="info-tab" onclick="View.switchInfoTab('castle')">拠点一覧</div>
+                    <div class="info-tab" onclick="View.closeModal()">閉じる</div>
+                </div>
+                <div id="info-content-area" class="info-content custom-scrollbar">
+                    <!-- Data rendered here -->
+                </div>
+            </div>`;
+    },
+
+    /**
+     * 勢力一覧テーブルのHTML
+     * @param {Array<Object>} rows - 行データの配列
+     * @returns {string} HTML文字列
+     */
+    InfoFactionTable: (rows) => {
+        let html = `
+            <table class="info-table">
+                <thead>
+                    <tr>
+                        <th>勢力名</th>
+                        <th>拠点数</th>
+                        <th>部隊数</th>
+                        <th>資金</th>
+                        <th>総収入</th>
+                        <th>総戦力</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+        rows.forEach(row => {
+            html += `
+                <tr>
+                    <td><span style="color:${row.color}">${row.emoji} ${row.name}</span></td>
+                    <td>${row.castleCount}</td>
+                    <td>${row.armyCount}</td>
+                    <td>${row.gold}G</td>
+                    <td class="text-highlight">+${row.income}G</td>
+                    <td>${row.power}</td>
+                </tr>`;
+        });
+
+        html += '</tbody></table>';
+        return html;
+    },
+
+    /**
+     * 拠点一覧テーブルのHTML
+     * @param {Array<Object>} rows - 行データの配列
+     * @returns {string} HTML文字列
+     */
+    InfoCastleTable: (rows) => {
+        let html = `
+            <table class="info-table">
+                <thead>
+                    <tr>
+                        <th>名称</th>
+                        <th>種別</th>
+                        <th>支配</th>
+                        <th>収入/Bonus</th>
+                        <th>戦力</th>
+                        <th>固有ユニット</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+        rows.forEach(row => {
+            html += `
+                <tr>
+                    <td class="font-bold">${row.name}</td>
+                    <td>${row.type}</td>
+                    <td>${row.ownerNameDisplay}</td>
+                    <td>${row.incomeText}</td>
+                    <td>${row.power}</td>
+                    <td>${row.uniqueUnit}</td>
+                </tr>`;
+        });
+
+        html += '</tbody></table>';
+        return html;
+    },
+    /**
+     * 汎用モーダルのテンプレートHTML
+     * @returns {string} HTML文字列
+     */
+    GenericModalTemplate: () => {
+        return `
+        <div class="modal-content">
+            <h3 id="modal-title" class="text-4xl font-bold text-white mb-6"></h3>
+            <p id="modal-body" class="text-xl text-gray-300 mb-10 leading-relaxed"></p>
+            <div id="modal-footer" class="flex justify-center gap-6"></div>
+        </div>`;
     }
 };
