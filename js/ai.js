@@ -1,9 +1,18 @@
 /**
  * STRATEGIC AI: 戦略フェーズの敵思考ロジック
+ * 敵勢力のターン進行、部隊の雇用・移動・攻撃などの意思決定を行う。
+ * @namespace
  */
 window.StrategicAI = {
     aiTimer: null,
 
+    // -------------------------------------------------------------------------
+    // メインループ
+    // -------------------------------------------------------------------------
+    /**
+     * 敵AIターンの実行 (Controllerから呼ばれる)
+     * 全敵勢力を順番に処理する。
+     */
     async runEnemyTurn() {
         if (Model.state.currentScreen !== 'map') return; // 戦闘中などは中断
 
@@ -22,15 +31,23 @@ window.StrategicAI = {
         }
     },
 
+    // -------------------------------------------------------------------------
+    // 意思決定プロセス
+    // -------------------------------------------------------------------------
+    /**
+     * 特定の勢力のターン処理を実行
+     * 支配下の全ユニットに対して移動・行動を決定する。
+     * @param {Object} faction - 処理対象の勢力データ
+     */
     async processFaction(faction) {
-        // 収入
+        // 収入処理
         const castleIncome = Model.state.castles.filter(c => c.owner === faction.id).reduce((sum, c) => sum + (c.income || 0), 0);
         const income = 100 + castleIncome;
         faction.gold += income;
         const hq = Model.state.castles.find(c => c.id === faction.hqId);
 
         // 1. 既存部隊の行動AI (補充・強化・移動)
-        // ここを先に実行することで、新規部隊作成よりも部隊強化を優先させる
+        // ここを先に実行することで、新規部隊作成よりも既存部隊の強化を優先させる
         const myUnitsSnapshot = Model.state.mapUnits.filter(u => u.owner === faction.id);
 
         for (const enemy of myUnitsSnapshot) {
@@ -52,7 +69,7 @@ window.StrategicAI = {
                 }
             }
 
-            // 1-2. 移動：一番近い敵拠点または敵ユニットを目指す
+            // 1-2. 移動先決定：最も優先度の高い隣接拠点へ
             const current = Model.state.castles.reduce((prev, curr) => Math.hypot(curr.x - enemy.x, curr.y - enemy.y) < Math.hypot(prev.x - enemy.x, prev.y - enemy.y) ? curr : prev);
 
             // 防衛ロジック優先
@@ -114,8 +131,7 @@ window.StrategicAI = {
                 let spawn = spawnPoints.find(c => c.id === faction.hqId);
                 if (!spawn) spawn = spawnPoints[Math.floor(Math.random() * spawnPoints.length)];
 
-                // Controller経由だとUI依存があるので、Modelで直接作成する
-                // Controller.createNewArmy -> Model.createNewArmy
+                // Controller経由だとUI依存があるので、Model経由で直接作成する
                 const newUnit = Model.createNewArmy(faction.id, spawn.x, spawn.y);
                 if (newUnit) {
                     // 基本ユニットを1体追加
@@ -128,7 +144,14 @@ window.StrategicAI = {
         }
     },
 
-    // アクション(移動・戦闘)完了待ち
+    // -------------------------------------------------------------------------
+    // ユーティリティ
+    // -------------------------------------------------------------------------
+    /**
+     * ユニットの行動（移動およびそれに伴う戦闘）の完了を待機する
+     * pollingを用いて非同期に待つ単純な実装
+     * @param {Object} unit - 監視対象のユニット
+     */
     async waitForAction(unit) {
         return new Promise(resolve => {
             const check = () => {
@@ -163,4 +186,5 @@ window.StrategicAI = {
         });
     }
 };
+
 

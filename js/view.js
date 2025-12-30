@@ -1,21 +1,23 @@
 /**
  * VIEW: 表示制御
+ * 画面の描画、DOM操作、Canvas描画を担当。
+ * Modelのデータを元に画面を更新する。UIコンポーネント(UI.js)を使用。
+ * @namespace
  */
-// UIコンポーネントは js/ui.js に移動しました
-
 window.View = {
-    canvas: null, ctx: null,
+    canvas: null,
+    ctx: null,
     Components: UI,
     mapOffsetX: 0,
     mapOffsetY: 0,
 
-    renderMasterSelect() {
-        const container = document.getElementById('master-select-container');
-        if (!container) return;
-
-        container.innerHTML = Data.MASTERS.map(m => UI.MasterSelectionCard(m)).join('');
-    },
-
+    // -------------------------------------------------------------------------
+    // 画面切り替え・表示
+    // -------------------------------------------------------------------------
+    /**
+     * 指定された画面IDに切り替える
+     * @param {string} screenId - 画面ID ('title', 'map', 'battle', 'ending' etc.)
+     */
     changeScreen(screenId) {
         document.querySelectorAll('div[id^="screen-"]').forEach(el => el.classList.add('hidden'));
         const target = document.getElementById(`screen-${screenId}`);
@@ -23,7 +25,6 @@ window.View = {
         Model.state.currentScreen = screenId;
 
         const turnIndicator = document.getElementById('turn-indicator');
-        const player = Model.state.factions.find(f => f.isPlayer);
         const isPlayerTurn = Model.state.strategicTurn === 'player';
 
         if (screenId === 'map') {
@@ -46,6 +47,21 @@ window.View = {
         }
     },
 
+    // -------------------------------------------------------------------------
+    // マスター・マップ選択画面
+    // -------------------------------------------------------------------------
+    /**
+     * マスター選択画面を描画する
+     */
+    renderMasterSelect() {
+        const container = document.getElementById('master-select-container');
+        if (!container) return;
+        container.innerHTML = Data.MASTERS.map(m => UI.MasterSelectionCard(m)).join('');
+    },
+
+    /**
+     * 設定モーダル（マップ選択）の表示切り替え
+     */
     toggleSettings() {
         const el = document.getElementById('screen-settings');
         if (el.classList.contains('hidden')) {
@@ -56,13 +72,18 @@ window.View = {
         }
     },
 
+    /**
+     * 設定画面（マップ選択リスト）の描画
+     */
     renderSettings() {
         const list = document.getElementById('map-select-list');
         if (!list) return;
-
         list.innerHTML = Data.MAP_TEMPLATES.map(t => UI.MapSelectionCard(t)).join('');
     },
 
+    /**
+     * マップフローリスト（詳細選択）を描画
+     */
     renderMapFlow() {
         const list = document.getElementById('map-flow-list');
         list.innerHTML = Data.MAP_TEMPLATES.map(t =>
@@ -70,6 +91,13 @@ window.View = {
         ).join('');
     },
 
+    // -------------------------------------------------------------------------
+    // 汎用メッセージ・モーダル
+    // -------------------------------------------------------------------------
+    /**
+     * 画面上部にメッセージを表示する
+     * @param {string} text - メッセージ内容
+     */
     showMessage(text) {
         const box = document.getElementById('message-box');
         const txt = document.getElementById('message-text');
@@ -79,6 +107,12 @@ window.View = {
         window.msgTimer = setTimeout(() => { box.style.opacity = '0'; }, 3000);
     },
 
+    /**
+     * モーダルウィンドウを表示する
+     * @param {string} title - タイトル
+     * @param {string} body - メッセージ本文
+     * @param {Array<{label:string, action:function}>} buttons - ボタン定義リスト
+     */
     openModal(title, body, buttons) {
         const modal = document.getElementById('modal-layer');
         document.getElementById('modal-title').innerText = title;
@@ -93,6 +127,10 @@ window.View = {
         modal.classList.remove('hidden');
     },
 
+    /**
+     * エンディング画面を表示する
+     * @param {boolean} isWin - 勝利フラグ
+     */
     showEnding(isWin) {
         const screen = document.getElementById('screen-ending');
         const title = document.getElementById('ending-title');
@@ -106,6 +144,12 @@ window.View = {
         this.changeScreen('ending');
     },
 
+    // -------------------------------------------------------------------------
+    // マップ画面 (Canvas描画)
+    // -------------------------------------------------------------------------
+    /**
+     * マップ描画用のCanvasを初期化する
+     */
     initCanvas() {
         const canvas = document.getElementById('map-canvas');
         if (!canvas) return;
@@ -119,7 +163,6 @@ window.View = {
 
         // マップのセンタリング計算
         if (Model.state.castles.length > 0) {
-            const padding = 100;
             const minX = Math.min(...Model.state.castles.map(c => c.x));
             const maxX = Math.max(...Model.state.castles.map(c => c.x));
             const minY = Math.min(...Model.state.castles.map(c => c.y));
@@ -136,11 +179,15 @@ window.View = {
 
         requestAnimationFrame(() => this.renderMapLoop());
 
-        // Event Listeners for Map Interaction
+        // イベントリスナーの登録
         this.canvas.addEventListener('click', (e) => Controller.handleMapClick(e));
         this.canvas.addEventListener('contextmenu', (e) => Controller.handleMapRightClick(e));
     },
 
+    /**
+     * マップ画面の描画ループ（Canvas）
+     * 拠点、ルート、ユニットを描画する。
+     */
     renderMapLoop() {
         if (!this.ctx || Model.state.currentScreen !== 'map') return;
         const ctx = this.ctx;
@@ -149,7 +196,7 @@ window.View = {
         const ox = this.mapOffsetX || 0;
         const oy = this.mapOffsetY || 0;
 
-        // Path connections
+        // ルート（道）の描画
         ctx.save();
         ctx.translate(ox, oy);
         Model.state.castles.forEach(c => {
@@ -168,7 +215,7 @@ window.View = {
             }
         });
 
-        // Castles
+        // 拠点の描画
         Model.state.castles.forEach(c => {
             const owner = Model.state.factions.find(f => f.id === c.owner);
             const color = owner ? owner.color : '#888';
@@ -190,7 +237,7 @@ window.View = {
             ctx.fillText(c.name, c.x, c.y + 60);
         });
 
-        // Units
+        // ユニットの描画
         // 選択中の部隊を最前面に描画するため、ソートして描画
         const unitsToRender = [...Model.state.mapUnits].sort((a, b) => {
             if (a === Model.state.selectedMapUnit) return 1;
@@ -248,6 +295,13 @@ window.View = {
         requestAnimationFrame(() => this.renderMapLoop());
     },
 
+    // -------------------------------------------------------------------------
+    // 拠点メニュー (Base Menu)
+    // -------------------------------------------------------------------------
+    /**
+     * 拠点メニューを表示する
+     * @param {Object} castle - 拠点データ
+     */
     toggleBaseMenu(castle = null) {
         if (castle) {
             this.renderBaseMenu(castle);
@@ -255,15 +309,22 @@ window.View = {
         }
     },
 
+    /**
+     * 拠点メニューをクリアして非表示にする
+     */
     clearBaseMenu() {
         document.getElementById('base-menu').classList.add('hidden');
         document.getElementById('base-menu-title').innerText = "拠点を選択してください";
         document.getElementById('base-menu-content').innerHTML = "";
     },
 
+    /**
+     * 拠点メニューの内容を描画する
+     * @param {Object} castle - 拠点データ
+     * @param {string} [targetUnitId=null] - 表示対象の部隊ID
+     */
     renderBaseMenu(castle, targetUnitId = null) {
         // Model.state と Data オブジェクトを使用
-        const castleOwner = Model.state.factions.find(f => f.id === castle.owner);
         const playerFaction = Model.state.factions.find(f => f.isPlayer);
 
         // 1. 部隊情報の取得とアクティブ部隊の決定
@@ -334,7 +395,6 @@ window.View = {
         // 2. 詳細表示 (activeUnitの内容)
         if (activeUnit) {
             const isPlayerUnit = (activeUnit.owner === playerFaction.id);
-            const faction = Model.state.factions.find(f => f.id === activeUnit.owner);
 
             let contentHTML = '';
 
@@ -371,19 +431,19 @@ window.View = {
         }
     },
 
-    // バトル画面関連
+    // -------------------------------------------------------------------------
+    // バトル画面 (Grid & UI)
+    // -------------------------------------------------------------------------
+    /**
+     * バトルグリッドDOMを初期化する
+     * Controllerでデータ生成後に呼び出される
+     */
     initBattleGrid() {
-        // Model側でGridデータを生成済みであることを前提に、ViewがDOM生成を行う
-        // ここではController.initBattleGridがDataを生成して呼び出した後、あるいはLoadGame後に呼ばれる
-        // GridデータのDOM参照が切れている場合（Load直後など）の再構築も兼ねる
-
         const grid = document.getElementById('battle-grid');
         grid.innerHTML = '';
 
         // 既存のgridデータがあるか確認
         if (!Model.state.battle.grid || Model.state.battle.grid.length === 0) {
-            // データがなければControllerが作るべきだが、View主導で再描画するなら空のまま帰るか、
-            // 空コンテナを表示する
             return;
         }
 
@@ -392,6 +452,9 @@ window.View = {
         View.updateBattleUI();
     },
 
+    /**
+     * バトルUI（ユニット位置、移動範囲、選択状態など）を更新する
+     */
     updateBattleUI() {
         const b = Model.state.battle;
         const grid = document.getElementById('battle-grid');
@@ -403,9 +466,6 @@ window.View = {
             if (cell.el) {
                 cell.el.innerHTML = '';
                 cell.el.classList.remove(UI.BattleStyles.gridSelectedClass, UI.BattleStyles.gridMoveClass, UI.BattleStyles.gridAttackClass);
-                // Background color is handled by base class .hex-base, so no need to set inline logic except clearing it if it was set inline previously?
-                // Previously: cell.el.style.backgroundColor = UI.BattleStyles.gridBase;
-                // Since inline style has higher specificity than class, we MUST clear inline style if it exists.
                 cell.el.style.backgroundColor = '';
             }
         });
@@ -449,25 +509,17 @@ window.View = {
             if (retreatBtn) retreatBtn.disabled = styles.retreatBtnDisabled;
         }
     },
-    // バトルの初期グリッド構築 (Controllerから移動)
+
+    /**
+     * バトルグリッドのベースDOM生成処理
+     * @param {Array} gridData - グリッドデータの配列
+     */
     renderBattleGridCore(gridData) {
         const grid = document.getElementById('battle-grid');
         grid.innerHTML = '';
 
         gridData.forEach(cell => {
             const r = cell.r; const c = cell.c;
-            // ヘクス配置計算 (size=50)
-            const size = 50;
-            // HexLayout: q=c, r=r
-            // pixel_x = size * (3/2 * q)
-            // pixel_y = size * (Math.sqrt(3)/2 * q + Math.sqrt(3) * r)
-            // しかしController.initBattleGridで使われていたロジック（rが奇数でズレる）とは異なる可能性がある
-            // ここでは一般的な奇数行ズレ配置（pointy topped）を採用する場合:
-            // x = size * sqrt(3) * (c + 0.5 * (r&1))
-            // y = size * 3/2 * r
-
-            // 以前のController.initBattleGridのロジック:
-            // const y = r * hexSize * 0.75;
             const hexSize = Data.BATTLE.GRID_SIZE;
             const px = c * hexSize + (r % 2 ? hexSize / 2 : 0);
             const py = r * hexSize * 0.75;
@@ -484,6 +536,4 @@ window.View = {
         grid.style.width = `${(cols + 0.5) * hexSize}px`;
         grid.style.height = `${(rows * 0.75 + 0.25) * hexSize}px`;
     }
-
-};
-window.UI = UI; window.View = View;
+}; window.UI = UI; window.View = View;

@@ -1,7 +1,16 @@
 /**
  * BATTLE SYSTEM: 戦闘ロジック
+ * バトル画面のゲームロジック、ターン進行、ダメージ計算、AI思考を担当する。
+ * @namespace
  */
 window.BattleSystem = {
+    // -------------------------------------------------------------------------
+    // 初期化・セットアップ
+    // -------------------------------------------------------------------------
+    /**
+     * バトルを開始する
+     * Controllerから呼び出される。
+     */
     start() {
         if (this.aiTimer) clearTimeout(this.aiTimer);
         // Note: window.gameState is used in some places, sync it just in case
@@ -10,6 +19,9 @@ window.BattleSystem = {
         this.initGrid();
     },
 
+    /**
+     * バトルフィールド（グリッド）とユニットの初期配置を行う
+     */
     initGrid() {
         const cols = 7, rows = 6;
         Model.state.battle.grid = [];
@@ -23,6 +35,7 @@ window.BattleSystem = {
         // Viewに描画依頼
         View.renderBattleGridCore(Model.state.battle.grid);
 
+        // 自軍は左端(0列)、敵軍は右端(6列)に配置
         const pU = Model.state.battleUnitA.army.map((u, i) => ({ ...u, r: 1 + i, c: 0, owner: 'player' }));
         const eU = Model.state.battleUnitB.army.map((u, i) => ({ ...u, r: 1 + i, c: 6, owner: 'enemy' }));
 
@@ -36,7 +49,15 @@ window.BattleSystem = {
         View.updateBattleUI();
     },
 
-    // View.jsのdrawHexから呼ばれる
+    // -------------------------------------------------------------------------
+    // ユーザー入力処理
+    // -------------------------------------------------------------------------
+    /**
+     * ヘックスクリック時の処理
+     * Viewから呼び出される
+     * @param {number} r - Row index
+     * @param {number} c - Column index
+     */
     handleClick(r, c) {
         // console.log(`Battle Click: ${r}, ${c}`);
         const b = Model.state.battle;
@@ -45,7 +66,7 @@ window.BattleSystem = {
 
         const target = b.units.find(u => u.r === r && u.c === c);
 
-        // 移動後の攻撃または待機
+        // 1. ユニット選択中：移動後の攻撃または待機
         if (b.selectedUnit && b.tempMoved) {
             const s = b.selectedUnit;
             const d = Model.getHexDist(s.r, s.c, r, c);
@@ -74,7 +95,7 @@ window.BattleSystem = {
             return;
         }
 
-        // 未行動の味方を選択
+        // 2. 未行動の味方を選択
         if (target && target.owner === 'player') {
             if (!b.movedUnits.has(target)) {
                 b.selectedUnit = target;
@@ -84,10 +105,11 @@ window.BattleSystem = {
             return;
         }
 
-        // 移動または遠距離攻撃
+        // 3. 移動または遠距離攻撃指示
         if (b.selectedUnit) {
             const s = b.selectedUnit, d = Model.getHexDist(s.r, s.c, r, c);
             if (target && target.owner === 'enemy') {
+                // 攻撃
                 if (b.tempMoved && s.range >= 2) {
                     View.showMessage("遠距離ユニットは移動後に攻撃できません");
                     return;
@@ -105,6 +127,7 @@ window.BattleSystem = {
                 }
             }
             else {
+                // 選択解除
                 b.selectedUnit = null;
             }
         }
@@ -112,6 +135,14 @@ window.BattleSystem = {
         this.checkEnd();
     },
 
+    // -------------------------------------------------------------------------
+    // アクション (攻撃, 判定)
+    // -------------------------------------------------------------------------
+    /**
+     * 攻撃を実行する
+     * @param {Object} atk - 攻撃ユニット
+     * @param {Object} def - 防御ユニット
+     */
     attack(atk, def) {
         // ダメージ計算
         // 基本: ATK - 0 (防御概念なし) * ランダム要素
@@ -162,6 +193,10 @@ window.BattleSystem = {
         this.checkEnd();
     },
 
+    /**
+     * 戦闘終了判定
+     * どちらかの全滅を確認する
+     */
     checkEnd() {
         const pUnits = Model.state.battle.units.filter(u => u.owner === 'player');
         const eUnits = Model.state.battle.units.filter(u => u.owner === 'enemy');
@@ -215,6 +250,12 @@ window.BattleSystem = {
         }
     },
 
+    // -------------------------------------------------------------------------
+    // ターン管理
+    // -------------------------------------------------------------------------
+    /**
+     * プレイヤーターンを終了し、敵AIターンへ
+     */
     endTurn() {
         // ターン終了時に選択解除
         Model.state.battle.selectedUnit = null;
@@ -226,6 +267,12 @@ window.BattleSystem = {
         this.runAI();
     },
 
+    // -------------------------------------------------------------------------
+    // AIロジック
+    // -------------------------------------------------------------------------
+    /**
+     * 敵AIの行動を実行する
+     */
     runAI() {
         // 簡易AI
         const aiUnits = Model.state.battle.units.filter(u => u.owner === 'enemy');
@@ -317,6 +364,12 @@ window.BattleSystem = {
         }, delay + 1000);
     },
 
+    /**
+     * マップ画面でのオート戦闘解決 (CPU vs CPU)
+     * @param {Object} u1 - 部隊1
+     * @param {Object} u2 - 部隊2
+     * @param {Object} attacker - 攻撃を仕掛けた部隊
+     */
     autoResolve(u1, u2, attacker) {
         // オート戦闘計算
         let dmg1 = 0, dmg2 = 0;

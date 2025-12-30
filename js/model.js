@@ -1,7 +1,21 @@
 /**
  * MODEL: 状態管理と計算ロジック
+ * ゲーム全体のステート管理、座標計算、データ変更ロジックを担当する。
+ * @namespace
  */
 window.Model = {
+    // -------------------------------------------------------------------------
+    // ステート定義
+    // -------------------------------------------------------------------------
+    /**
+     * ゲームの状態オブジェクト
+     * @property {Array} factions - 全勢力のデータ
+     * @property {Array} castles - 全拠点のデータ
+     * @property {Array} mapUnits - マップ上の全部隊データ
+     * @property {string} currentScreen - 現在の画面ID
+     * @property {number} turnCount - 経過ターン数
+     * @property {Object} battle - 戦闘フェーズの状態
+     */
     state: {
         factions: [],
         castles: [],
@@ -27,11 +41,15 @@ window.Model = {
         globalBattleCooldown: 0
     },
 
+    // -------------------------------------------------------------------------
+    // 座標計算ロジック (Hex Grid)
+    // -------------------------------------------------------------------------
     /**
-     * オフセット座標からキューブ座標へ変換
+     * オフセット座標からキューブ座標へ変換する
+     * ヘックスグリッドの距離計算に使用。
      * @param {number} r - Row (y)
      * @param {number} c - Col (x)
-     * @returns {{x:number, y:number, z:number}} Cube coordinates
+     * @returns {{x:number, y:number, z:number}} キューブ座標オブジェクト
      */
     getCubeCoords(r, c) {
         const x = c - (r - (r & 1)) / 2;
@@ -41,12 +59,12 @@ window.Model = {
     },
 
     /**
-     * ヘックス間の距離計算
-     * @param {number} r1 - Start Row
-     * @param {number} c1 - Start Col
-     * @param {number} r2 - End Row
-     * @param {number} c2 - End Col
-     * @returns {number} Distance in hex steps
+     * ヘックス間の距離を計算する
+     * @param {number} r1 - 開始地点 Row
+     * @param {number} c1 - 開始地点 Col
+     * @param {number} r2 - 終了地点 Row
+     * @param {number} c2 - 終了地点 Col
+     * @returns {number} ヘックス単位の距離 (到達不能時は999)
      */
     getHexDist(r1, c1, r2, c2) {
         if (r1 === undefined || c1 === undefined || r2 === undefined || c2 === undefined) return 999;
@@ -55,11 +73,14 @@ window.Model = {
         return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y), Math.abs(a.z - b.z));
     },
 
+    // -------------------------------------------------------------------------
+    // ユニット・部隊管理ロジック
+    // -------------------------------------------------------------------------
     /**
-     * 部隊雇用
+     * 部隊にユニットを雇用する
      * @param {string} armyId - 雇用先の部隊ID
      * @param {string} unitTypeId - 雇用するユニットの定義ID
-     * @returns {string|true} 成功ならtrue、失敗ならエラーメッセージ
+     * @returns {string|boolean} 成功ならtrue、失敗ならエラーメッセージ文字列
      */
     recruitUnit(armyId, unitTypeId) {
         const army = this.state.mapUnits.find(u => u.id === armyId);
@@ -80,11 +101,11 @@ window.Model = {
     },
 
     /**
-     * ユニット強化
+     * ユニットを強化する (HPまたはATK)
      * @param {string} armyId - 部隊ID
-     * @param {number} unitIndex - 部隊内のインデックス
-     * @param {string} type - 'hp' or 'atk'
-     * @returns {string|true} 成功ならtrue、失敗ならエラーメッセージ
+     * @param {number} unitIndex - 部隊内のユニットインデックス
+     * @param {string} type - 強化タイプ ('hp' または 'atk')
+     * @returns {string|boolean} 成功ならtrue、失敗ならエラーメッセージ文字列
      */
     enhanceUnit(armyId, unitIndex, type) {
         const army = this.state.mapUnits.find(u => u.id === armyId);
@@ -112,7 +133,13 @@ window.Model = {
         return "不正な強化タイプです";
     },
 
-    // 新規部隊作成
+    /**
+     * 新規部隊を作成しマップに配置する
+     * @param {string} factionId - 所属勢力ID
+     * @param {number} x - X座標
+     * @param {number} y - Y座標
+     * @returns {Object|null} 作成された新しい部隊オブジェクト、失敗時はnull
+     */
     createNewArmy(factionId, x, y) {
         const faction = this.state.factions.find(f => f.id === factionId);
         if (!faction) return null;

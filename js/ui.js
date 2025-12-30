@@ -1,34 +1,62 @@
 /**
  * UI: UIコンポーネント定義
+ * HTMLテンプレート文字列やDOM要素を生成するステートレスなメソッド群。
+ * @namespace
  */
 window.UI = {
-    // 基本的なボタンスタイル
-    // 基本的なボタンスタイル
+    // -------------------------------------------------------------------------
+    // 汎用UIコンポーネント (Buttons, Modals)
+    // -------------------------------------------------------------------------
+    /**
+     * 基本的なボタンHTML文字列を返す
+     * @param {string} label - ボタンのラベル
+     * @param {string} onclick - onclick属性に設定するJSコード文字列
+     * @param {string} [type='primary'] - ボタンタイプ ('primary', 'secondary', 'neutral' etc.)
+     * @param {string} [extraClass=''] - 追加のCSSクラス
+     * @returns {string} HTML文字列
+     */
     Button: (label, onclick, type = 'primary', extraClass = '') => {
-        // base class `btn-base` defined in css
-        // specific types defined in css: `btn-primary`, `btn-secondary`, etc.
         return `<button onclick="${onclick}" class="btn-base btn-${type} ${extraClass}">${label}</button>`;
     },
 
-    // モーダル用ボタン (DOM要素を返す)
+    /**
+     * モーダル用ボタンのDOM要素を作成する
+     * @param {string} label - ボタン名
+     * @param {function} onclick - クリック時のコールバック関数
+     * @param {string} [extraClass=''] - 追加CSSクラス
+     * @returns {HTMLButtonElement} 生成されたボタン要素
+     */
     createModalButton: (label, onclick, extraClass = '') => {
         const btn = document.createElement('button');
-        // `btn-modal` defined in css
         btn.className = `btn-modal ${extraClass}`;
         btn.innerText = label;
         btn.onclick = onclick;
         return btn;
     },
 
-    // マスター選択カード
+    /**
+     * 各種情報パネルのHTMLを生成する
+     * @param {string} content - パネル内部のHTMLコンテンツ
+     * @param {string} [extraClass=''] - 追加クラス
+     * @returns {string} HTML文字列
+     */
+    Panel: (content, extraClass = '') => {
+        return `<div class="panel-base ${extraClass}">${content}</div>`;
+    },
+
+    // -------------------------------------------------------------------------
+    // カードコンポーネント (Master, Map, Army)
+    // -------------------------------------------------------------------------
+    /**
+     * マスター選択画面のカードHTML
+     * @param {Object} m - マスターデータ
+     * @returns {string} HTML文字列
+     */
     MasterSelectionCard: (m) => {
         let colorName = 'blue';
         if (m.id === 'mage') colorName = 'green';
         if (m.id === 'demon') colorName = 'red';
 
-        // NOTE: Dynamic border colors (hover:border-${colorName}-500) and text colors are still easier in JS/Tailwind unless we make specific classes for each master.
-        // For separation, we use `card-base` but keep color utility classes for dynamic parts.
-        // `card-base` handles layout, basic border, bg, shadow.
         return `
         <div onclick="Controller.createGame('${m.id}')"
             class="card-base w-[300px] hover:border-${colorName}-500 ${extraClass = ''}">
@@ -38,7 +66,11 @@ window.UI = {
         </div>`;
     },
 
-    // マップ選択カード
+    /**
+     * マップ選択画面のカードHTML
+     * @param {Object} t - マップテンプレートデータ
+     * @returns {string} HTML文字列
+     */
     MapSelectionCard: (t) => {
         let emoji = '🗺️';
         if (t.id === 'islands') emoji = '🏝️';
@@ -53,7 +85,16 @@ window.UI = {
         </div>`;
     },
 
-    // 選択用カード（マップ用・マスター用共通）
+    /**
+     * 汎用カードコンポーネント
+     * @param {string} title - タイトル
+     * @param {string} desc - 説明文
+     * @param {string} icon - 絵文字アイコン
+     * @param {string} onclick - クリックアクション
+     * @param {string} subtext - サブテキスト（オプション）
+     * @param {string} extraClass - 追加クラス
+     * @returns {string} HTML文字列
+     */
     Card: (title, desc, icon, onclick, subtext = '', extraClass = '') => {
         return `
             <div onclick="${onclick}" 
@@ -65,37 +106,16 @@ window.UI = {
             </div>`;
     },
 
-    // メニュータイトル
-    MenuTitle: (name, isHQ, ownerName, ownerEmoji, color, extraInfo = '') => {
-        return `
-            <span>${name}</span>
-            <span class="ml-2">${isHQ ? '👑本拠地' : ''}</span>
-            <span style="color:${color}" class="ml-2">${ownerEmoji}${ownerName}</span>
-            ${extraInfo}
-        `;
-    },
-
-    // メニューボーナス表示
-    MenuBonus: (type, amount) => {
-        if (type === 'bonus') {
-            // .text-bonus defined in css
-            return `<span class="text-bonus">💰ボーナス: ${amount}G</span>`;
-        } else {
-            // .text-income defined in css
-            return `<span class="text-income">💰収入: ${amount}G</span>`;
-        }
-    },
-
-    // 各種パネル
-    Panel: (content, extraClass = '') => {
-        // .panel-base defined in css
-        return `<div class="panel-base ${extraClass}">${content}</div>`;
-    },
-
-    // 部隊カード (BaseMenu内などで使用)
+    /**
+     * 部隊情報カード（BaseMenu等で使用）
+     * @param {Object} unit - 部隊データ
+     * @param {boolean} isPlayer - プレイヤーかどうか
+     * @param {string} factionName - 勢力名
+     * @param {string} extraContent - 追加コンテンツHTML
+     * @returns {string} HTML文字列
+     */
     ArmyCard: (unit, isPlayer, factionName, extraContent = '') => {
         const colorClass = isPlayer ? 'text-blue-300' : 'text-red-400';
-        // .army-card-base, .army-card-player, .army-card-enemy defined in css
         const bgClass = isPlayer ? 'army-card-player' : 'army-card-enemy';
         return `
             <div class="army-card-base ${bgClass}">
@@ -110,9 +130,53 @@ window.UI = {
             </div>`;
     },
 
-    // ユニット詳細行
+    // -------------------------------------------------------------------------
+    // メニュー・ヘッダー関連
+    // -------------------------------------------------------------------------
+    /**
+     * メニューのタイトルHTML
+     * @param {string} name - 名前（拠点名など）
+     * @param {boolean} isHQ - 本拠地かどうか
+     * @param {string} ownerName - 所有者名
+     * @param {string} ownerEmoji - 所有者アイコン
+     * @param {string} color - 色コード
+     * @param {string} extraInfo - 追加情報
+     * @returns {string} HTML文字列
+     */
+    MenuTitle: (name, isHQ, ownerName, ownerEmoji, color, extraInfo = '') => {
+        return `
+            <span>${name}</span>
+            <span class="ml-2">${isHQ ? '👑本拠地' : ''}</span>
+            <span style="color:${color}" class="ml-2">${ownerEmoji}${ownerName}</span>
+            ${extraInfo}
+        `;
+    },
+
+    /**
+     * メニュー内のボーナス/収入表示HTML
+     * @param {string} type - 'bonus' or 'income'
+     * @param {number} amount - 金額
+     * @returns {string} HTML文字列
+     */
+    MenuBonus: (type, amount) => {
+        if (type === 'bonus') {
+            return `<span class="text-bonus">💰ボーナス: ${amount}G</span>`;
+        } else {
+            return `<span class="text-income">💰収入: ${amount}G</span>`;
+        }
+    },
+
+    // -------------------------------------------------------------------------
+    // ユニットリスト・雇用関連
+    // -------------------------------------------------------------------------
+    /**
+     * ユニットリストの1行分のアイテムHTML
+     * @param {Object} u - ユニットデータ
+     * @param {number} i - インデックス
+     * @param {Object|null} enhanceActions - 強化アクション（hp, atk）のJSコード文字
+     * @returns {string} HTML文字列
+     */
     UnitListItem: (u, i, enhanceActions = null) => {
-        // .unit-list-item, .unit-info-group, .unit-details, .btn-enhance-hp, .btn-enhance-atk
         return `
         <div class="unit-list-item">
             <div class="unit-info-group">
@@ -129,30 +193,31 @@ window.UI = {
         </div>`;
     },
 
-    // 部隊選択タブボタン (Elementを返す)
-    createTabButton: (unit, isActive, faction, onclick) => {
-        const color = faction ? faction.color : '#aaaaaa';
-        const count = unit.army.length;
-        const max = Data.MAX_UNITS;
-
-        const btn = document.createElement('button');
-        // .tab-btn, .tab-btn-active, .tab-btn-inactive
-        const stateClass = isActive ? 'tab-btn-active' : 'tab-btn-inactive';
-        btn.className = `tab-btn ${stateClass}`;
-
-        btn.innerHTML = `
-            <div class="text-xl font-bold uppercase truncate w-full text-center px-1 mb-1" style="color:${color}">${unit.isMaster ? '主軍' : '部隊'}</div>
-            <div class="text-xl font-mono font-bold ${count >= max ? 'text-red-400' : 'text-cyan-400'}">${count}/${max}</div>
-            ${isActive ? '<div class="tab-active-indicator">▲</div>' : ''}
-        `;
-        btn.onclick = onclick;
-        return btn;
+    /**
+     * ユニットリストパネル全体のHTML
+     * @param {Object} unit - 部隊データ
+     * @param {Object} castle - 拠点データ
+     * @param {function} unitListItemHTML - アイテム生成関数
+     * @returns {string} HTML文字列
+     */
+    UnitListPanel: (unit, castle, unitListItemHTML) => {
+        return `
+            <p class="panel-title">部隊編成・強化</p>
+            <div class="flex flex-col gap-3">
+                ${unit.army.map((u, i) => unitListItemHTML(u, i)).join('')}
+            </div>`;
     },
 
-    // ユニット雇用パネル
-    // ユニット雇用アイテム
+    /**
+     * 雇用候補アイテムのHTML
+     * @param {Object} ut - ユニット定義
+     * @param {string} activeUnitId - 現在の部隊ID
+     * @param {string} castleId - 拠点ID
+     * @param {boolean} canAfford - 購入可能か
+     * @param {boolean} isFull - 部隊が満員か
+     * @returns {string} HTML文字列
+     */
     RecruitItem: (ut, activeUnitId, castleId, canAfford, isFull) => {
-        // .recruit-item, .btn-buy
         return `
             <div class="recruit-item">
                 <div class="flex items-center gap-3">
@@ -170,8 +235,15 @@ window.UI = {
             </div>`;
     },
 
+    /**
+     * 雇用パネル全体のHTML
+     * @param {Array} options - 雇用候補リスト
+     * @param {Object} activeUnit - 現在の部隊
+     * @param {Object} castle - 拠点
+     * @param {function} recruitItemHTML - アイテム生成関数
+     * @returns {string} HTML文字列
+     */
     RecruitPanel: (options, activeUnit, castle, recruitItemHTML) => {
-        // .panel-title
         return `
             <p class="panel-title">ユニット雇用</p>
             <div class="flex flex-col gap-3">
@@ -179,25 +251,49 @@ window.UI = {
             </div>`;
     },
 
-    // ユニットリストパネル
-    UnitListPanel: (unit, castle, unitListItemHTML) => {
-        // .panel-title
-        return `
-            <p class="panel-title">部隊編成・強化</p>
-            <div class="flex flex-col gap-3">
-                ${unit.army.map((u, i) => unitListItemHTML(u, i)).join('')}
-            </div>`;
+    /**
+     * 部隊選択タブ切り替えボタンを作成する
+     * @param {Object} unit - 部隊データ
+     * @param {boolean} isActive - アクティブかどうか
+     * @param {Object} faction - 勢力データ
+     * @param {function} onclick - クリックハンドラ
+     * @returns {HTMLButtonElement} ボタン要素
+     */
+    createTabButton: (unit, isActive, faction, onclick) => {
+        const color = faction ? faction.color : '#aaaaaa';
+        const count = unit.army.length;
+        const max = Data.MAX_UNITS;
+
+        const btn = document.createElement('button');
+        const stateClass = isActive ? 'tab-btn-active' : 'tab-btn-inactive';
+        btn.className = `tab-btn ${stateClass}`;
+
+        btn.innerHTML = `
+            <div class="text-xl font-bold uppercase truncate w-full text-center px-1 mb-1" style="color:${color}">${unit.isMaster ? '主軍' : '部隊'}</div>
+            <div class="text-xl font-mono font-bold ${count >= max ? 'text-red-400' : 'text-cyan-400'}">${count}/${max}</div>
+            ${isActive ? '<div class="tab-active-indicator">▲</div>' : ''}
+        `;
+        btn.onclick = onclick;
+        return btn;
     },
 
-    // バトル用ヘックス
+    // -------------------------------------------------------------------------
+    // バトル画面コンポーネント (Hex, Unit, Turn)
+    // -------------------------------------------------------------------------
+    /**
+     * バトルヘックスDOM要素を作成
+     * @param {number} x - Pixel X
+     * @param {number} y - Pixel Y
+     * @param {number} r - Grid Row
+     * @param {number} c - Grid Col
+     * @param {function} onClick - クリックハンドラ
+     * @returns {HTMLDivElement} ヘックス要素
+     */
     BattleHex: (x, y, r, c, onClick) => {
         const div = document.createElement('div');
-        // .battle-hex, .clip-hex, .hex-base
         div.className = "battle-hex clip-hex hex-base";
         div.style.left = `${x}px`;
         div.style.top = `${y}px`;
-        // clip-path moved to css .clip-hex
-        // background-color moved to css .hex-base
 
         div.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -206,9 +302,14 @@ window.UI = {
         return div;
     },
 
-    // バトルユニット表示
+    /**
+     * バトルユニットのHTML表現
+     * @param {Object} u - ユニットデータ
+     * @param {number} rankIndex - ランクインデックス
+     * @param {number} hpPct - HP残量(0.0-1.0)
+     * @returns {string} HTML文字列
+     */
     BattleUnitHTML: (u, rankIndex = 0, hpPct = 1) => {
-        // .battle-unit-rank, .battle-unit-bar-container, .battle-unit-bar-fill
         return `
             <div class="flex items-center gap-1 mb-1">
                 <span class="text-4xl shadow-black drop-shadow-md">${u.emoji}</span>
@@ -219,12 +320,20 @@ window.UI = {
             </div>`;
     },
 
-    // 敵軍部隊リストコンテナ
+    /**
+     * 敵ユニット一覧の表示コンテナHTML
+     * @param {string} content - 内部コンテンツ
+     * @returns {string} HTML文字列
+     */
     EnemyUnitListContainer: (content) => {
         return `<div class="flex flex-col gap-3">${content}</div>`;
     },
 
-    // ターン表示スタイル
+    /**
+     * ターンインジケータのスタイル＆メッセージ定義を返す
+     * @param {string} turn - 'player' | 'enemy'
+     * @returns {{text:string, className:string, endBtnDisabled:boolean, retreatBtnDisabled:boolean}}
+     */
     TurnIndicatorStyles: (turn) => {
         if (turn === 'player') {
             return {
@@ -243,7 +352,11 @@ window.UI = {
         }
     },
 
-    // エンディング画面スタイル
+    /**
+     * エンディング画面のスタイル定義を返す
+     * @param {boolean} isWin - 勝利したかどうか
+     * @returns {{titleText:string, titleClass:string, bodyText:string}}
+     */
     EndingStyles: (isWin) => {
         if (isWin) {
             return {
@@ -260,7 +373,9 @@ window.UI = {
         }
     },
 
-    // バトル画面スタイル定数 (Class名)
+    /**
+     * バトル画面で使用するスタイルクラス定数
+     */
     BattleStyles: {
         gridBaseClass: "hex-base",
         gridMoveClass: "hex-move",
