@@ -8,167 +8,76 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=DotGothic16&display=swap"
         rel="stylesheet">
-    <style>
-        body {
-            font-family: 'DotGothic16', sans-serif;
-            background-color: #050505;
-            color: #e0e0e0;
-            overflow: hidden;
-            user-select: none;
-        }
-
-        .font-cinzel {
-            font-family: 'Cinzel', serif;
-        }
-
-        /* Custom Scrollbar */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.3);
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #4b5563;
-            border-radius: 4px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #6b7280;
-        }
-
-        /* Hexagon Clip Path */
-        .clip-hex {
-            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-        }
-
-        /* Animations */
-        @keyframes scanline {
-            0% {
-                transform: translateY(-100%);
-            }
-
-            100% {
-                transform: translateY(100%);
-            }
-        }
-
-        .scanlines::before {
-            content: " ";
-            display: block;
-            position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 2;
-            background-size: 100% 2px, 3px 100%;
-            pointer-events: none;
-        }
-
-        .crt-flicker {
-            animation: flicker 0.15s infinite;
-            pointer-events: none;
-        }
-
-        @keyframes flicker {
-            0% {
-                opacity: 0.97;
-            }
-
-            50% {
-                opacity: 1;
-            }
-
-            100% {
-                opacity: 0.98;
-            }
-        }
-
-        .hex:hover {
-            filter: brightness(1.3);
-            z-index: 10;
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body class="h-screen w-screen overflow-hidden text-white crt-flicker">
 
     <!-- TITLE SCREEN -->
-    <div id="screen-title" class="flex flex-col items-center justify-center h-full bg-black relative z-10">
-        <h1
-            class="text-8xl mb-4 font-black tracking-tighter text-gray-200 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] font-cinzel">
+    <div id="screen-title" class="screen-title">
+        <h1 class="title-heading">
             バハムート戦記
         </h1>
 
         <div class="flex gap-8 relative z-50">
             <button
                 onclick="console.log('Start Clicked'); if(window.View) View.changeScreen('settings'); else alert('View not loaded');"
-                class="px-12 py-3 bg-red-900/80 hover:bg-red-700 border-2 border-red-500 text-2xl tracking-widest transition-all font-bold shadow-[0_0_20px_rgba(220,38,38,0.5)] hover:scale-105 active:scale-95 text-white cursor-pointer pointer-events-auto rounded-lg">
+                class="btn-base btn-primary">
                 新規ゲーム
             </button>
             <button onclick="if(window.Controller) Controller.loadGame(); else alert('Controller not loaded');"
-                class="px-12 py-3 bg-blue-900/80 hover:bg-blue-700 border-2 border-blue-500 text-2xl tracking-widest transition-all font-bold shadow-[0_0_20px_rgba(37,99,235,0.5)] hover:scale-105 active:scale-95 text-white cursor-pointer pointer-events-auto rounded-lg">
+                class="btn-base btn-secondary">
                 ロードゲーム
             </button>
         </div>
     </div>
 
     <!-- SETTINGS SCREEN (Map Select) -->
-    <div id="screen-settings" class="hidden flex flex-col items-center justify-center h-full bg-gray-900 relative z-10">
-        <h2 class="text-5xl mb-16 font-black text-white border-b-4 border-white pb-4 px-20 tracking-wider">マップ選択</h2>
+    <div id="screen-settings" class="hidden screen-settings">
+        <h2 class="screen-heading">マップ選択</h2>
         <!-- Using flex container like master select -->
-        <div id="map-select-list" class="flex gap-10 overflow-x-auto p-10 w-full justify-center"></div>
-        <button onclick="View.changeScreen('title')"
-            class="mt-12 px-12 py-3 bg-gray-900/80 hover:bg-gray-700 border-2 border-gray-500 text-2xl tracking-widest transition-all font-bold shadow-[0_0_20px_rgba(107,114,128,0.5)] hover:scale-105 active:scale-95 text-white cursor-pointer pointer-events-auto rounded-lg">
+        <div id="map-select-list" class="selection-list-container"></div>
+        <button onclick="View.changeScreen('title')" class="btn-base btn-neutral mt-12">
             戻る
         </button>
     </div>
 
     <!-- MASTER SELECT SCREEN -->
-    <div id="screen-master-select"
-        class="hidden flex flex-col items-center justify-center h-full bg-gray-900 relative z-10">
-        <h2 class="text-5xl mb-16 font-black text-white border-b-4 border-white pb-4 px-20 tracking-wider">マスター選択</h2>
-        <div id="master-select-container" class="flex gap-10 overflow-x-auto p-10 w-full justify-center">
+    <div id="screen-master-select" class="hidden screen-settings">
+        <h2 class="screen-heading">マスター選択</h2>
+        <div id="master-select-container" class="selection-list-container">
             <!-- Masters will be injected here by View.renderMasterSelect() -->
         </div>
-        <button onclick="View.changeScreen('title')"
-            class="mt-12 px-12 py-3 bg-gray-900/80 hover:bg-gray-700 border-2 border-gray-500 text-2xl tracking-widest transition-all font-bold shadow-[0_0_20px_rgba(107,114,128,0.5)] hover:scale-105 active:scale-95 text-white cursor-pointer pointer-events-auto rounded-lg">
+        <button onclick="View.changeScreen('title')" class="btn-base btn-neutral mt-12">
             戻る
         </button>
     </div>
 
     <!-- MAP SCREEN -->
-    <div id="screen-map" class="hidden h-full flex flex-col bg-gray-900 relative">
+    <div id="screen-map" class="hidden screen-map">
         <!-- HEADER (Status) -->
-        <header
-            class="bg-gray-900 border-b border-gray-700 p-2 flex justify-between items-start h-20 shrink-0 z-50 shadow-xl relative">
-            <div class="flex items-center gap-6 h-full px-4">
+        <header class="map-header">
+            <div class="map-stats-container">
                 <div class="flex gap-10">
-                    <div class="flex flex-col items-center">
-                        <div class="text-2xl text-blue-500 uppercase font-black tracking-widest mb-1">拠点数</div>
-                        <div id="castle-count-display" class="text-3xl text-white font-mono font-bold leading-none">0/0
+                    <div class="map-stat-group">
+                        <div class="map-stat-label text-blue-500">拠点数</div>
+                        <div id="castle-count-display" class="map-stat-value">0/0
                         </div>
                     </div>
-                    <div class="flex flex-col items-center">
-                        <div class="text-2xl text-green-500 uppercase font-black tracking-widest mb-1">部隊数</div>
-                        <div id="army-total-display" class="text-3xl text-white font-mono font-bold leading-none">0/0
+                    <div class="map-stat-group">
+                        <div class="map-stat-label text-green-500">部隊数</div>
+                        <div id="army-total-display" class="map-stat-value">0/0
                         </div>
                     </div>
-                    <div class="flex flex-col items-center">
-                        <div class="text-2xl text-yellow-500 uppercase font-black tracking-widest mb-1">資金</div>
-                        <div id="gold-amount" class="text-3xl text-white font-mono font-bold leading-none">500G</div>
+                    <div class="map-stat-group">
+                        <div class="map-stat-label text-yellow-500">資金</div>
+                        <div id="gold-amount" class="map-stat-value">500G</div>
                     </div>
                 </div>
             </div>
 
             <!-- Turn Indicator -->
-            <div id="turn-indicator"
-                class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10">
+            <div id="turn-indicator" class="map-turn-indicator">
                 <div id="turn-display" class="text-2xl text-yellow-600 font-black uppercase tracking-[0.3em] mb-1">
                     第1ターン
                 </div>
@@ -182,13 +91,11 @@
 
         <div class="flex flex-1 overflow-hidden relative">
             <!-- MAIN MAP VIEW -->
-            <main class="flex-1 relative bg-green-950/20 overflow-hidden">
-                <canvas id="map-canvas"
-                    class="w-full h-full cursor-crosshair blur-[0.3px] relative z-10 pointer-events-auto"></canvas>
+            <main class="map-main">
+                <canvas id="map-canvas" class="map-canvas"></canvas>
 
                 <!-- Base Menu Overlay -->
-                <div id="base-menu"
-                    class="absolute top-4 left-4 bottom-4 w-[675px] max-w-[98vw] bg-gray-900/90 border-2 border-gray-700 flex flex-col shrink-0 z-50 overflow-hidden rounded-xl shadow-2xl backdrop-blur-sm hidden">
+                <div id="base-menu" class="base-menu-overlay hidden">
                     <div class="p-2 bg-black/60 border-b border-gray-800 flex justify-between items-center shrink-0">
                         <div class="flex flex-col">
                             <h2 id="base-menu-title"
@@ -217,8 +124,7 @@
             </main>
 
             <!-- RIGHT SIDEBAR (End Turn) -->
-            <aside id="command-sidebar"
-                class="w-48 bg-gray-950 border-l border-gray-800 flex flex-col justify-start items-center pt-4 z-[55] shadow-xl">
+            <aside id="command-sidebar" class="map-sidebar">
                 <div id="menu-group" class="flex flex-col gap-4 items-center px-4 h-full hidden py-6">
                     <button onclick="Controller.endStrategicTurn()"
                         class="w-40 py-3 bg-gradient-to-b from-gray-800 to-gray-950 hover:from-gray-700 hover:to-gray-900 border-2 border-red-900/50 hover:border-red-500 text-white font-black uppercase tracking-widest shadow-lg transition-all transform active:scale-95 rounded-lg flex items-center justify-center group relative z-50 pointer-events-auto">
@@ -239,7 +145,7 @@
             </aside>
         </div>
 
-        <footer class="h-16 bg-gray-950 border-t-2 border-gray-700 flex items-center px-8 shrink-0 z-[60]">
+        <footer class="map-footer">
             <div id="message-box" class="opacity-0 transition-opacity duration-300 flex items-center">
                 <div class="text-white">
                     <span class="text-yellow-500 mr-2">▶</span>
@@ -250,8 +156,7 @@
     </div>
 
     <!-- BATTLE SCREEN -->
-    <div id="screen-battle"
-        class="hidden flex flex-col items-center justify-center h-screen bg-slate-900 z-[100] pointer-events-auto fixed inset-0">
+    <div id="screen-battle" class="hidden screen-battle">
         <div class="mb-8 flex gap-16">
             <div id="p1-stats" class="text-4xl text-blue-400 font-bold uppercase tracking-wider">プレイヤー部隊</div>
             <div class="text-white text-2xl font-bold opacity-30 italic self-center">VS</div>
@@ -287,10 +192,8 @@
 
 
     <!-- Modal Layer -->
-    <div id="modal-layer"
-        class="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center hidden backdrop-blur-sm">
-        <div
-            class="bg-gray-900 border-2 border-gray-600 p-12 max-w-2xl text-center shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-xl">
+    <div id="modal-layer" class="modal-layer hidden">
+        <div class="modal-content">
             <h3 id="modal-title" class="text-4xl font-bold text-white mb-6">Title</h3>
             <p id="modal-body" class="text-xl text-gray-300 mb-10 leading-relaxed">Content</p>
             <div id="modal-footer" class="flex justify-center gap-6"></div>
