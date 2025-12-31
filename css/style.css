@@ -437,25 +437,23 @@ body {
     overflow: hidden;
 }
 
-#map-canvas {
-    background-repeat: no-repeat;
-    background-position: center;
-    /* background-size: cover; Keep disabled per user request */
-}
 
 .map-header {
     background-color: #111827;
-    border-bottom: 1px solid #374151;
-    /* gray-700 */
+    background-image: url('../assets/img/ui_header_bg.png');
+    background-size: 100% 100%;
+    /* border-bottom: 1px solid #374151; Removed for texture */
     padding: 0.5rem;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    height: 5rem;
+    height: 6rem;
+    /* Increased height for ornate header */
     flex-shrink: 0;
     z-index: 50;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
     position: relative;
+    text-shadow: 2px 2px 4px black;
 }
 
 .map-stats-container {
@@ -524,6 +522,9 @@ body {
     position: relative;
     z-index: 10;
     pointer-events: auto;
+    /* background-size: cover; Keep disabled per user request */
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 /* Base Menu Overlay (Popup inside map) */
@@ -548,31 +549,41 @@ body {
 }
 
 /* Sidebar */
+/* Sidebar */
 .map-sidebar {
     width: 12rem;
-    background-color: #030712;
-    /* gray-950 */
-    border-left: 1px solid #1f2937;
+    background-color: #3f2e00;
+    /* dark brown fallback */
+    background-image: url('../assets/img/ui_sidebar_paper.png');
+    background-size: 100% 100%;
+    /* Stretch to fill */
+    border-left: 2px solid #574c25;
+    /* dark gold border */
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
     padding-top: 1rem;
     z-index: 55;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
 }
 
 /* Footer */
 .map-footer {
-    height: 4rem;
+    height: 5rem;
+    /* Increased height for stone texture */
     background-color: #030712;
-    border-top: 2px solid #374151;
+    background-image: url('../assets/img/ui_footer_bg.png');
+    background-size: 100% 100%;
+    /* border-top: 2px solid #374151; Removed for texture */
     display: flex;
     align-items: center;
-    padding-left: 2rem;
-    padding-right: 2rem;
+    padding-left: 3rem;
+    padding-right: 3rem;
     flex-shrink: 0;
     z-index: 60;
+    text-shadow: 2px 2px 4px black;
+    /* Strong shadow for readability */
 }
 
 /* Battle Screen */

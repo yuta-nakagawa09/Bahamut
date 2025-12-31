@@ -176,26 +176,30 @@ window.View = {
         this.ctx = newCanvas.getContext('2d');
         this.canvas = newCanvas;
 
-        // マップのセンタリング計算
-        if (Model.state.castles.length > 0) {
-            const minX = Math.min(...Model.state.castles.map(c => c.x));
-            const maxX = Math.max(...Model.state.castles.map(c => c.x));
-            const minY = Math.min(...Model.state.castles.map(c => c.y));
-            const maxY = Math.max(...Model.state.castles.map(c => c.y));
+        // マップのセンタリング計算（固定：データ座標(480, 360)を画面中央に配置）
+        // これにより、拠点の配置状況に関わらず座標系が安定し、背景画像の中心と整合します。
+        const centerX = 480;
+        const centerY = 360;
 
-            const mapWidth = maxX - minX;
-            const mapHeight = maxY - minY;
-            const centerX = minX + mapWidth / 2;
-            const centerY = minY + mapHeight / 2;
-
-            this.mapOffsetX = (this.canvas.width / 2) - centerX;
-            this.mapOffsetY = (this.canvas.height / 2) - centerY;
-        }
+        this.mapOffsetX = (this.canvas.width / 2) - centerX;
+        this.mapOffsetY = (this.canvas.height / 2) - centerY;
 
         requestAnimationFrame(() => this.renderMapLoop());
 
         // イベントリスナーの登録
-        this.canvas.addEventListener('click', (e) => Controller.handleMapClick(e));
+        this.canvas.addEventListener('click', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            const canvasX = e.clientX - rect.left;
+            const canvasY = e.clientY - rect.top;
+
+            const ox = this.mapOffsetX || 0;
+            const oy = this.mapOffsetY || 0;
+            const dataX = canvasX - ox;
+            const dataY = canvasY - oy;
+
+            console.log(`Map Click (Data): x=${Math.round(dataX)}, y=${Math.round(dataY)}`);
+            Controller.handleMapClick(e);
+        });
         this.canvas.addEventListener('contextmenu', (e) => Controller.handleMapRightClick(e));
     },
 
@@ -557,6 +561,7 @@ window.View = {
         // コンテナサイズ調整
         const cols = 7; const rows = 6; const hexSize = Data.BATTLE.GRID_SIZE;
         grid.style.height = `${(rows * 0.75 + 0.25) * hexSize}px`;
+        grid.style.width = `${(cols * 1.0 + 0.5) * hexSize}px`; // 幅を指定してFlex中央寄せを機能させる
     },
     /**
      * モーダルを閉じる
