@@ -166,8 +166,8 @@ window.Data = {
             { id: 'paladin', name: '騎士', emoji: '🏇', hp: 60, atk: 20, range: 1, move: 5, cost: 500 }
         ],
         'mage': [
-            { id: 'elf', name: 'エルフ', emoji: '🏹', hp: 30, atk: 18, range: 3, move: 3, cost: 300 },
-            { id: 'fairy', name: '妖精', emoji: '🧚', hp: 25, atk: 12, range: 2, move: 4, cost: 250 }
+            { id: 'elf', name: 'エルフ', emoji: '🏹', hp: 45, atk: 23, range: 3, move: 3, cost: 300 },
+            { id: 'fairy', name: '妖精', emoji: '🧚', hp: 50, atk: 20, range: 2, move: 4, cost: 250 }
         ],
         'demon': [
             { id: 'imp', name: '小悪魔', emoji: '👿', hp: 28, atk: 18, range: 1, move: 4, cost: 150 },
@@ -188,9 +188,9 @@ window.Data = {
             id: 'classic', name: 'バハムート大陸 (Classic)', desc: '標準的なバランスの初期マップです。', image: 'assets/img/icon_map_continent.png',
             castles: [
                 { id: 'c1', name: '王都', x: 215, y: 290, owner: 'player', captureBonus: 0, income: 500, uniqueUnit: null, neighbors: ['c3', 'c7', 'c8'] },
-                { id: 'c2', name: '暗黒城', x: 780, y: 640, owner: 'enemy', captureBonus: 2000, income: 500, uniqueUnit: 'hell-hound', neighbors: ['c3', 'c5', 'c6', 'c9'] },
-                { id: 'c6', name: '東の塔', x: 850, y: 330, owner: 'enemy2', captureBonus: 800, income: 300, uniqueUnit: 'sorcerer', neighbors: ['c2', 'c4', 'c9'] },
-                { id: 'c3', name: '自由都市', x: 470, y: 375, owner: 'neutral', captureBonus: 500, income: 400, uniqueUnit: 'guard', neighbors: ['c1', 'c2', 'c4', 'c5', 'c9'] },
+                { id: 'c2', name: '暗黒城', x: 780, y: 640, owner: 'enemy', captureBonus: 2000, income: 500, uniqueUnit: 'hell-hound', neighbors: ['c5', 'c6', 'c9'] },
+                { id: 'c6', name: '東の塔', x: 780, y: 330, owner: 'enemy2', captureBonus: 800, income: 300, uniqueUnit: 'sorcerer', neighbors: ['c2', 'c4', 'c9'] },
+                { id: 'c3', name: '自由都市', x: 470, y: 375, owner: 'neutral', captureBonus: 500, income: 400, uniqueUnit: 'guard', neighbors: ['c1', 'c4', 'c5', 'c9'] },
                 { id: 'c4', name: '北の砦', x: 700, y: 160, owner: 'neutral', captureBonus: 350, income: 200, uniqueUnit: 'crossbow', neighbors: ['c3', 'c6', 'c8'] },
                 { id: 'c5', name: '南の村', x: 535, y: 540, owner: 'neutral', captureBonus: 200, income: 150, uniqueUnit: 'militia', neighbors: ['c2', 'c3', 'c10'] },
                 { id: 'c7', name: '西の廃墟', x: 145, y: 420, owner: 'neutral', captureBonus: 400, income: 100, uniqueUnit: 'ghost', neighbors: ['c1', 'c10'] },
@@ -226,7 +226,7 @@ window.Data = {
                 { id: 'c7', name: '中央島', x: 475, y: 350, owner: 'neutral', captureBonus: 800, income: 400, uniqueUnit: 'ancient-dragon', neighbors: ['c6', 'c4', 'c8', 'c9'] },
                 { id: 'c8', name: '北の関門', x: 490, y: 240, owner: 'neutral', captureBonus: 300, income: 150, uniqueUnit: 'golem', neighbors: ['c1', 'c7'] },
                 { id: 'c9', name: '南の関門', x: 500, y: 500, owner: 'neutral', captureBonus: 300, income: 150, uniqueUnit: 'golem', neighbors: ['c2', 'c7'] },
-                { id: 'c10', name: '離れ小島', x: 850, y: 680, owner: 'neutral', captureBonus: 500, income: 300, uniqueUnit: 'griffin', neighbors: ['c5'] }
+                { id: 'c10', name: '離れ小島', x: 760, y: 610, owner: 'neutral', captureBonus: 500, income: 300, uniqueUnit: 'griffin', neighbors: ['c5'] }
             ]
         }
     ],
