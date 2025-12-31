@@ -35,6 +35,16 @@ window.View = {
             menu.classList.add('hidden'); // 初期状態ではメニューを隠す
             this.clearBaseMenu();
 
+            // マップ背景の動的設定
+            const mapCanvas = document.getElementById('map-canvas');
+            let bgImage = 'assets/img/map_bg_continent.png';
+            if (Model.state.selectedMapId === 'islands') bgImage = 'assets/img/map_bg_islands.png';
+            if (Model.state.selectedMapId === 'ring') bgImage = 'assets/img/map_bg_ring.png';
+
+            if (mapCanvas) {
+                mapCanvas.style.backgroundImage = `url('${bgImage}')`;
+            }
+
             if (isPlayerTurn) {
                 sideMenu.classList.remove('hidden');
             } else {

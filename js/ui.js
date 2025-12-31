@@ -57,12 +57,24 @@ window.UI = {
         if (m.id === 'mage') colorName = 'green';
         if (m.id === 'demon') colorName = 'red';
 
+        let iconContent;
+        if (m.id === 'knight') {
+            iconContent = `<img src="assets/img/icon_master_fighter.png" class="card-icon" alt="${m.name}">`;
+        } else if (m.id === 'mage') {
+            iconContent = `<img src="assets/img/icon_master_mage.png" class="card-icon" alt="${m.name}">`;
+        } else if (m.id === 'demon') {
+            iconContent = `<img src="assets/img/icon_master_demon.png" class="card-icon" alt="${m.name}">`;
+        } else {
+            // Fallback
+            iconContent = `<div class="text-9xl mb-8 transition-transform group-hover:scale-110">${m.emoji}</div>`;
+        }
+
         return `
         <div onclick="Controller.createGame('${m.id}')"
-            class="card-base w-[300px] hover:border-${colorName}-500 ${extraClass = ''}">
-            <div class="text-9xl mb-8 transition-transform group-hover:scale-110">${m.emoji}</div>
-            <div class="text-4xl font-bold mb-4 text-white group-hover:text-${colorName}-400">${m.name}</div>
-            <p class="text-center text-gray-400">${m.desc}</p>
+            class="card-base hover:border-${colorName}-500 ${extraClass = ''} w-[300px] ">
+            ${iconContent}
+            <div class="text-4xl font-bold mb-4 text-white group-hover:text-${colorName}-400" style="text-shadow: 1px 1px 2px black;">${m.name}</div>
+            <p class="text-center text-gray-200 text-lg font-semibold" style="text-shadow: 1px 1px 1px black;">${m.desc}</p>
         </div>`;
     },
 
@@ -72,16 +84,16 @@ window.UI = {
      * @returns {string} HTML文字列
      */
     MapSelectionCard: (t) => {
-        let emoji = '🗺️';
-        if (t.id === 'islands') emoji = '🏝️';
-        if (t.id === 'ring') emoji = '⭕';
+        let iconPath = 'assets/img/icon_map_continent.png';
+        if (t.id === 'islands') iconPath = 'assets/img/icon_map_islands.png';
+        if (t.id === 'ring') iconPath = 'assets/img/icon_map_ring.png';
 
         return `
         <div onclick="Controller.selectMapAndNext('${t.id}')"
-            class="card-base w-[300px] hover:border-yellow-500">
-            <div class="text-9xl mb-8 transition-transform group-hover:scale-110">${emoji}</div>
-            <div class="text-4xl font-bold mb-4 text-white group-hover:text-yellow-400">${t.name}</div>
-            <p class="text-center text-gray-400">${t.desc}</p>
+            class="card-base hover:border-yellow-500 w-[300px] ">
+            <img src="${iconPath}" class="card-icon" alt="${t.name}">
+            <div class="text-4xl font-bold mb-4 text-[#fbbf24] group-hover:text-yellow-300" style="text-shadow: 1px 1px 2px black;">${t.name}</div>
+            <p class="text-center text-gray-200 text-lg font-semibold" style="text-shadow: 1px 1px 1px black;">${t.desc}</p>
         </div>`;
     },
 

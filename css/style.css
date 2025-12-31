@@ -244,15 +244,13 @@ body {
 }
 
 .card-base {
-    padding: 2.5rem;
-    border: 4px solid #374151;
-    /* gray-700 */
+    padding: 3rem;
     transition: all 150ms;
     cursor: pointer;
-    border-radius: 1rem;
-    background-color: rgba(31, 41, 55, 0.8);
-    /* gray-800/80 */
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    border-radius: 1.5rem;
+    background-color: transparent;
+    /* Background moved to ::before for cropping */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -260,11 +258,42 @@ body {
     position: relative;
     z-index: 50;
     pointer-events: auto;
+    color: #fbbf24;
+    text-shadow: 1px 1px 2px black;
+    width: 480px;
+    min-height: 450px;
+    overflow: hidden;
+}
+
+.card-base::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url('../assets/img/card_bg.png');
+    background-size: 130% 100%;
+    background-position: center;
+    transform: scale(1.15);
+    /* Zoom to crop black borders */
+    z-index: -1;
+    pointer-events: none;
 }
 
 .card-base:hover {
 
     transform: scale(1.05);
+}
+
+.card-icon {
+    width: 12rem;
+    height: 12rem;
+    margin-bottom: 1.5rem;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+    transition: transform 300ms;
+}
+
+.card-base:hover .card-icon {
+    transform: scale(1.0);
 }
 
 /* Layout Components */
@@ -359,17 +388,31 @@ body {
 
 .screen-heading {
     font-size: 3rem;
-    /* text-5xl */
-    margin-bottom: 4rem;
+    margin-bottom: 2rem;
     font-weight: 900;
     color: #3f2e00;
     /* Dark ink color */
-    border-bottom: 4px solid #3f2e00;
-    padding-bottom: 1rem;
-    padding-left: 5rem;
-    padding-right: 5rem;
+    /* border-bottom: 4px solid #3f2e00; Removed for scroll bg */
+    padding: 1.5rem 6rem;
     letter-spacing: 0.05em;
-    /* tracking-wider */
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.screen-heading::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url('../assets/img/title_scroll_bg.png');
+    background-size: 110% 200%;
+    background-position: center;
+    background-repeat: no-repeat;
+    mix-blend-mode: lighten;
+    z-index: -1;
+    pointer-events: none;
 }
 
 .selection-list-container {
@@ -386,8 +429,18 @@ body {
     height: 100%;
     display: flex;
     flex-direction: column;
+    background-image: url('../assets/img/parchment_bg.png');
+    background-size: cover;
+    background-position: center;
     background-color: #111827;
     position: relative;
+    overflow: hidden;
+}
+
+#map-canvas {
+    background-repeat: no-repeat;
+    background-position: center;
+    /* background-size: cover; Keep disabled per user request */
 }
 
 .map-header {
