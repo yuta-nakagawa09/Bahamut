@@ -91,16 +91,6 @@ window.View = {
         list.innerHTML = Data.MAP_TEMPLATES.map(t => UI.MapSelectionCard(t)).join('');
     },
 
-    /**
-     * マップフローリスト（詳細選択）を描画
-     */
-    renderMapFlow() {
-        const list = document.getElementById('map-flow-list');
-        list.innerHTML = Data.MAP_TEMPLATES.map(t =>
-            UI.Card(t.name, t.desc, '', `Controller.selectMapAndNext('${t.id}')`, 'Click to Select')
-        ).join('');
-    },
-
     // -------------------------------------------------------------------------
     // 汎用メッセージ・モーダル
     // -------------------------------------------------------------------------

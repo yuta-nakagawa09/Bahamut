@@ -152,8 +152,7 @@ window.BattleSystem = {
 
         // 攻撃経験値 (とどめ以外でも入る)
         atk.xp = (atk.xp || 0) + Data.BATTLE.XP.ATTACK;
-        if (atk.xp >= Data.RANK_UP_XP && atk.rank < 5) {
-            atk.rank++; atk.xp = 0; atk.hp += 10; atk.atk += 2; atk.currentHp += 10;
+        if (Model.processRankUp(atk)) {
             View.showMessage(`${atk.name}はランクアップした！`);
         }
 
@@ -166,8 +165,9 @@ window.BattleSystem = {
 
             // 反撃経験値
             def.xp = (def.xp || 0) + Data.BATTLE.XP.COUNTER;
-            if (def.xp >= Data.RANK_UP_XP && def.rank < 5) {
-                def.rank++; def.xp = 0; def.hp += 10; def.atk += 2; def.currentHp += 10;
+            if (Model.processRankUp(def)) {
+                // 反撃側のランクアップ表示はタイミングが難しいが、反撃メッセージの後に出す
+                setTimeout(() => View.showMessage(`${def.name}はランクアップした！`), 1000);
             }
         }
 
@@ -176,8 +176,7 @@ window.BattleSystem = {
             Model.state.battle.units = Model.state.battle.units.filter(u => u !== def);
             // 撃破経験値ボーナス
             atk.xp = (atk.xp || 0) + Data.BATTLE.XP.KILL;
-            if (atk.xp >= Data.RANK_UP_XP && atk.rank < 5) {
-                atk.rank++; atk.xp = 0; atk.hp += 10; atk.atk += 2; atk.currentHp += 10;
+            if (Model.processRankUp(atk)) {
                 View.showMessage(`${atk.name}はランクアップした！`);
             }
         }

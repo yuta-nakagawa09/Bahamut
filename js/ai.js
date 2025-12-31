@@ -41,8 +41,7 @@ window.StrategicAI = {
      */
     async processFaction(faction) {
         // 収入処理
-        const castleIncome = Model.state.castles.filter(c => c.owner === faction.id).reduce((sum, c) => sum + (c.income || 0), 0);
-        const income = 100 + castleIncome;
+        const income = Model.calculateFactionIncome(faction.id);
         faction.gold += income;
         const hq = Model.state.castles.find(c => c.id === faction.hqId);
 
@@ -58,9 +57,9 @@ window.StrategicAI = {
 
             // 1-1. 回復・補充
             // 金があるなら確率高めで実行 (300G以上、かつ確率50%〜90%)
-            if (faction.gold >= 300 && enemy.army.length < Data.MAX_UNITS) {
+            if (faction.gold >= Data.AI.RECRUIT.MIN_GOLD && enemy.army.length < Data.MAX_UNITS) {
                 const ut = Data.FACTION_UNITS[faction.master.id][0];
-                const chance = (faction.gold > 1000) ? 0.9 : 0.5;
+                const chance = (faction.gold > Data.AI.RECRUIT.RICH_GOLD) ? Data.AI.RECRUIT.CHANCE_HIGH : Data.AI.RECRUIT.CHANCE_LOW;
 
                 // Model.recruitUnit を使用して整合性を保つ
                 if (Math.random() < chance) {
@@ -75,11 +74,11 @@ window.StrategicAI = {
             // 防衛ロジック優先
             // 本拠地周辺に敵がいるか？
             const enemiesNearHQ = Model.state.mapUnits.filter(u => u.owner !== faction.id && Math.hypot(u.x - hq.x, u.y - hq.y) < Data.AI.DEFENSE.DIST);
-            const alliesAtHQ = Model.state.mapUnits.filter(u => u.owner === faction.id && Math.hypot(u.x - hq.x, u.y - hq.y) < 50);
+            const alliesAtHQ = Model.state.mapUnits.filter(u => u.owner === faction.id && Math.hypot(u.x - hq.x, u.y - hq.y) < Data.AI.DEFENSE.RADIUS_HQ);
             const distFromHQ = Math.hypot(enemy.x - hq.x, enemy.y - hq.y);
 
             // 自分が本拠地にいない、かつ 本拠地が危ない(敵がいて味方が少ない)なら戻る
-            if (distFromHQ > 50 && enemiesNearHQ.length > 0 && alliesAtHQ.length < Data.AI.DEFENSE.ALLY_THRESHOLD) {
+            if (distFromHQ > Data.AI.DEFENSE.SAFE_DIST && enemiesNearHQ.length > 0 && alliesAtHQ.length < Data.AI.DEFENSE.ALLY_THRESHOLD) {
                 enemy.targetX = hq.x;
                 enemy.targetY = hq.y;
                 enemy.isMoving = true;

@@ -181,15 +181,25 @@ window.Controller = {
     createGame(masterId) {
         const playerMaster = Data.MASTERS.find(m => m.id === masterId);
         const mapData = Data.MAP_TEMPLATES.find(m => m.id === Model.state.selectedMapId);
-        const hqPlayer = mapData.castles.find(c => c.owner === 'player');
-        const hqEnemy = mapData.castles.find(c => c.owner === 'enemy');
-        const hqEnemy2 = mapData.castles.find(c => c.owner === 'enemy2');
+        Model.state.factions = Data.FACTIONS.map(f => {
+            const isPlayer = (f.id === 'player');
+            const hq = mapData.castles.find(c => c.owner === f.id);
+            // プレイヤーの場合は選択されたマスター、それ以外はData定義のマスター
+            const master = isPlayer ? playerMaster : Data.MASTERS.find(m => m.id === f.masterId);
+            // 色もプレイヤーはマスター依存、敵は勢力定義依存
+            const color = isPlayer ? playerMaster.color : f.color;
 
-        Model.state.factions = [
-            { id: 'player', name: 'プレイヤー王国', color: playerMaster.color, master: playerMaster, isPlayer: true, gold: 1000, isAlive: true, hqId: hqPlayer ? hqPlayer.id : 'c1' },
-            { id: 'enemy', name: '暗黒帝国', color: '#ff0000', master: Data.MASTERS[2], isPlayer: false, gold: 1000, isAlive: !!hqEnemy, hqId: hqEnemy ? hqEnemy.id : 'c2' },
-            { id: 'enemy2', name: '東方同盟', color: '#aa00aa', master: Data.MASTERS[1], isPlayer: false, gold: 1000, isAlive: !!hqEnemy2, hqId: hqEnemy2 ? hqEnemy2.id : 'c6' }
-        ];
+            return {
+                id: f.id,
+                name: f.name,
+                color: color,
+                master: master,
+                isPlayer: isPlayer,
+                gold: 1000,
+                isAlive: !!hq,
+                hqId: hq ? hq.id : f.defaultHq
+            };
+        });
 
         Model.state.castles = JSON.parse(JSON.stringify(mapData.castles));
         Model.state.mapUnits = [];

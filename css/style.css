@@ -260,7 +260,7 @@ body {
     pointer-events: auto;
     color: #fbbf24;
     text-shadow: 1px 1px 2px black;
-    width: 480px;
+    width: 380px;
     min-height: 450px;
     overflow: hidden;
 }

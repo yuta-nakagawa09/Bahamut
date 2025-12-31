@@ -118,16 +118,20 @@ window.Model = {
         if (!unit) return "ユニットが見つかりません";
 
         if (type === 'hp') {
-            if (faction.gold < 100) return "資金が足りません(100G必要)";
+            const cost = Data.ENHANCEMENT.HP.COST;
+            const val = Data.ENHANCEMENT.HP.VALUE;
+            if (faction.gold < cost) return `資金が足りません(${cost}G必要)`;
             // if (unit.currentHp >= unit.hp) return "HPは既に満タンです"; // 最大HP強化なので満タンでもOKにする
-            faction.gold -= 100;
-            unit.hp += 10;
-            unit.currentHp += 10;
+            faction.gold -= cost;
+            unit.hp += val;
+            unit.currentHp += val;
             return true;
         } else if (type === 'atk') {
-            if (faction.gold < 150) return "資金が足りません(150G必要)";
-            faction.gold -= 150;
-            unit.atk += 3;
+            const cost = Data.ENHANCEMENT.ATK.COST;
+            const val = Data.ENHANCEMENT.ATK.VALUE;
+            if (faction.gold < cost) return `資金が足りません(${cost}G必要)`;
+            faction.gold -= cost;
+            unit.atk += val;
             return true;
         }
         return "不正な強化タイプです";

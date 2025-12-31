@@ -53,21 +53,8 @@ window.UI = {
      * @returns {string} HTML文字列
      */
     MasterSelectionCard: (m) => {
-        let colorName = 'blue';
-        if (m.id === 'mage') colorName = 'green';
-        if (m.id === 'demon') colorName = 'red';
-
-        let iconContent;
-        if (m.id === 'knight') {
-            iconContent = `<img src="assets/img/icon_master_fighter.png" class="card-icon" alt="${m.name}">`;
-        } else if (m.id === 'mage') {
-            iconContent = `<img src="assets/img/icon_master_mage.png" class="card-icon" alt="${m.name}">`;
-        } else if (m.id === 'demon') {
-            iconContent = `<img src="assets/img/icon_master_demon.png" class="card-icon" alt="${m.name}">`;
-        } else {
-            // Fallback
-            iconContent = `<div class="text-9xl mb-8 transition-transform group-hover:scale-110">${m.emoji}</div>`;
-        }
+        const colorName = m.colorKey || 'blue';
+        const iconContent = `<img src="${m.image}" class="card-icon" alt="${m.name}">`;
 
         return `
         <div onclick="Controller.createGame('${m.id}')"
@@ -84,9 +71,7 @@ window.UI = {
      * @returns {string} HTML文字列
      */
     MapSelectionCard: (t) => {
-        let iconPath = 'assets/img/icon_map_continent.png';
-        if (t.id === 'islands') iconPath = 'assets/img/icon_map_islands.png';
-        if (t.id === 'ring') iconPath = 'assets/img/icon_map_ring.png';
+        const iconPath = t.image || 'assets/img/icon_map_continent.png';
 
         return `
         <div onclick="Controller.selectMapAndNext('${t.id}')"
@@ -95,27 +80,6 @@ window.UI = {
             <div class="text-4xl font-bold mb-4 text-[#fbbf24] group-hover:text-yellow-300" style="text-shadow: 1px 1px 2px black;">${t.name}</div>
             <p class="text-center text-gray-200 text-lg font-semibold" style="text-shadow: 1px 1px 1px black;">${t.desc}</p>
         </div>`;
-    },
-
-    /**
-     * 汎用カードコンポーネント
-     * @param {string} title - タイトル
-     * @param {string} desc - 説明文
-     * @param {string} icon - 絵文字アイコン
-     * @param {string} onclick - クリックアクション
-     * @param {string} subtext - サブテキスト（オプション）
-     * @param {string} extraClass - 追加クラス
-     * @returns {string} HTML文字列
-     */
-    Card: (title, desc, icon, onclick, subtext = '', extraClass = '') => {
-        return `
-            <div onclick="${onclick}" 
-                 class="card-base w-[400px] hover:border-yellow-500 ${extraClass}">
-                ${icon ? `<div class="text-9xl mb-8 transition-transform group-hover:scale-110">${icon}</div>` : ''}
-                <div class="text-4xl font-bold mb-4 text-white text-center group-hover:text-yellow-500 transition-colors">${title}</div>
-                <p class="text-xl text-gray-400 text-center leading-relaxed mb-6">${desc}</p>
-                ${subtext ? `<div class="text-yellow-500 font-bold uppercase tracking-widest text-sm animate-pulse">${subtext}</div>` : ''}
-            </div>`;
     },
 
     /**
@@ -208,8 +172,8 @@ window.UI = {
             </div>
             ${enhanceActions ? `
             <div class="flex flex-row gap-1">
-                <button onclick="${enhanceActions.hp}" class="btn-enhance-hp">HP+(100G)</button>
-                <button onclick="${enhanceActions.atk}" class="btn-enhance-atk">ATK+(150G)</button>
+                <button onclick="${enhanceActions.hp}" class="btn-enhance-hp">HP+(${Data.ENHANCEMENT.HP.COST}${Data.CURRENCY_UNIT})</button>
+                <button onclick="${enhanceActions.atk}" class="btn-enhance-atk">ATK+(${Data.ENHANCEMENT.ATK.COST}${Data.CURRENCY_UNIT})</button>
             </div>` : ''}
         </div>`;
     },
@@ -504,9 +468,9 @@ window.UI = {
     GenericModalTemplate: () => {
         return `
         <div class="modal-content">
-            <h3 id="modal-title" class="text-4xl font-bold text-white mb-6"></h3>
-            <p id="modal-body" class="text-xl text-gray-300 mb-10 leading-relaxed"></p>
-            <div id="modal-footer" class="flex justify-center gap-6"></div>
+            <h3 id="modal-title" class="modal-title"></h3>
+            <p id="modal-body" class="modal-body"></p>
+            <div id="modal-footer" class="modal-footer"></div>
         </div>`;
     }
 };
