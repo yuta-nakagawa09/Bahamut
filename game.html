@@ -116,7 +116,7 @@
                             class="text-gray-500 hover:text-white transition-colors text-2xl bg-white/10 w-8 h-8 rounded-full flex items-center justify-center relative z-50 pointer-events-auto">×</button>
                     </div>
 
-                    <div class="flex-1 overflow-y-auto p-2 flex flex-col gap-4 custom-scrollbar">
+                    <div class="flex-1 overflow-y-auto p-2 flex flex-col gap-2 custom-scrollbar">
                         <button id="btn-create-army"
                             class="w-full py-2 bg-purple-900 hover:bg-purple-700 border border-purple-400 text-lg font-black uppercase tracking-widest shadow-lg transition-all transform active:scale-95 disabled:opacity-30 disabled:grayscale text-white rounded-lg relative z-50 pointer-events-auto">
                             新規部隊追加
@@ -135,20 +135,12 @@
             <!-- RIGHT SIDEBAR (End Turn) -->
             <aside id="command-sidebar" class="map-sidebar">
                 <div id="menu-group" class="flex flex-col gap-4 items-center px-4 h-full hidden py-6">
-                    <button onclick="View.openInfoModal()" class="sidebar-btn-base btn-save-load mb-4">
-                        情報
-                    </button>
-                    <button onclick="Controller.endStrategicTurn()" class="sidebar-btn-base btn-turn-end group mb-4">
-                        <span class="text-xl writing-vertical-rl">ターン終了</span>
-                    </button>
+                    <button onclick="Controller.endStrategicTurn()" class="sidebar-btn-base">ターン終了</button>
+                    <button onclick="View.openInfoModal()" class="sidebar-btn-base">情報</button>
                     <div class="flex-1"></div>
-
-                    <button onclick="Controller.saveGame()" class="sidebar-btn-base btn-save-load">セーブ</button>
-                    <button onclick="Controller.loadGame()" class="sidebar-btn-base btn-save-load">ロード</button>
-
-                    <button onclick="Controller.confirmReturnToTitle()" class="sidebar-btn-base btn-back-title">
-                        タイトルに戻る
-                    </button>
+                    <button onclick="Controller.saveGame()" class="sidebar-btn-base">セーブ</button>
+                    <button onclick="Controller.loadGame()" class="sidebar-btn-base">ロード</button>
+                    <button onclick="Controller.confirmReturnToTitle()" class="sidebar-btn-base">タイトルに戻る</button>
                 </div>
             </aside>
         </div>

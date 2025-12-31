@@ -530,9 +530,7 @@ body {
 /* Base Menu Overlay (Popup inside map) */
 .base-menu-overlay {
     position: absolute;
-    top: 1rem;
-    left: 1rem;
-    bottom: 1rem;
+    height: 775px;
     width: 675px;
     max-width: 98vw;
     background-color: rgba(17, 24, 39, 0.9);
@@ -1027,60 +1025,29 @@ body {
     z-index: 50;
     pointer-events: auto;
     font-weight: 700;
+    border-color: rgba(30, 58, 138, 0.5);
+    color: white;
+    font-size: 1.125rem;
 }
 
 .sidebar-btn-base:hover {
     background-image: linear-gradient(to bottom, #374151, #111827);
     transform: scale(1.05);
+    border-color: #3b82f6;
 }
 
 .sidebar-btn-base:active {
     transform: scale(0.95);
 }
 
-.btn-turn-end {
-    border-color: rgba(127, 29, 29, 0.5);
-    color: white;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-turn-end:hover {
-    border-color: #ef4444;
-}
-
-.btn-save-load {
-    border-color: rgba(30, 58, 138, 0.5);
-    color: white;
-    font-size: 1.125rem;
-}
-
-.btn-save-load:hover {
-    border-color: #3b82f6;
-}
-
-.btn-back-title {
-    border-color: #4b5563;
-    color: #d1d5db;
-    font-size: 1.125rem;
-    margin-bottom: 1rem;
-}
-
-.btn-back-title:hover {
-    border-color: #9ca3af;
-    color: white;
-}
-
 /* Info Modal Styles */
 .info-modal-container {
     display: flex;
     flex-direction: column;
-    height: 70vh;
-    width: 60vw;
+    height: 775px;
+    width: 675px;
+    flex-shrink: 0;
+
     background-color: #111827;
     border-radius: 0.75rem;
     overflow: hidden;
