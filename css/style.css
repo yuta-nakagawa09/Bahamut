@@ -530,6 +530,9 @@ body {
 /* Base Menu Overlay (Popup inside map) */
 .base-menu-overlay {
     position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     height: 775px;
     width: 675px;
     max-width: 98vw;
