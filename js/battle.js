@@ -305,43 +305,73 @@ window.BattleSystem = {
                 if (!done) {
                     // 2. 移動：一番近い敵へ近づく
                     const target = targets.reduce((p, c) => Model.getHexDist(u.r, u.c, c.r, c.c) < Model.getHexDist(u.r, u.c, p.r, p.c) ? c : p);
-
                     const startR = u.r;
                     const startC = u.c;
-                    let moves = u.move || 3;
-                    while (moves > 0) {
-                        const distToTarget = Model.getHexDist(u.r, u.c, target.r, target.c);
-                        if (distToTarget <= u.range) break;
+                    const moveRange = u.move || 3;
 
-                        let bestNext = null;
-                        let bestDist = distToTarget;
+                    // BFSによる移動範囲計算 (味方は通過可能、敵は不可)
+                    const reachable = [];
+                    const queue = [{ r: u.r, c: u.c, dist: 0 }];
+                    const visited = new Set([`${u.r},${u.c}`]);
 
-                        for (let dr = -1; dr <= 1; dr++) {
-                            for (let dc = -1; dc <= 1; dc++) {
-                                if (dr === 0 && dc === 0) continue;
-                                const nr = u.r + dr, nc = u.c + dc;
-                                if (nr < 0 || nc < 0) continue;
+                    while (queue.length > 0) {
+                        const curr = queue.shift();
+                        if (curr.dist < moveRange) {
+                            // 隣接ヘックスを探索
+                            for (let dr = -1; dr <= 1; dr++) {
+                                for (let dc = -1; dc <= 1; dc++) {
+                                    if (dr === 0 && dc === 0) continue;
+                                    const nr = curr.r + dr, nc = curr.c + dc;
 
-                                if (Model.getHexDist(u.r, u.c, nr, nc) === 1) {
-                                    const occupied = Model.state.battle.units.find(unit => unit.r === nr && unit.c === nc);
-                                    if (!occupied) {
-                                        const d = Model.getHexDist(nr, nc, target.r, target.c);
-                                        if (d < bestDist) {
-                                            bestDist = d;
-                                            bestNext = { r: nr, c: nc };
+                                    // マップ範囲外チェック
+                                    // Note: グリッドサイズ(7x6)はハードコードされているが、ModelかDataから取得が望ましい
+                                    if (nr < 0 || nc < 0 || nr >= 6 || nc >= 7) continue;
+
+                                    // Hex距離が1であることを確認 (偶数/奇数行のズレ対応はgetHexDistで考慮済みだが、
+                                    // ここでは単純な座標近傍探索なので、getHexDist(curr, next) === 1 のチェックを入れる)
+                                    if (Model.getHexDist(curr.r, curr.c, nr, nc) !== 1) continue;
+
+                                    if (!visited.has(`${nr},${nc}`)) {
+                                        const occupiedUnit = Model.state.battle.units.find(unit => unit.r === nr && unit.c === nc);
+                                        // 通過条件: ユニットがいない OR 自分の勢力(Ally)なら通過可能
+                                        const canPass = !occupiedUnit || occupiedUnit.owner === side;
+
+                                        if (canPass) {
+                                            visited.add(`${nr},${nc}`);
+                                            queue.push({ r: nr, c: nc, dist: curr.dist + 1 });
+
+                                            // 停止条件: ユニットがいないこと (味方の上には止まれない)
+                                            if (!occupiedUnit) {
+                                                reachable.push({ r: nr, c: nc });
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
+                    }
 
-                        if (bestNext) {
-                            u.r = bestNext.r;
-                            u.c = bestNext.c;
-                            moves--;
-                        } else {
-                            break;
+                    // 移動可能なマスのうち、ターゲットに最も近いマスを選択
+                    let bestDest = null;
+                    let bestDist = Model.getHexDist(u.r, u.c, target.r, target.c);
+
+                    reachable.forEach(pos => {
+                        const d = Model.getHexDist(pos.r, pos.c, target.r, target.c);
+                        // ターゲットとの距離が縮まる、かつ射程内ならベスト。射程内に入れないならとにかく近づく。
+                        if (d < bestDist) {
+                            bestDist = d;
+                            bestDest = pos;
+                        } else if (bestDest === null && d <= bestDist) {
+                            // 移動しないよりは移動したほうがいいケース（距離が変わらなくても有利な位置など）
+                            // ここでは単純に距離優先
+                            bestDist = d;
+                            bestDest = pos;
                         }
+                    });
+
+                    if (bestDest) {
+                        u.r = bestDest.r;
+                        u.c = bestDest.c;
                     }
 
                     // 移動後攻撃確認
