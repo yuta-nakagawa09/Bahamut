@@ -401,20 +401,54 @@ window.View = {
      * 拠点メニューを表示する
      * @param {Object} castle - 拠点データ
      */
+    /**
+     * 拠点メニューを表示する
+     * @param {Object} castle - 拠点データ
+     */
     toggleBaseMenu(castle = null) {
-        if (castle) {
-            this.renderBaseMenu(castle);
-            document.getElementById('base-menu').classList.remove('hidden');
+        const menu = document.getElementById('base-menu');
+        const mapSidebar = document.getElementById('command-sidebar');
+
+        if (!castle) {
+            menu.classList.add('hidden');
+            mapSidebar.classList.remove('hidden'); // Show sidebar when menu closed
+            // Clear selection
+            if (Model.state.selectedCastle) {
+                Model.state.selectedCastle = null;
+                // Redraw to remove selection ring
+            }
+            return;
         }
+
+        // Set state
+        Model.state.selectedCastle = castle;
+        menu.classList.remove('hidden');
+        mapSidebar.classList.add('hidden'); // Hide sidebar to prevent overlap/distraction
+
+        // Reset Tab State on Open
+        const units = Model.state.mapUnits.filter(u => Math.hypot(u.x - castle.x, u.y - castle.y) < Data.UI.UNIT_DETECT_RADIUS);
+        if (units.length === 0) {
+            this.baseMenuTab = 'create';
+        } else {
+            this.baseMenuTab = 'recruit';
+        }
+
+        this.renderBaseMenu(castle);
+    },
+
+    clearBaseMenu() {
+        this.toggleBaseMenu(null);
     },
 
     /**
-     * 拠点メニューをクリアして非表示にする
+     * 拠点メニューのタブ切り替え
+     * @param {string} tabId 
      */
-    clearBaseMenu() {
-        document.getElementById('base-menu').classList.add('hidden');
-        document.getElementById('base-menu-title').innerText = "拠点を選択してください";
-        document.getElementById('base-menu-content').innerHTML = "";
+    switchBaseTab(tabId) {
+        this.baseMenuTab = tabId;
+        if (Model.state.selectedCastle) {
+            this.renderBaseMenu(Model.state.selectedCastle);
+        }
     },
 
     /**
@@ -423,7 +457,6 @@ window.View = {
      * @param {string} [targetUnitId=null] - 表示対象の部隊ID
      */
     renderBaseMenu(castle, targetUnitId = null) {
-        // Model.state と Data オブジェクトを使用
         const playerFaction = Model.state.factions.find(f => f.isPlayer);
 
         // 1. 部隊情報の取得とアクティブ部隊の決定
@@ -453,84 +486,168 @@ window.View = {
         } else {
             infoText = UI.MenuBonus('income', castle.income || 0);
         }
-
-        // 戦力計算 (Modelに移譲)
         const totalPower = Model.getCastleTotalPower(castle);
         infoText += UI.MenuPower(totalPower);
 
         document.getElementById('base-menu-title').innerHTML = UI.MenuTitle(castle.name, isHQ, ownerName, ownerEmoji, color, infoText);
 
-        const createBtn = document.getElementById('btn-create-army');
-        createBtn.disabled = castle.owner !== playerFaction.id || playerFaction.gold < Data.ARMY_COST || Model.state.mapUnits.filter(u => u.owner === playerFaction.id).length >= Data.MAX_ARMIES;
-        createBtn.onclick = () => Controller.createNewArmy(castle);
 
-        const menuContent = document.getElementById('base-menu-content');
-        menuContent.innerHTML = '';
+        // 3. メインタブの描画
+        const tabsContainer = document.getElementById('base-menu-tabs');
+        tabsContainer.innerHTML = '';
 
-        // 部隊がいない場合のメッセージ
-        const noMsg = document.getElementById('no-unit-message');
-        if (allUnits.length === 0) {
-            noMsg.classList.remove('hidden');
-            return;
+        const isPlayerCastle = (castle.owner === playerFaction.id);
+
+        if (isPlayerCastle) {
+            tabsContainer.appendChild(UI.BaseMenuTabs(this.baseMenuTab, (t) => this.switchBaseTab(t)));
         }
+
+        // 4. タブごとのコンテンツ描画
+        const contentContainer = document.getElementById('base-menu-tab-content');
+        contentContainer.innerHTML = '';
+        const noMsg = document.getElementById('no-unit-message');
         noMsg.classList.add('hidden');
 
-        // 1. 部隊選択タブ
-        const tabContainer = document.createElement('div');
-        tabContainer.className = "flex gap-3 pb-1 mb-1";
-
-        allUnits.forEach(u => {
-            const isActive = (u === activeUnit);
-            const isPlayerUnit = (u.owner === playerFaction.id);
-            const faction = Model.state.factions.find(f => f.id === u.owner);
-
-            const btn = UI.createTabButton(u, isActive, faction, () => {
-                // 自軍部隊なら選択状態も更新
-                if (isPlayerUnit) {
-                    Model.state.selectedMapUnit = u;
-                }
-                this.renderBaseMenu(castle, u.id);
-            });
-            tabContainer.appendChild(btn);
-        });
-        menuContent.appendChild(tabContainer);
-
-        // 2. 詳細表示 (activeUnitの内容)
-        if (activeUnit) {
-            const isPlayerUnit = (activeUnit.owner === playerFaction.id);
-
-            let contentHTML = '';
-
-            if (isPlayerUnit) {
-                // 自軍: 雇用パネル + 部隊リスト
-                const factionUnits = Data.FACTION_UNITS[playerFaction.master.id];
-                let options = [...factionUnits];
-                if (castle.uniqueUnit) {
-                    const spec = Data.SPECIAL_UNITS[castle.uniqueUnit];
-                    if (spec) options.push(spec);
-                }
-
-                const recruitHTML = UI.RecruitPanel(options, activeUnit, castle, (ut, activeUnit, castle) => {
-                    const canAfford = playerFaction.gold >= ut.cost;
-                    const isFull = activeUnit.army.length >= Data.MAX_UNITS;
-                    return UI.RecruitItem(ut, activeUnit.id, castle.id, canAfford, isFull);
+        // タブ分岐
+        if (!isPlayerCastle) {
+            // -----------------------------------------------------------
+            // 敵拠点 / 中立拠点
+            // -----------------------------------------------------------
+            if (activeUnit) {
+                // 部隊選択タブ (敵軍)
+                const armyTabContainer = document.createElement('div');
+                armyTabContainer.className = "flex gap-3 pb-1 mb-1 overflow-x-auto custom-scrollbar";
+                allUnits.forEach(u => {
+                    const isActive = (u === activeUnit);
+                    const f = Model.state.factions.find(fx => fx.id === u.owner);
+                    const btn = UI.createTabButton(u, isActive, f, () => this.renderBaseMenu(castle, u.id));
+                    armyTabContainer.appendChild(btn);
                 });
+                contentContainer.appendChild(armyTabContainer);
 
-                const unitsHTML = UI.UnitListPanel(activeUnit, castle, (u, i) => UI.UnitListItem(u, i, {
-                    hp: `Controller.enhanceUnit('${activeUnit.id}', ${i}, 'hp', '${castle.id}')`,
-                    atk: `Controller.enhanceUnit('${activeUnit.id}', ${i}, 'atk', '${castle.id}')`
-                }));
-
-                contentHTML = recruitHTML + unitsHTML;
+                // ユニットリスト (敵軍)
+                const listHtml = UI.EnemyUnitListContainer(activeUnit.army.map((u, i) => UI.UnitListItem(u, i)).join(''));
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = listHtml;
+                contentContainer.appendChild(wrapper);
             } else {
-                // 敵軍: 部隊リストのみ
-                contentHTML = UI.EnemyUnitListContainer(activeUnit.army.map((u, i) => UI.UnitListItem(u, i)).join(''));
+                noMsg.classList.remove('hidden');
             }
 
-            // コンテンツのみ追加 (カードヘッダーなし)
-            const contentWrapper = document.createElement('div');
-            contentWrapper.innerHTML = contentHTML;
-            menuContent.appendChild(contentWrapper);
+        } else {
+            // -----------------------------------------------------------
+            // 自軍拠点 (3タブ制御)
+            // -----------------------------------------------------------
+            if (this.baseMenuTab === 'create') {
+                // --- 新規部隊タブ ---
+                const createBtn = document.createElement('button');
+                const canCreate = playerFaction.gold >= Data.ARMY_COST && Model.state.mapUnits.filter(u => u.owner === playerFaction.id).length < Data.MAX_ARMIES;
+
+                createBtn.className = "w-full py-4 bg-purple-900 hover:bg-purple-700 border border-purple-400 text-xl font-black uppercase tracking-widest shadow-lg transition-all transform active:scale-95 disabled:opacity-30 disabled:grayscale text-white rounded-lg relative z-50 pointer-events-auto flex flex-col items-center justify-center gap-2";
+                createBtn.innerHTML = `
+                    <span>新規部隊結成</span>
+                    <span class="text-sm font-normal text-purple-200">費用: ${Data.ARMY_COST}G</span>
+                `;
+                createBtn.disabled = !canCreate;
+                createBtn.onclick = () => {
+                    Controller.createNewArmy(castle);
+                    this.baseMenuTab = 'recruit';
+                };
+                contentContainer.appendChild(createBtn);
+
+                // 説明テキスト
+                const desc = document.createElement('div');
+                desc.className = "text-center text-gray-400 text-sm mt-2";
+                if (!canCreate) {
+                    if (playerFaction.gold < Data.ARMY_COST) desc.innerText = "資金不足です";
+                    else desc.innerText = "部隊数が上限に達しています";
+                } else {
+                    desc.innerText = "新しい部隊をこの拠点に配置します";
+                }
+                contentContainer.appendChild(desc);
+
+            } else if (this.baseMenuTab === 'recruit') {
+                // --- 雇用タブ ---
+                if (allUnits.length > 0 && activeUnit) {
+                    // 部隊選択
+                    const armyTabContainer = document.createElement('div');
+                    armyTabContainer.className = "flex gap-3 pb-1 mb-1 overflow-x-auto custom-scrollbar";
+                    allUnits.forEach(u => {
+                        const isActive = (u === activeUnit);
+                        const f = Model.state.factions.find(fx => fx.id === u.owner);
+                        const btn = UI.createTabButton(u, isActive, f, () => {
+                            if (u.owner === playerFaction.id) Model.state.selectedMapUnit = u;
+                            this.renderBaseMenu(castle, u.id);
+                        });
+                        armyTabContainer.appendChild(btn);
+                    });
+                    contentContainer.appendChild(armyTabContainer);
+
+                    // 雇用パネル
+                    if (activeUnit.owner === playerFaction.id) {
+                        const factionUnits = Data.FACTION_UNITS[playerFaction.master.id];
+                        let options = [...factionUnits];
+                        if (castle.uniqueUnit) {
+                            const spec = Data.SPECIAL_UNITS[castle.uniqueUnit];
+                            if (spec) options.push(spec);
+                        }
+
+                        const recruitHTML = UI.RecruitPanel(options, activeUnit, castle, (ut, activeUnit, castle) => {
+                            const canAfford = playerFaction.gold >= ut.cost;
+                            const isFull = activeUnit.army.length >= Data.MAX_UNITS;
+                            return UI.RecruitItem(ut, activeUnit.id, castle.id, canAfford, isFull);
+                        });
+                        const wrapper = document.createElement('div');
+                        wrapper.innerHTML = recruitHTML;
+                        contentContainer.appendChild(wrapper);
+                    } else {
+                        const msg = document.createElement('div');
+                        msg.className = "text-center text-red-400 py-4";
+                        msg.innerText = "敵軍部隊です（操作不可）";
+                        contentContainer.appendChild(msg);
+                    }
+                } else {
+                    noMsg.classList.remove('hidden');
+                    noMsg.innerText = "部隊がいません。「部隊新規」で作成してください。";
+                }
+
+            } else if (this.baseMenuTab === 'enhance') {
+                // --- 強化タブ ---
+                if (allUnits.length > 0 && activeUnit) {
+                    // 部隊選択
+                    const armyTabContainer = document.createElement('div');
+                    armyTabContainer.className = "flex gap-3 pb-1 mb-1 overflow-x-auto custom-scrollbar";
+                    allUnits.forEach(u => {
+                        const isActive = (u === activeUnit);
+                        const f = Model.state.factions.find(fx => fx.id === u.owner);
+                        const btn = UI.createTabButton(u, isActive, f, () => {
+                            if (u.owner === playerFaction.id) Model.state.selectedMapUnit = u;
+                            this.renderBaseMenu(castle, u.id);
+                        });
+                        armyTabContainer.appendChild(btn);
+                    });
+                    contentContainer.appendChild(armyTabContainer);
+
+                    // ユニットリスト (強化ボタン付き)
+                    if (activeUnit.owner === playerFaction.id) {
+                        const unitsHTML = UI.UnitListPanel(activeUnit, castle, (u, i) => UI.UnitListItem(u, i, {
+                            hp: `Controller.enhanceUnit('${activeUnit.id}', ${i}, 'hp', '${castle.id}')`,
+                            atk: `Controller.enhanceUnit('${activeUnit.id}', ${i}, 'atk', '${castle.id}')`
+                        }));
+                        const wrapper = document.createElement('div');
+                        wrapper.innerHTML = unitsHTML;
+                        contentContainer.appendChild(wrapper);
+                    } else {
+                        const listHtml = UI.EnemyUnitListContainer(activeUnit.army.map((u, i) => UI.UnitListItem(u, i)).join(''));
+                        const wrapper = document.createElement('div');
+                        wrapper.innerHTML = listHtml;
+                        contentContainer.appendChild(wrapper);
+                    }
+                } else {
+                    noMsg.classList.remove('hidden');
+                    noMsg.innerText = "部隊がいません。";
+                }
+            }
         }
     },
 

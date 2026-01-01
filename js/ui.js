@@ -462,5 +462,48 @@ window.UI = {
             <p id="modal-body" class="modal-body"></p>
             <div id="modal-footer" class="modal-footer"></div>
         </div>`;
+    },
+
+    // -------------------------------------------------------------------------
+    // 拠点メニュータブ
+    // -------------------------------------------------------------------------
+    /**
+     * 拠点メニューのタブHTMLを生成・イベント設定
+     * @param {string} activeTab - 'create' | 'recruit' | 'enhance'
+     * @param {function} onSwitch - タブ切り替え時のコールバック (tabId) => void
+     * @returns {HTMLElement} タブコンテナ要素
+     */
+    BaseMenuTabs: (activeTab, onSwitch) => {
+        const container = document.createElement('div');
+        container.className = "flex gap-2 w-full"; // Full width container
+
+        const tabs = [
+            { id: 'create', label: '部隊新規' },
+            { id: 'recruit', label: '雇用' },
+            { id: 'enhance', label: '強化' }
+        ];
+
+        tabs.forEach(tab => {
+            const btn = document.createElement('button');
+            const isActive = tab.id === activeTab;
+
+            // Base classes
+            let classes = "flex-1 py-2 text-sm font-bold uppercase tracking-wider rounded-t-lg transition-colors duration-200 border-b-2 pointer-events-auto ";
+
+            if (isActive) {
+                // Active styles
+                classes += "bg-gray-800 text-yellow-400 border-yellow-400";
+            } else {
+                // Inactive styles
+                classes += "bg-gray-900 text-gray-500 border-gray-700 hover:bg-gray-800 hover:text-gray-300";
+            }
+
+            btn.className = classes;
+            btn.innerText = tab.label;
+            btn.onclick = () => onSwitch(tab.id);
+            container.appendChild(btn);
+        });
+
+        return container;
     }
 };

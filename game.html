@@ -119,16 +119,15 @@
                         </div>
 
                         <div class="flex-1 overflow-y-auto p-2 flex flex-col gap-2 custom-scrollbar">
-                            <button id="btn-create-army"
-                                class="w-full py-2 bg-purple-900 hover:bg-purple-700 border border-purple-400 text-lg font-black uppercase tracking-widest shadow-lg transition-all transform active:scale-95 disabled:opacity-30 disabled:grayscale text-white rounded-lg relative z-50 pointer-events-auto">
-                                新規部隊追加
-                            </button>
+                            <!-- Base Menu Tabs -->
+                            <div id="base-menu-tabs" class="flex gap-2 mb-2 px-2"></div>
 
-                            <p class="text-xl text-gray-400 mb-2 font-bold uppercase tracking-widest text-center">駐留部隊一覧
-                            </p>
-                            <div id="base-menu-content" class="flex flex-col gap-3"></div>
+                            <!-- Tab Content -->
+                            <div id="base-menu-tab-content" class="flex flex-col gap-3"></div>
+
+                            <!-- No Unit Message (Hidden by default) -->
                             <div id="no-unit-message"
-                                class="py-12 text-center border-2 border-dashed border-gray-800 rounded-lg text-gray-600 text-xs font-black uppercase tracking-widest italic">
+                                class="hidden py-12 text-center border-2 border-dashed border-gray-800 rounded-lg text-gray-600 text-xs font-black uppercase tracking-widest italic">
                                 駐留部隊なし
                             </div>
                         </div>
