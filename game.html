@@ -13,194 +13,197 @@
 
 <body class="h-screen w-screen overflow-hidden text-white crt-flicker">
 
-    <!-- TITLE SCREEN -->
-    <div id="screen-title" class="screen-title">
-        <div class="title-scroll-container">
-            <h1 class="title-heading">
-                バハムート戦記
-            </h1>
-        </div>
-
-        <div class="flex gap-8 mt-12 relative z-50">
-            <button
-                onclick="console.log('Start Clicked'); if(window.View) View.changeScreen('settings'); else alert('View not loaded');"
-                class="btn-base btn-primary">
-                新規ゲーム
-            </button>
-            <button onclick="if(window.Controller) Controller.loadGame(); else alert('Controller not loaded');"
-                class="btn-base btn-secondary">
-                ロードゲーム
-            </button>
-        </div>
-    </div>
-
-    <!-- SETTINGS SCREEN (Map Select) -->
-    <div id="screen-settings" class="hidden screen-settings">
-        <h2 class="screen-heading">マップ選択</h2>
-        <!-- Using flex container like master select -->
-        <div id="map-select-list" class="selection-list-container"></div>
-        <button onclick="View.changeScreen('title')" class="btn-base btn-neutral mt-12">
-            戻る
-        </button>
-    </div>
-
-    <!-- MASTER SELECT SCREEN -->
-    <div id="screen-master-select" class="hidden screen-settings">
-        <h2 class="screen-heading">マスター選択</h2>
-        <div id="master-select-container" class="selection-list-container">
-            <!-- Masters will be injected here by View.renderMasterSelect() -->
-        </div>
-        <button onclick="View.changeScreen('title')" class="btn-base btn-neutral mt-12">
-            戻る
-        </button>
-    </div>
-
-    <!-- MAP SCREEN -->
-    <div id="screen-map" class="hidden screen-map">
-        <!-- HEADER (Status) -->
-        <header class="map-header">
-            <!-- Turn Indicator -->
-            <div id="turn-indicator" class="map-turn-indicator">
-                <div id="turn-display" class="text-2xl text-yellow-600 font-black uppercase tracking-[0.3em] mb-1">
-                    第1ターン
-                </div>
-                <div id="turn-text-map" class="text-3xl text-white font-mono font-bold leading-none">
-                    自軍フェーズ
-                </div>
+    <div id="game-container" class="game-container">
+        <!-- TITLE SCREEN -->
+        <div id="screen-title" class="screen-title">
+            <div class="title-scroll-container">
+                <h1 class="title-heading">
+                    バハムート戦記
+                </h1>
             </div>
 
-            <div class="map-stats-container">
-                <div class="flex gap-3">
-                    <div class="map-stat-group">
-                        <div class="map-stat-label text-blue-500">拠点数</div>
-                        <div id="castle-count-display" class="map-stat-value">0/0
-                        </div>
-                    </div>
-                    <div class="map-stat-group">
-                        <div class="map-stat-label text-green-500">部隊数</div>
-                        <div id="army-total-display" class="map-stat-value">0/0
-                        </div>
-                    </div>
-                    <div class="map-stat-group">
-                        <div class="map-stat-label text-yellow-500">資金</div>
-                        <div id="gold-amount" class="map-stat-value">500G</div>
-                    </div>
-                    <!-- New Stats -->
-                    <div class="map-stat-group">
-                        <div class="map-stat-label text-cyan-400">総収入</div>
-                        <div id="income-display" class="map-stat-value">100G</div>
-                    </div>
-                    <div class="map-stat-group">
-                        <div class="map-stat-label text-red-400">総戦力</div>
-                        <div id="power-display" class="map-stat-value">0</div>
-                    </div>
-                </div>
+            <div class="flex gap-8 mt-12 relative z-50">
+                <button
+                    onclick="console.log('Start Clicked'); if(window.View) View.changeScreen('settings'); else alert('View not loaded');"
+                    class="btn-base btn-newgame">
+                    新規ゲーム
+                </button>
+                <button onclick="if(window.Controller) Controller.loadGame(); else alert('Controller not loaded');"
+                    class="btn-base btn-loadgame">
+                    ロードゲーム
+                </button>
             </div>
-        </header>
-
-        <div class="flex flex-1 overflow-hidden relative">
-            <!-- MAIN MAP VIEW -->
-            <main class="map-main">
-                <canvas id="map-canvas" class="map-canvas"></canvas>
-
-                <!-- Base Menu Overlay -->
-                <div id="base-menu" class="base-menu-overlay hidden">
-                    <div class="p-2 bg-black/60 border-b border-gray-800 flex justify-between items-center shrink-0">
-                        <div class="flex flex-col">
-                            <h2 id="base-menu-title"
-                                class="text-xl text-yellow-500 font-black tracking-tighter uppercase leading-tight">
-                                拠点を選択してください
-                            </h2>
-                        </div>
-                        <button onclick="View.clearBaseMenu()"
-                            class="text-gray-500 hover:text-white transition-colors text-2xl bg-white/10 w-8 h-8 rounded-full flex items-center justify-center relative z-50 pointer-events-auto">×</button>
-                    </div>
-
-                    <div class="flex-1 overflow-y-auto p-2 flex flex-col gap-2 custom-scrollbar">
-                        <button id="btn-create-army"
-                            class="w-full py-2 bg-purple-900 hover:bg-purple-700 border border-purple-400 text-lg font-black uppercase tracking-widest shadow-lg transition-all transform active:scale-95 disabled:opacity-30 disabled:grayscale text-white rounded-lg relative z-50 pointer-events-auto">
-                            新規部隊追加
-                        </button>
-
-                        <p class="text-xl text-gray-400 mb-2 font-bold uppercase tracking-widest text-center">駐留部隊一覧</p>
-                        <div id="base-menu-content" class="flex flex-col gap-3"></div>
-                        <div id="no-unit-message"
-                            class="py-12 text-center border-2 border-dashed border-gray-800 rounded-lg text-gray-600 text-xs font-black uppercase tracking-widest italic">
-                            駐留部隊なし
-                        </div>
-                    </div>
-                </div>
-            </main>
-
-            <!-- RIGHT SIDEBAR (End Turn) -->
-            <aside id="command-sidebar" class="map-sidebar">
-                <div id="menu-group" class="flex flex-col gap-4 items-center px-4 h-full hidden py-6">
-                    <button onclick="Controller.endStrategicTurn()" class="sidebar-btn-base">ターン終了</button>
-                    <button onclick="View.openInfoModal()" class="sidebar-btn-base">情報</button>
-                    <div class="flex-1"></div>
-                    <button onclick="Controller.saveGame()" class="sidebar-btn-base">セーブ</button>
-                    <button onclick="Controller.loadGame()" class="sidebar-btn-base">ロード</button>
-                    <button onclick="Controller.confirmReturnToTitle()" class="sidebar-btn-base">タイトルに戻る</button>
-                </div>
-            </aside>
         </div>
 
-        <footer class="map-footer">
-            <div id="message-box" class="opacity-0 transition-opacity duration-300 flex items-center">
-                <div class="text-white">
-                    <span class="text-yellow-500 mr-2">▶</span>
-                    <span id="message-text" class="text-lg font-bold tracking-widest font-mono">メッセージ</span>
-                </div>
+        <!-- SETTINGS SCREEN (Map Select) -->
+        <div id="screen-settings" class="hidden screen-settings">
+            <h2 class="screen-heading">マップ選択</h2>
+            <!-- Using flex container like master select -->
+            <div id="map-select-list" class="selection-list-container"></div>
+            <button onclick="View.changeScreen('title')" class="btn-base btn-neutral ">
+                戻る
+            </button>
+        </div>
+
+        <!-- MASTER SELECT SCREEN -->
+        <div id="screen-master-select" class="hidden screen-settings">
+            <h2 class="screen-heading">マスター選択</h2>
+            <div id="master-select-container" class="selection-list-container">
+                <!-- Masters will be injected here by View.renderMasterSelect() -->
             </div>
-        </footer>
-    </div>
-
-    <!-- BATTLE SCREEN -->
-    <div id="screen-battle" class="hidden screen-battle">
-        <div class="mb-8 flex gap-16">
-            <div id="p1-stats" class="text-4xl text-blue-400 font-bold uppercase tracking-wider">プレイヤー部隊</div>
-            <div class="text-white text-2xl font-bold opacity-30 italic self-center">VS</div>
-            <div id="p2-stats" class="text-4xl text-red-400 font-bold uppercase tracking-wider">敵勢力部隊</div>
-        </div>
-        <div id="battle-turn-indicator" class="mb-4 text-3xl font-black tracking-widest text-yellow-500 animate-pulse">
-            PLAYER TURN
-        </div>
-        <div id="battle-grid" class="relative scale-110"></div>
-        <div class="mt-16 flex gap-10" id="battle-controls">
-            <button id="battle-end-turn-btn" onclick="BattleSystem.endTurn()"
-                class="px-12 py-4 bg-blue-800 hover:bg-blue-600 border-2 border-white transition-colors text-2xl font-bold rounded-lg shadow-xl pointer-events-auto text-white disabled:opacity-30 disabled:grayscale disabled:pointer-events-none">
-                ターン終了
-            </button>
-            <button id="battle-auto-btn" onclick="BattleSystem.runAI('player')"
-                class="px-12 py-4 bg-purple-800 hover:bg-purple-600 border-2 border-white transition-colors text-2xl font-bold rounded-lg shadow-xl pointer-events-auto text-white disabled:opacity-30 disabled:grayscale disabled:pointer-events-none">
-                オート
-            </button>
-            <button id="battle-retreat-btn" onclick="Controller.showEscapeConfirm()"
-                class="px-12 py-4 bg-gray-800 hover:bg-gray-600 border-2 border-white transition-colors text-2xl font-bold rounded-lg shadow-xl pointer-events-auto text-white disabled:opacity-30 disabled:grayscale disabled:pointer-events-none">
-                撤退
+            <button onclick="View.changeScreen('title')" class="btn-base btn-neutral">
+                戻る
             </button>
         </div>
-    </div>
 
-    <!-- ENDING SCREEN -->
-    <div id="screen-ending"
-        class="hidden flex flex-col items-center justify-center h-screen bg-black z-[200] fixed inset-0 pointer-events-auto">
-        <h1 id="ending-title" class="text-8xl font-bold mb-12">エンディング</h1>
-        <p id="ending-body" class="text-2xl text-gray-400 max-w-2xl text-center leading-loose">...</p>
-        <button onclick="location.reload()"
-            class="mt-12 btn-base btn-neutral relative z-[201] pointer-events-auto cursor-pointer">
-            タイトルに戻る
-        </button>
-    </div>
+        <!-- MAP SCREEN -->
+        <div id="screen-map" class="hidden screen-map">
+            <!-- HEADER (Status) -->
+            <header class="map-header">
+                <!-- Turn Indicator -->
+                <div id="turn-indicator" class="map-turn-indicator">
+                    <div id="turn-display" class="text-2xl text-yellow-600 font-black uppercase tracking-[0.3em] mb-1">
+                        第1ターン
+                    </div>
+                    <div id="turn-text-map" class="text-3xl text-white font-mono font-bold leading-none">
+                        自軍フェーズ
+                    </div>
+                </div>
 
+                <div class="map-stats-container">
+                    <div class="flex gap-3">
+                        <div class="map-stat-group">
+                            <div class="map-stat-label text-blue-500">拠点数</div>
+                            <div id="castle-count-display" class="map-stat-value">0/0
+                            </div>
+                        </div>
+                        <div class="map-stat-group">
+                            <div class="map-stat-label text-green-500">部隊数</div>
+                            <div id="army-total-display" class="map-stat-value">0/0
+                            </div>
+                        </div>
+                        <div class="map-stat-group">
+                            <div class="map-stat-label text-yellow-500">資金</div>
+                            <div id="gold-amount" class="map-stat-value">500G</div>
+                        </div>
+                        <!-- New Stats -->
+                        <div class="map-stat-group">
+                            <div class="map-stat-label text-cyan-400">総収入</div>
+                            <div id="income-display" class="map-stat-value">100G</div>
+                        </div>
+                        <div class="map-stat-group">
+                            <div class="map-stat-label text-red-400">総戦力</div>
+                            <div id="power-display" class="map-stat-value">0</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
 
+            <div class="flex flex-1 overflow-hidden relative">
+                <!-- MAIN MAP VIEW -->
+                <main class="map-main">
+                    <canvas id="map-canvas" class="map-canvas"></canvas>
 
-    <!-- Modal Layer -->
-    <div id="modal-layer" class="modal-layer hidden">
-        <div class="modal-content">
-            <h3 id="modal-title" class="text-4xl font-bold text-white mb-6">Title</h3>
-            <p id="modal-body" class="text-xl text-gray-300 mb-10 leading-relaxed">Content</p>
-            <div id="modal-footer" class="flex justify-center gap-6"></div>
+                    <!-- Base Menu Overlay -->
+                    <div id="base-menu" class="base-menu-overlay hidden">
+                        <div
+                            class="p-2 bg-black/60 border-b border-gray-800 flex justify-between items-center shrink-0">
+                            <div class="flex flex-col">
+                                <h2 id="base-menu-title"
+                                    class="text-xl text-yellow-500 font-black tracking-tighter uppercase leading-tight">
+                                    拠点を選択してください
+                                </h2>
+                            </div>
+                            <button onclick="View.clearBaseMenu()"
+                                class="text-gray-500 hover:text-white transition-colors text-2xl bg-white/10 w-8 h-8 rounded-full flex items-center justify-center relative z-50 pointer-events-auto">×</button>
+                        </div>
+
+                        <div class="flex-1 overflow-y-auto p-2 flex flex-col gap-2 custom-scrollbar">
+                            <button id="btn-create-army"
+                                class="w-full py-2 bg-purple-900 hover:bg-purple-700 border border-purple-400 text-lg font-black uppercase tracking-widest shadow-lg transition-all transform active:scale-95 disabled:opacity-30 disabled:grayscale text-white rounded-lg relative z-50 pointer-events-auto">
+                                新規部隊追加
+                            </button>
+
+                            <p class="text-xl text-gray-400 mb-2 font-bold uppercase tracking-widest text-center">駐留部隊一覧
+                            </p>
+                            <div id="base-menu-content" class="flex flex-col gap-3"></div>
+                            <div id="no-unit-message"
+                                class="py-12 text-center border-2 border-dashed border-gray-800 rounded-lg text-gray-600 text-xs font-black uppercase tracking-widest italic">
+                                駐留部隊なし
+                            </div>
+                        </div>
+                    </div>
+                </main>
+
+                <!-- RIGHT SIDEBAR (End Turn) -->
+                <aside id="command-sidebar" class="map-sidebar">
+                    <div id="menu-group" class="flex flex-col gap-4 items-center px-4 h-full hidden py-6">
+                        <button onclick="Controller.endStrategicTurn()" class="sidebar-btn-base">ターン終了</button>
+                        <button onclick="View.openInfoModal()" class="sidebar-btn-base">情報</button>
+                        <div class="flex-1"></div>
+                        <button onclick="Controller.saveGame()" class="sidebar-btn-base">セーブ</button>
+                        <button onclick="Controller.loadGame()" class="sidebar-btn-base">ロード</button>
+                        <button onclick="Controller.confirmReturnToTitle()" class="sidebar-btn-base">タイトルに戻る</button>
+                    </div>
+                </aside>
+            </div>
+
+            <footer class="map-footer">
+                <div id="message-box" class="opacity-0 transition-opacity duration-300 flex items-center">
+                    <div class="text-white">
+                        <span class="text-yellow-500 mr-2">▶</span>
+                        <span id="message-text" class="text-lg font-bold tracking-widest font-mono">メッセージ</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+
+        <!-- BATTLE SCREEN -->
+        <div id="screen-battle" class="hidden screen-battle">
+            <div class="mb-8 flex gap-16">
+                <div id="p1-stats" class="text-4xl text-blue-400 font-bold uppercase tracking-wider">プレイヤー部隊</div>
+                <div class="text-white text-2xl font-bold opacity-30 italic self-center">VS</div>
+                <div id="p2-stats" class="text-4xl text-red-400 font-bold uppercase tracking-wider">敵勢力部隊</div>
+            </div>
+            <div id="battle-turn-indicator"
+                class="mb-4 text-3xl font-black tracking-widest text-yellow-500 animate-pulse">
+                PLAYER TURN
+            </div>
+            <div id="battle-grid" class="relative scale-110"></div>
+            <div class="mt-16 flex gap-10" id="battle-controls">
+                <button id="battle-end-turn-btn" onclick="BattleSystem.endTurn()"
+                    class="px-12 py-4 bg-blue-800 hover:bg-blue-600 border-2 border-white transition-colors text-2xl font-bold rounded-lg shadow-xl pointer-events-auto text-white disabled:opacity-30 disabled:grayscale disabled:pointer-events-none">
+                    ターン終了
+                </button>
+                <button id="battle-auto-btn" onclick="BattleSystem.runAI('player')"
+                    class="px-12 py-4 bg-purple-800 hover:bg-purple-600 border-2 border-white transition-colors text-2xl font-bold rounded-lg shadow-xl pointer-events-auto text-white disabled:opacity-30 disabled:grayscale disabled:pointer-events-none">
+                    オート
+                </button>
+                <button id="battle-retreat-btn" onclick="Controller.showEscapeConfirm()"
+                    class="px-12 py-4 bg-gray-800 hover:bg-gray-600 border-2 border-white transition-colors text-2xl font-bold rounded-lg shadow-xl pointer-events-auto text-white disabled:opacity-30 disabled:grayscale disabled:pointer-events-none">
+                    撤退
+                </button>
+            </div>
+        </div>
+
+        <!-- ENDING SCREEN -->
+        <div id="screen-ending"
+            class="hidden flex flex-col items-center justify-center h-screen bg-black z-[200] fixed inset-0 pointer-events-auto">
+            <h1 id="ending-title" class="text-8xl font-bold mb-12">エンディング</h1>
+            <p id="ending-body" class="text-2xl text-gray-400 max-w-2xl text-center leading-loose">...</p>
+            <button onclick="location.reload()"
+                class="mt-12 btn-base btn-neutral relative z-[201] pointer-events-auto cursor-pointer">
+                タイトルに戻る
+            </button>
+        </div>
+
+        <!-- Modal Layer -->
+        <div id="modal-layer" class="modal-layer hidden">
+            <div class="modal-content">
+                <h3 id="modal-title" class="text-4xl font-bold text-white mb-6">Title</h3>
+                <p id="modal-body" class="text-xl text-gray-300 mb-10 leading-relaxed">Content</p>
+                <div id="modal-footer" class="flex justify-center gap-6"></div>
+            </div>
         </div>
     </div>
 

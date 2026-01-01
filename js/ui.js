@@ -58,7 +58,7 @@ window.UI = {
 
         return `
         <div onclick="Controller.createGame('${m.id}')"
-            class="card-base hover:border-${colorName}-500 ${extraClass = ''} w-[300px] ">
+            class="card-base hover:border-${colorName}-500 ${extraClass = ''}">
             ${iconContent}
             <div class="text-4xl font-bold mb-4 text-white group-hover:text-${colorName}-400" style="text-shadow: 1px 1px 2px black;">${m.name}</div>
             <p class="text-center text-gray-200 text-lg font-semibold" style="text-shadow: 1px 1px 1px black;">${m.desc}</p>
@@ -75,7 +75,7 @@ window.UI = {
 
         return `
         <div onclick="Controller.selectMapAndNext('${t.id}')"
-            class="card-base hover:border-yellow-500 w-[300px] ">
+            class="card-base hover:border-yellow-500">
             <img src="${iconPath}" class="card-icon" alt="${t.name}">
             <div class="text-4xl font-bold mb-4 text-[#fbbf24] group-hover:text-yellow-300" style="text-shadow: 1px 1px 2px black;">${t.name}</div>
             <p class="text-center text-gray-200 text-lg font-semibold" style="text-shadow: 1px 1px 1px black;">${t.desc}</p>

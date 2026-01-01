@@ -1,11 +1,27 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=DotGothic16&display=swap');
 
 body {
-    font-family: 'DotGothic16', sans-serif;
-    background-color: #050505;
-    color: #e0e0e0;
+    background-color: #000;
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
     overflow: hidden;
-    user-select: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Cinzel', serif;
+}
+
+.game-container {
+    width: 1280px;
+    height: 720px;
+    position: relative;
+    background-color: #1a1a1a;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+    overflow: hidden;
+    /* transform will be applied by JS */
+    transform-origin: center center;
 }
 
 .font-cinzel {
@@ -92,11 +108,11 @@ body {
     @apply px-10 py-4 border-2 transition-all font-bold shadow-xl hover:scale-105 active:translate-y-1 text-white disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
-.btn-primary {
+.btn-newgame {
     @apply bg-red-900 hover:bg-red-700 border-white text-3xl;
 }
 
-.btn-secondary {
+.btn-loadgame {
     @apply bg-blue-900 hover:bg-blue-700 border-white text-2xl;
 }
 
@@ -170,7 +186,7 @@ body {
     cursor: not-allowed;
 }
 
-.btn-primary {
+.btn-newgame {
     background-color: #7f1d1d;
     /* bg-red-900 */
     border-color: white;
@@ -178,20 +194,20 @@ body {
     /* text-3xl */
 }
 
-.btn-primary:hover {
+.btn-newgame:hover {
     background-color: #b91c1c;
     /* hover:bg-red-700 */
 }
 
-.btn-secondary {
+.btn-loadgame {
     background-color: #1e3a8a;
     /* bg-blue-900 */
     border-color: white;
-    font-size: 1.5rem;
-    /* text-2xl */
+    font-size: 1.875rem;
+    /* text-3xl */
 }
 
-.btn-secondary:hover {
+.btn-loadgame:hover {
     background-color: #1d4ed8;
     /* hover:bg-blue-700 */
 }
@@ -261,7 +277,7 @@ body {
     color: #fbbf24;
     text-shadow: 1px 1px 2px black;
     width: 380px;
-    min-height: 450px;
+    min-height: 300px;
     overflow: hidden;
 }
 
@@ -284,8 +300,8 @@ body {
 }
 
 .card-icon {
-    width: 12rem;
-    height: 12rem;
+    width: 100px;
+    height: 100px;
     margin-bottom: 1.5rem;
     object-fit: contain;
     filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
@@ -340,9 +356,9 @@ body {
 
 .title-scroll-container {
     position: relative;
-    width: 90vw;
+    width: 1100px;
     /* Much wider */
-    height: 320px;
+    height: 300px;
     /* 80% of 400px */
     display: flex;
     align-items: center;
@@ -439,20 +455,24 @@ body {
 
 
 .map-header {
+    position: absolute;
+    left: 0px;
+    top: 0px;
     background-color: #111827;
     background-image: url('../assets/img/ui_header_bg.png');
-    background-size: 100% 100%;
+    background-size: 1280px 100px;
     /* border-bottom: 1px solid #374151; Removed for texture */
     padding: 0.5rem;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    height: 6rem;
+    width: 1280px;
+    height: 100px;
     /* Increased height for ornate header */
-    flex-shrink: 0;
+    /* flex-shrink: 0; */
     z-index: 50;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-    position: relative;
+    /* position: relative; */
     text-shadow: 2px 2px 4px black;
 }
 
@@ -515,16 +535,20 @@ body {
 }
 
 .map-canvas {
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    left: 0px;
+    top: 100px;
+    width: 1080px;
+    height: 540px;
     cursor: crosshair;
     filter: blur(0.3px);
-    position: relative;
+    /* position: relative; */
     z-index: 10;
     pointer-events: auto;
     /* background-size: cover; Keep disabled per user request */
     background-repeat: no-repeat;
     background-position: center;
+    background-size: 1080px 540px;
 }
 
 /* Base Menu Overlay (Popup inside map) */
@@ -533,8 +557,8 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    height: 775px;
-    width: 675px;
+    height: 520px;
+    width: 680px;
     max-width: 98vw;
     background-color: rgba(17, 24, 39, 0.9);
     /* gray-900/90 */
@@ -552,11 +576,15 @@ body {
 /* Sidebar */
 /* Sidebar */
 .map-sidebar {
-    width: 12rem;
+    position: absolute;
+    left: 1080px;
+    top: 100px;
+    width: 200px;
+    height: 540px;
     background-color: #3f2e00;
     /* dark brown fallback */
     background-image: url('../assets/img/ui_sidebar_paper.png');
-    background-size: 100% 100%;
+    background-size: 200px 540px;
     /* Stretch to fill */
     border-left: 2px solid #574c25;
     /* dark gold border */
@@ -567,21 +595,26 @@ body {
     padding-top: 1rem;
     z-index: 55;
     box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
+    /* position: relative; */
 }
 
 /* Footer */
 .map-footer {
-    height: 5rem;
+    position: absolute;
+    left: 0px;
+    top: 640px;
+    height: 80px;
+    width: 1280px;
     /* Increased height for stone texture */
     background-color: #030712;
     background-image: url('../assets/img/ui_footer_bg.png');
-    background-size: 100% 100%;
+    background-size: 1280px 80px;
     /* border-top: 2px solid #374151; Removed for texture */
     display: flex;
     align-items: center;
     padding-left: 3rem;
     padding-right: 3rem;
-    flex-shrink: 0;
+    /* flex-shrink: 0; */
     z-index: 60;
     text-shadow: 2px 2px 4px black;
     /* Strong shadow for readability */
@@ -1047,8 +1080,8 @@ body {
 .info-modal-container {
     display: flex;
     flex-direction: column;
-    height: 775px;
-    width: 675px;
+    height: 520px;
+    width: 680px;
     flex-shrink: 0;
 
     background-color: #111827;

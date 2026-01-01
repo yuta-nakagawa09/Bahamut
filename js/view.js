@@ -12,11 +12,64 @@ window.View = {
     mapOffsetY: 0,
 
     // -------------------------------------------------------------------------
-    // 画面切り替え・表示
+    // 初期化
     // -------------------------------------------------------------------------
+    // スケーリング管理
+    scale: 1,
+
+    init() {
+        this.ctx = null;
+        this.canvas = null;
+        this.initScaling();
+        window.addEventListener('resize', () => this.initScaling());
+    },
+
     /**
-     * 指定された画面IDに切り替える
-     * @param {string} screenId - 画面ID ('title', 'map', 'battle', 'ending' etc.)
+     * 画面スケーリングの計算と適用
+     * ウィンドウサイズに合わせてゲーム画面を拡大縮小する
+     */
+    initScaling() {
+        const container = document.getElementById('game-container');
+        if (!container) return;
+
+        const baseWidth = 1280;
+        const baseHeight = 720;
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+
+        // Contain (画面内に収める)
+        const scaleX = windowWidth / baseWidth;
+        const scaleY = windowHeight / baseHeight;
+        this.scale = Math.min(scaleX, scaleY);
+
+        container.style.transform = `scale(${this.scale})`;
+    },
+
+    /**
+     * スケーリングを考慮した座標変換
+     * @param {MouseEvent} e
+     * @returns {Object} {x, y} ゲーム内座標(1280x720基準)
+     */
+    getScaledCoordinates(e) {
+        const container = document.getElementById('game-container');
+        if (!container) return { x: e.clientX, y: e.clientY };
+
+        const rect = container.getBoundingClientRect();
+
+        // コンテナ内の相対座標を計算
+        const relX = e.clientX - rect.left;
+        const relY = e.clientY - rect.top;
+
+        // スケールで割って元の解像度に戻す
+        return {
+            x: relX / this.scale,
+            y: relY / this.scale
+        };
+    },
+
+    /**
+     * 画面切り替え
+     * @param {string} screenId - 切り替える画面ID ('title', 'settings', 'map', 'battle', 'ending')
      */
     changeScreen(screenId) {
         document.querySelectorAll('div[id^="screen-"]').forEach(el => el.classList.add('hidden'));
@@ -37,9 +90,8 @@ window.View = {
 
             // マップ背景の動的設定
             const mapCanvas = document.getElementById('map-canvas');
-            let bgImage = 'assets/img/map_bg_continent.png';
-            if (Model.state.selectedMapId === 'islands') bgImage = 'assets/img/map_bg_islands.png';
-            if (Model.state.selectedMapId === 'ring') bgImage = 'assets/img/map_bg_ring.png';
+            const mapData = Data.MAP_TEMPLATES.find(m => m.id === Model.state.selectedMapId);
+            const bgImage = mapData ? mapData.backgroundImage : 'assets/img/map_bg_continent.png';
 
             if (mapCanvas) {
                 mapCanvas.style.backgroundImage = `url('${bgImage}')`;
@@ -158,39 +210,77 @@ window.View = {
     initCanvas() {
         const canvas = document.getElementById('map-canvas');
         if (!canvas) return;
-        const container = canvas.parentElement;
+
+        // Canvasの解像度を固定(1080x540)
+        // CSSでの表示サイズと一致させることで、描画とクリック判定のズレを防ぐ
+        const fixedWidth = 1080;
+        const fixedHeight = 540;
+
+        // 既存のCanvasを置換（イベントリスナー重複防止のため）
         const newCanvas = canvas.cloneNode(true);
         canvas.parentNode.replaceChild(newCanvas, canvas);
-        newCanvas.width = container.clientWidth;
-        newCanvas.height = container.clientHeight;
+
+        newCanvas.width = fixedWidth;
+        newCanvas.height = fixedHeight;
+
         this.ctx = newCanvas.getContext('2d');
         this.canvas = newCanvas;
 
-        // マップのセンタリング計算（固定：データ座標(480, 360)を画面中央に配置）
-        // これにより、拠点の配置状況に関わらず座標系が安定し、背景画像の中心と整合します。
-        const centerX = 480;
-        const centerY = 360;
+        // マップのセンタリング計算（廃止：左上原点絶対座標へ変更）
+        this.mapOffsetX = 0;
+        this.mapOffsetY = 0;
 
-        this.mapOffsetX = (this.canvas.width / 2) - centerX;
-        this.mapOffsetY = (this.canvas.height / 2) - centerY;
-
-        requestAnimationFrame(() => this.renderMapLoop());
+        // ループ開始
+        if (this.animationId) cancelAnimationFrame(this.animationId);
+        const loop = () => {
+            this.renderMapLoop();
+            this.animationId = requestAnimationFrame(loop);
+        };
+        loop();
 
         // イベントリスナーの登録
         this.canvas.addEventListener('click', (e) => {
+            // Screen Scaleを考慮した補正
+            // getBoundingClientRectは画面上のスケーリングされた座標を返す
             const rect = this.canvas.getBoundingClientRect();
-            const canvasX = e.clientX - rect.left;
-            const canvasY = e.clientY - rect.top;
 
-            const ox = this.mapOffsetX || 0;
-            const oy = this.mapOffsetY || 0;
-            const dataX = canvasX - ox;
-            const dataY = canvasY - oy;
+            // 画面上のクリック位置とCanvas左上の差分
+            const screenX = e.clientX - rect.left;
+            const screenY = e.clientY - rect.top;
 
-            console.log(`Map Click (Data): x=${Math.round(dataX)}, y=${Math.round(dataY)}`);
-            Controller.handleMapClick(e);
+            // スケールで割って、Canvas内部(論理)座標に変換
+            const canvasX = screenX / this.scale;
+            const canvasY = screenY / this.scale;
+
+            // mapOffsetX等の補正は不要になったため、canvasX/Yをそのまま使用
+            // Controllerへの互換性維持のため customX/Y に入れる
+            const simulatedEvent = {
+                clientX: 0, clientY: 0,
+                customX: canvasX,
+                customY: canvasY
+            };
+
+            // const dataX = canvasX;
+            // const dataY = canvasY;
+            // console.log(`Map Click (Data): x=${Math.round(dataX)}, y=${Math.round(dataY)}`);
+            console.log(`Map Click (Scaled): x=${Math.round(canvasX)}, y=${Math.round(canvasY)}`);
+            Controller.handleMapClick(simulatedEvent);
         });
-        this.canvas.addEventListener('contextmenu', (e) => Controller.handleMapRightClick(e));
+
+        this.canvas.addEventListener('contextmenu', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            const screenX = e.clientX - rect.left;
+            const screenY = e.clientY - rect.top;
+            const canvasX = screenX / this.scale;
+            const canvasY = screenY / this.scale;
+
+            const simulatedEvent = {
+                preventDefault: () => e.preventDefault(),
+                customX: canvasX,
+                customY: canvasY
+            };
+            Controller.handleMapRightClick(simulatedEvent);
+        });
     },
 
     /**
@@ -202,12 +292,13 @@ window.View = {
         const ctx = this.ctx;
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        const ox = this.mapOffsetX || 0;
-        const oy = this.mapOffsetY || 0;
+        // オフセット廃止のため、そのまま描画
+        // const ox = this.mapOffsetX || 0;
+        // const oy = this.mapOffsetY || 0;
 
         // ルート（道）の描画
         ctx.save();
-        ctx.translate(ox, oy);
+        // ctx.translate(ox, oy); // 廃止
         Model.state.castles.forEach(c => {
             if (c.neighbors) {
                 c.neighbors.forEach(nid => {
@@ -241,9 +332,9 @@ window.View = {
             }
 
             ctx.fillStyle = 'white';
-            ctx.font = 'bold 24px DotGothic16';
+            ctx.font = 'bold 16px DotGothic16';
             ctx.textAlign = 'center';
-            ctx.fillText(c.name, c.x, c.y + 60);
+            ctx.fillText(c.name, c.x, c.y + 45);
         });
 
         // ユニットの描画
@@ -290,18 +381,17 @@ window.View = {
             ctx.textBaseline = 'middle';
             ctx.fillText(u.emoji, 0, 0);
 
-            // HP Bar
-            const hpPct = u.army.reduce((a, b) => a + b.currentHp, 0) / u.army.reduce((a, b) => a + b.hp, 0);
-            ctx.fillStyle = 'red';
-            ctx.fillRect(-20, 25, 40, 6);
-            ctx.fillStyle = '#00ff00';
-            ctx.fillRect(-20, 25, 40 * hpPct, 6);
+            // // HP Bar
+            // const hpPct = u.army.reduce((a, b) => a + b.currentHp, 0) / u.army.reduce((a, b) => a + b.hp, 0);
+            // ctx.fillStyle = 'red';
+            // ctx.fillRect(-20, 25, 40, 6);
+            // ctx.fillStyle = '#00ff00';
+            // ctx.fillRect(-20, 25, 40 * hpPct, 6);
 
             ctx.restore();
         });
 
         ctx.restore();
-        requestAnimationFrame(() => this.renderMapLoop());
     },
 
     // -------------------------------------------------------------------------

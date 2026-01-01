@@ -209,6 +209,29 @@ window.Model = {
             .filter(c => c.owner === factionId)
             .reduce((sum, c) => sum + (c.income || 0), 0);
         return castleIncome;
+    },
+    /**
+     * ユニットのランクアップ処理
+     * @param {Object} unit
+     * @returns {boolean} ランクアップしたかどうか
+     */
+    processRankUp(unit) {
+        // Data.RANK_UP_XP は root直下
+        if (unit.xp >= Data.RANK_UP_XP && (unit.rank === undefined || unit.rank < 5)) {
+            unit.rank = (unit.rank || 0) + 1;
+            unit.xp = 0;
+
+            // 能力上昇 (20%)
+            const hpBonus = Math.floor(unit.hp * Data.BATTLE.RANK_UP_RATE);
+            const atkBonus = Math.floor(unit.atk * Data.BATTLE.RANK_UP_RATE);
+
+            unit.hp += hpBonus;
+            unit.atk += atkBonus;
+            unit.currentHp += hpBonus; // 最大HP上昇分だけ回復
+
+            return true;
+        }
+        return false;
     }
 };
 window.Model = Model;

@@ -11,27 +11,56 @@ window.Controller = {
     /**
      * アプリケーションの初期化
      */
+    /**
+     * アプリケーションの初期化
+     */
     init() {
-        setInterval(() => this.updateLogic(), 50);
+        // ゲームループの開始 (RequestAnimationFrame)
+        this.lastTime = performance.now();
+        requestAnimationFrame(() => this.gameLoop());
         View.renderMasterSelect();
     },
 
     /**
-     * ゲームロジック更新ループ (50ms間隔)
-     * - ユニット移動の更新
-     * - 戦闘発生の判定
-     * - 拠点制圧・勝敗判定
-     * - ヘッダー情報のDOM更新
+     * メインゲームループ
      */
-    updateLogic() {
+    gameLoop() {
+        const now = performance.now();
+        // 経過時間 (ms)
+        const dt = now - this.lastTime;
+        this.lastTime = now;
+
+        // ロジック更新 (最大100ms程度にキャップして、タブ非アクティブ復帰時の急激な動作を防ぐ)
+        this.updateLogic(Math.min(dt, 100));
+
+        requestAnimationFrame(() => this.gameLoop());
+    },
+
+    /**
+     * ゲームロジック更新 (可変フレームレート対応)
+     * @param {number} dtDelta - 前フレームからの経過時間(ms)
+     */
+    updateLogic(dtDelta) {
         if (Model.state.currentScreen !== 'map') return;
+
+        // 基準更新間隔 (50ms) に対する比率
+        // これまでのバランス(UnitSpeed=10/50ms)を維持するため
+        const tickRatio = dtDelta / 50;
 
         // 1. ユニット位置更新 (移動アニメーション)
         Model.state.mapUnits.forEach(u => {
-            const dx = u.targetX - u.x, dy = u.targetY - u.y, dist = Math.hypot(dx, dy);
-            if (dist > Data.UNIT_SPEED) {
-                u.x += dx / dist * Data.UNIT_SPEED;
-                u.y += dy / dist * Data.UNIT_SPEED;
+            if (!u.isMoving) return; // 動いていないならスキップ（ターゲット到達済みも含む）
+
+            const dx = u.targetX - u.x;
+            const dy = u.targetY - u.y;
+            const dist = Math.hypot(dx, dy);
+
+            // 今回のフレームでの移動距離
+            const moveStep = Data.UNIT_SPEED * tickRatio;
+
+            if (dist > moveStep) {
+                u.x += dx / dist * moveStep;
+                u.y += dy / dist * moveStep;
             } else {
                 u.x = u.targetX;
                 u.y = u.targetY;
@@ -40,7 +69,10 @@ window.Controller = {
         });
 
         // 2. 戦闘判定 (クールダウン管理含む)
-        if (Model.state.globalBattleCooldown > 0) Model.state.globalBattleCooldown--;
+        if (Model.state.globalBattleCooldown > 0) {
+            Model.state.globalBattleCooldown -= tickRatio;
+        }
+
         if (Model.state.globalBattleCooldown <= 0 && !Model.state.gameCleared) {
             for (let i = 0; i < Model.state.mapUnits.length; i++) {
                 for (let j = i + 1; j < Model.state.mapUnits.length; j++) {
@@ -59,7 +91,7 @@ window.Controller = {
                         } else {
                             // CPU同士 -> オート解決
                             BattleSystem.autoResolve(u1, u2, attacker);
-                            Model.state.globalBattleCooldown = 60; // オート戦闘後も少しウェイト
+                            Model.state.globalBattleCooldown = 60; // オート戦闘後も少しウェイト (3秒相当)
                         }
                         return;
                     }
@@ -181,13 +213,56 @@ window.Controller = {
     createGame(masterId) {
         const playerMaster = Data.MASTERS.find(m => m.id === masterId);
         const mapData = Data.MAP_TEMPLATES.find(m => m.id === Model.state.selectedMapId);
+
+        // マップデータの拠点をディープコピーして、所有者を変更可能にする
+        const currentCastles = JSON.parse(JSON.stringify(mapData.castles));
+
+        // プレイヤーが選んだマスターをデフォルトとする敵勢力がいるか確認
+        const targetFactionDef = Data.FACTIONS.find(f => f.masterId === masterId && f.id !== 'player');
+
+        if (targetFactionDef) {
+            // スワップ対象の勢力がいる場合、拠点の所有権を入れ替える
+            const playerCastle = currentCastles.find(c => c.owner === 'player');
+            const targetCastle = currentCastles.find(c => c.owner === targetFactionDef.id);
+
+            if (playerCastle && targetCastle) {
+                playerCastle.owner = targetFactionDef.id; // 元のプレイヤー拠点を敵へ
+                targetCastle.owner = 'player';            // 敵の拠点をプレイヤーへ
+            }
+        }
+
+        // 使用済みマスターID管理 (プレイヤーの選択を確保)
+        const usedMasterIds = new Set([masterId]);
+
         Model.state.factions = Data.FACTIONS.map(f => {
             const isPlayer = (f.id === 'player');
-            const hq = mapData.castles.find(c => c.owner === f.id);
-            // プレイヤーの場合は選択されたマスター、それ以外はData定義のマスター
-            const master = isPlayer ? playerMaster : Data.MASTERS.find(m => m.id === f.masterId);
-            // 色もプレイヤーはマスター依存、敵は勢力定義依存
-            const color = isPlayer ? playerMaster.color : f.color;
+            // 変更された currentCastles から HQ を探す
+            const hq = currentCastles.find(c => c.owner === f.id);
+
+            let master;
+            let color;
+
+            if (isPlayer) {
+                master = playerMaster;
+                color = playerMaster.color;
+            } else {
+                // 敵勢力のマスター決定ロジック
+                // 1. デフォルト設定が未使用ならそれを使う
+                if (!usedMasterIds.has(f.masterId)) {
+                    master = Data.MASTERS.find(m => m.id === f.masterId);
+                    usedMasterIds.add(f.masterId);
+                } else {
+                    // 2. 使われていたら、未使用のマスターから探して割り当てる
+                    master = Data.MASTERS.find(m => !usedMasterIds.has(m.id));
+                    // 万が一すべて埋まっていたらデフォルト(重複許容)
+                    if (!master) master = Data.MASTERS.find(m => m.id === f.masterId);
+
+                    usedMasterIds.add(master.id);
+                }
+
+                // 敵のカラー
+                color = master.color;
+            }
 
             return {
                 id: f.id,
@@ -201,7 +276,7 @@ window.Controller = {
             };
         });
 
-        Model.state.castles = JSON.parse(JSON.stringify(mapData.castles));
+        Model.state.castles = currentCastles;
         Model.state.mapUnits = [];
         Model.state.turnCount = 1;
         Model.state.strategicTurn = 'player';
@@ -474,9 +549,17 @@ window.Controller = {
     handleMapClick(e) {
         if (Model.state.strategicTurn !== 'player') return;
 
-        const rect = View.canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left - View.mapOffsetX;
-        const y = e.clientY - rect.top - View.mapOffsetY;
+        let x, y;
+        if (e.customX !== undefined && e.customY !== undefined) {
+            // Viewから渡された補正済み座標を使用
+            x = e.customX;
+            y = e.customY;
+        } else {
+            // fallback (非推奨だが念のため)
+            const rect = View.canvas.getBoundingClientRect();
+            x = e.clientX - rect.left;
+            y = e.clientY - rect.top;
+        }
 
         const targetCastle = Model.state.castles.find(c => Math.hypot(c.x - x, c.y - y) < Data.UI.CASTLE_DETECT_RADIUS);
         const u = Model.state.selectedMapUnit;
@@ -540,9 +623,15 @@ window.Controller = {
         e.preventDefault();
         if (Model.state.strategicTurn !== 'player') return;
 
-        const rect = View.canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left - View.mapOffsetX;
-        const y = e.clientY - rect.top - View.mapOffsetY;
+        let x, y;
+        if (e.customX !== undefined && e.customY !== undefined) {
+            x = e.customX;
+            y = e.customY;
+        } else {
+            const rect = View.canvas.getBoundingClientRect();
+            x = e.clientX - rect.left;
+            y = e.clientY - rect.top;
+        }
 
         // 右クリックで拠点メニューを開く
         const clickedCastle = Model.state.castles.find(c => Math.hypot(c.x - x, c.y - y) < Data.UI.CLICK_RADIUS);

@@ -276,124 +276,136 @@ window.BattleSystem = {
      * AIの行動を実行する
      * @param {string} side - 行動させる側 ('enemy' or 'player')
      */
-    runAI(side = 'enemy') {
-        const aiUnits = Model.state.battle.units.filter(u => u.owner === side);
-        let delay = 0;
+    /**
+     * AIの行動を実行する
+     * @param {string} side - 行動させる側 ('enemy' or 'player')
+     */
+    async runAI(side = 'enemy') {
+        try {
+            const aiUnits = Model.state.battle.units.filter(u => u.owner === side);
 
-        aiUnits.forEach(u => {
-            setTimeout(() => {
-                if (u.currentHp <= 0) return;
+            // 処理中の操作ブロック用フラグなどが必要ならここで設定
+
+            for (const u of aiUnits) {
+                // バトルが終了していたら中断
+                if (!Model.state.battle.active) break;
+
+                // 死亡確認
+                if (u.currentHp <= 0) continue;
+
                 // プレイヤーターンAIで、既に手動で移動・行動済みの場合はスキップ
-                if (side === 'player' && Model.state.battle.movedUnits.has(u)) return;
+                if (side === 'player' && Model.state.battle.movedUnits.has(u)) continue;
 
                 // ターゲット選定 (自分以外の勢力)
                 const targets = Model.state.battle.units.filter(t => t.owner !== side);
-                if (targets.length === 0) return;
+                if (targets.length === 0) break;
 
-                // 1. 攻撃可能な敵がいるか
+                // -----------------------------------------------------------------
+                // 1. 攻撃可能な敵がいるか確認して攻撃
+                // -----------------------------------------------------------------
                 let done = false;
                 for (let t of targets) {
                     const d = Model.getHexDist(u.r, u.c, t.r, t.c);
                     if (d <= u.range) {
                         this.attack(u, t);
                         done = true;
+                        // 行動後のウェイト（視認性向上）
+                        await new Promise(r => setTimeout(r, 600));
                         break;
                     }
                 }
 
-                if (!done) {
-                    // 2. 移動：一番近い敵へ近づく
-                    const target = targets.reduce((p, c) => Model.getHexDist(u.r, u.c, c.r, c.c) < Model.getHexDist(u.r, u.c, p.r, p.c) ? c : p);
-                    const startR = u.r;
-                    const startC = u.c;
-                    const moveRange = u.move || 3;
+                if (done) continue; // 攻撃したら次のユニットへ
 
-                    // BFSによる移動範囲計算 (味方は通過可能、敵は不可)
-                    const reachable = [];
-                    const queue = [{ r: u.r, c: u.c, dist: 0 }];
-                    const visited = new Set([`${u.r},${u.c}`]);
+                // -----------------------------------------------------------------
+                // 2. 移動：一番近い敵へ近づく
+                // -----------------------------------------------------------------
+                const target = targets.reduce((p, c) => Model.getHexDist(u.r, u.c, c.r, c.c) < Model.getHexDist(u.r, u.c, p.r, p.c) ? c : p);
+                const startR = u.r;
+                const startC = u.c;
+                const moveRange = u.move || 3;
 
-                    while (queue.length > 0) {
-                        const curr = queue.shift();
-                        if (curr.dist < moveRange) {
-                            // 隣接ヘックスを探索
-                            for (let dr = -1; dr <= 1; dr++) {
-                                for (let dc = -1; dc <= 1; dc++) {
-                                    if (dr === 0 && dc === 0) continue;
-                                    const nr = curr.r + dr, nc = curr.c + dc;
+                // BFSによる移動範囲計算
+                const reachable = [];
+                const queue = [{ r: u.r, c: u.c, dist: 0 }];
+                const visited = new Set([`${u.r},${u.c}`]);
 
-                                    // マップ範囲外チェック
-                                    // Note: グリッドサイズ(7x6)はハードコードされているが、ModelかDataから取得が望ましい
-                                    if (nr < 0 || nc < 0 || nr >= 6 || nc >= 7) continue;
+                while (queue.length > 0) {
+                    const curr = queue.shift();
+                    if (curr.dist < moveRange) {
+                        for (let dr = -1; dr <= 1; dr++) {
+                            for (let dc = -1; dc <= 1; dc++) {
+                                if (dr === 0 && dc === 0) continue;
+                                const nr = curr.r + dr, nc = curr.c + dc;
+                                if (nr < 0 || nc < 0 || nr >= 6 || nc >= 7) continue;
+                                if (Model.getHexDist(curr.r, curr.c, nr, nc) !== 1) continue;
 
-                                    // Hex距離が1であることを確認 (偶数/奇数行のズレ対応はgetHexDistで考慮済みだが、
-                                    // ここでは単純な座標近傍探索なので、getHexDist(curr, next) === 1 のチェックを入れる)
-                                    if (Model.getHexDist(curr.r, curr.c, nr, nc) !== 1) continue;
+                                if (!visited.has(`${nr},${nc}`)) {
+                                    const occupiedUnit = Model.state.battle.units.find(unit => unit.r === nr && unit.c === nc);
+                                    const canPass = !occupiedUnit || occupiedUnit.owner === side;
 
-                                    if (!visited.has(`${nr},${nc}`)) {
-                                        const occupiedUnit = Model.state.battle.units.find(unit => unit.r === nr && unit.c === nc);
-                                        // 通過条件: ユニットがいない OR 自分の勢力(Ally)なら通過可能
-                                        const canPass = !occupiedUnit || occupiedUnit.owner === side;
-
-                                        if (canPass) {
-                                            visited.add(`${nr},${nc}`);
-                                            queue.push({ r: nr, c: nc, dist: curr.dist + 1 });
-
-                                            // 停止条件: ユニットがいないこと (味方の上には止まれない)
-                                            if (!occupiedUnit) {
-                                                reachable.push({ r: nr, c: nc });
-                                            }
+                                    if (canPass) {
+                                        visited.add(`${nr},${nc}`);
+                                        queue.push({ r: nr, c: nc, dist: curr.dist + 1 });
+                                        if (!occupiedUnit) {
+                                            reachable.push({ r: nr, c: nc });
                                         }
                                     }
                                 }
                             }
                         }
                     }
-
-                    // 移動可能なマスのうち、ターゲットに最も近いマスを選択
-                    let bestDest = null;
-                    let bestDist = Model.getHexDist(u.r, u.c, target.r, target.c);
-
-                    reachable.forEach(pos => {
-                        const d = Model.getHexDist(pos.r, pos.c, target.r, target.c);
-                        // ターゲットとの距離が縮まる、かつ射程内ならベスト。射程内に入れないならとにかく近づく。
-                        if (d < bestDist) {
-                            bestDist = d;
-                            bestDest = pos;
-                        } else if (bestDest === null && d <= bestDist) {
-                            // 移動しないよりは移動したほうがいいケース（距離が変わらなくても有利な位置など）
-                            // ここでは単純に距離優先
-                            bestDist = d;
-                            bestDest = pos;
-                        }
-                    });
-
-                    if (bestDest) {
-                        u.r = bestDest.r;
-                        u.c = bestDest.c;
-                    }
-
-                    // 移動後攻撃確認
-                    const hasMoved = (u.r !== startR || u.c !== startC);
-                    const d = Model.getHexDist(u.r, u.c, target.r, target.c);
-
-                    if (hasMoved && u.range >= 2) {
-                        // 遠距離ユニットは移動攻撃不可
-                        Model.state.battle.movedUnits.add(u);
-                        View.updateBattleUI();
-                    } else if (d <= u.range) {
-                        this.attack(u, target);
-                    } else {
-                        // 攻撃できずに待機
-                        Model.state.battle.movedUnits.add(u);
-                        View.updateBattleUI();
-                    }
                 }
-            }, delay);
-            delay += 1000;
-        });
 
-        setTimeout(() => {
+                // 移動先決定
+                let bestDest = null;
+                let bestDist = Model.getHexDist(u.r, u.c, target.r, target.c);
+
+                reachable.forEach(pos => {
+                    const d = Model.getHexDist(pos.r, pos.c, target.r, target.c);
+                    if (d < bestDist) {
+                        bestDist = d;
+                        bestDest = pos;
+                    } else if (bestDest === null && d <= bestDist) {
+                        bestDist = d;
+                        bestDest = pos;
+                    }
+                });
+
+                if (bestDest) {
+                    u.r = bestDest.r;
+                    u.c = bestDest.c;
+                }
+
+                // 移動後攻撃確認
+                const hasMoved = (u.r !== startR || u.c !== startC);
+                const distAfterMove = Model.getHexDist(u.r, u.c, target.r, target.c);
+
+                if (hasMoved && u.range >= 2) {
+                    // 遠距離ユニットは移動攻撃不可
+                    Model.state.battle.movedUnits.add(u);
+                    View.updateBattleUI();
+                    await new Promise(r => setTimeout(r, 600));
+                } else if (distAfterMove <= u.range) {
+                    // 移動後攻撃
+                    View.updateBattleUI();
+                    // 移動アニメーションの描画を待つ
+                    await new Promise(r => requestAnimationFrame(r));
+                    await new Promise(r => setTimeout(r, 600)); // 少し待ってから攻撃
+                    this.attack(u, target);
+                    await new Promise(r => setTimeout(r, 600));
+                } else {
+                    // 待機
+                    Model.state.battle.movedUnits.add(u);
+                    View.updateBattleUI();
+                    await new Promise(r => setTimeout(r, 600));
+                }
+
+                // 次のユニットの処理へ行く前に描画更新サイクルを回す
+                await new Promise(r => requestAnimationFrame(r));
+            }
+
+            // ターン終了処理
             if (side === 'enemy') {
                 Model.state.battle.turn = 'player';
                 Model.state.battle.movedUnits.clear();
@@ -403,7 +415,10 @@ window.BattleSystem = {
                 // プレイヤーAI終了後は自動でターン終了へ
                 this.endTurn();
             }
-        }, delay + 1000);
+        } catch (e) {
+            console.error("AI Error:", e);
+            View.showMessage("AI Error: " + e.message);
+        }
     },
 
     /**
@@ -424,9 +439,23 @@ window.BattleSystem = {
         u1.army = u1.army.filter(u => u.currentHp > 0);
         u2.army = u2.army.filter(u => u.currentHp > 0);
 
-        // 生存者は全回復
-        if (u1.army.length > 0) u1.army.forEach(u => u.currentHp = u.hp);
-        if (u2.army.length > 0) u2.army.forEach(u => u.currentHp = u.hp);
+        // 生存者は全回復 & 経験値獲得
+        if (u1.army.length > 0) {
+            const bonus = (u2.army.length === 0) ? 30 : 0;
+            u1.army.forEach(u => {
+                u.currentHp = u.hp;
+                u.xp = (u.xp || 0) + 20 + bonus;
+                Model.processRankUp(u);
+            });
+        }
+        if (u2.army.length > 0) {
+            const bonus = (u1.army.length === 0) ? 30 : 0;
+            u2.army.forEach(u => {
+                u.currentHp = u.hp;
+                u.xp = (u.xp || 0) + 20 + bonus;
+                Model.processRankUp(u);
+            });
+        }
 
         // 引き分け時の撤退処理 (攻撃側またはu1を最寄りの自軍拠点へ戻す)
         if (u1.army.length > 0 && u2.army.length > 0) {
