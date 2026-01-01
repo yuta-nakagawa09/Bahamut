@@ -34,16 +34,6 @@ window.UI = {
         return btn;
     },
 
-    /**
-     * 各種情報パネルのHTMLを生成する
-     * @param {string} content - パネル内部のHTMLコンテンツ
-     * @param {string} [extraClass=''] - 追加クラス
-     * @returns {string} HTML文字列
-     */
-    Panel: (content, extraClass = '') => {
-        return `<div class="panel-base ${extraClass}">${content}</div>`;
-    },
-
     // -------------------------------------------------------------------------
     // カードコンポーネント (Master, Map, Army)
     // -------------------------------------------------------------------------

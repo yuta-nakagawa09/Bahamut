@@ -459,9 +459,29 @@ window.BattleSystem = {
 
         // 引き分け時の撤退処理 (攻撃側またはu1を最寄りの自軍拠点へ戻す)
         if (u1.army.length > 0 && u2.army.length > 0) {
-            const retreatUnit = attacker || u1;
+            let retreatUnit = attacker;
+
+            // 1. 拠点防衛戦の場合、防衛側が優先して残る (テリトリー判定)
+            const nearbyCastle = Model.state.castles.find(c => Math.hypot(c.x - u1.x, c.y - u1.y) < Data.UI.CASTLE_DETECT_RADIUS * 1.5);
+            if (nearbyCastle) {
+                if (nearbyCastle.owner === u1.owner && nearbyCastle.owner !== u2.owner) {
+                    retreatUnit = u2; // u1が持ち主 -> u2が退く
+                } else if (nearbyCastle.owner === u2.owner && nearbyCastle.owner !== u1.owner) {
+                    retreatUnit = u1; // u2が持ち主 -> u1が退く
+                }
+            }
+
+            // fallback: attacker特定できない場合は u1 を退かす (仮)
+            if (!retreatUnit) retreatUnit = u1;
+
             const faction = Model.state.factions.find(f => f.id === retreatUnit.owner);
             if (faction) {
+                // 自軍の拠点リスト (今いる場所を除く... としたいが、もしここが自軍拠点なら「ここ」に戻るのは変だが、drawならそもそもここが自軍拠点でないはず(invader retreats) or 自軍拠点ならstay?)
+                // Draw時のルール: "Invader retreats to their base". "Defender stays".
+                // RetreatUnit is the Invader. So they should find a valid base that is NOT the current location (if they are at a base).
+                // Actually, logic is: Find *nearest* friendly castle.
+                // If Invader is at Enemy Castle C1. Nearest Friendly is C2. Move to C2. Correct.
+
                 const castles = Model.state.castles.filter(c => c.owner === faction.id);
                 if (castles.length > 0) {
                     const nearest = castles.reduce((p, c) => {

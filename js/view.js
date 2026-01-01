@@ -32,8 +32,8 @@ window.View = {
         const container = document.getElementById('game-container');
         if (!container) return;
 
-        const baseWidth = 1280;
-        const baseHeight = 720;
+        const baseWidth = Data.UI.BASE_WIDTH;
+        const baseHeight = Data.UI.BASE_HEIGHT;
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;
 
