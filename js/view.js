@@ -389,6 +389,26 @@ window.View = {
         ctx.restore();
     },
 
+
+    /**
+     * 観戦モードの切り替え
+     */
+    toggleSpectatorMode() {
+        Model.state.spectateCPUBattles = !Model.state.spectateCPUBattles;
+        const btn = document.getElementById('spectator-toggle-btn');
+        if (btn) {
+            if (Model.state.spectateCPUBattles) {
+                btn.innerHTML = '<span>👁️</span> 観戦: ON';
+                btn.classList.remove('bg-gray-800', 'text-gray-500', 'border-gray-600');
+                btn.classList.add('bg-green-900', 'text-green-400', 'border-green-600');
+            } else {
+                btn.innerHTML = '<span>👁️</span> 観戦: OFF';
+                btn.classList.remove('bg-green-900', 'text-green-400', 'border-green-600');
+                btn.classList.add('bg-gray-800', 'text-gray-500', 'border-gray-600');
+            }
+        }
+    },
+
     // -------------------------------------------------------------------------
     // 拠点メニュー (Base Menu)
     // -------------------------------------------------------------------------
@@ -421,12 +441,7 @@ window.View = {
         // mapSidebar.classList.add('hidden'); // Removed strict hiding to allow parallel viewing
 
         // Reset Tab State on Open
-        const units = Model.state.mapUnits.filter(u => Math.hypot(u.x - castle.x, u.y - castle.y) < Data.UI.UNIT_DETECT_RADIUS);
-        if (units.length === 0) {
-            this.baseMenuTab = 'create';
-        } else {
-            this.baseMenuTab = 'recruit';
-        }
+        this.baseMenuTab = 'enhance';
 
         this.renderBaseMenu(castle);
     },
@@ -673,14 +688,30 @@ window.View = {
 
         if (indicator) {
             const styles = UI.TurnIndicatorStyles(b.turn);
-            indicator.innerText = styles.text;
-            indicator.className = styles.className;
-            if (endBtn) endBtn.disabled = styles.endBtnDisabled;
 
-            const autoBtn = document.getElementById('battle-auto-btn');
-            if (autoBtn) autoBtn.disabled = styles.endBtnDisabled;
+            // 観戦モード判定 (Side AがAI)
+            const playerFaction = Model.state.factions.find(f => f.isPlayer);
+            const isSpectating = Model.state.spectateCPUBattles && Model.state.battleUnitA.owner !== playerFaction.id;
 
-            if (retreatBtn) retreatBtn.disabled = styles.retreatBtnDisabled;
+            if (isSpectating) {
+                indicator.innerText = "CPU対戦中";
+                indicator.className = "text-xl font-bold text-gray-500 animate-pulse mb-2"; // サイズ調整とマージン
+                if (endBtn) endBtn.disabled = true;
+
+                const autoBtn = document.getElementById('battle-auto-btn');
+                if (autoBtn) autoBtn.disabled = true;
+
+                if (retreatBtn) retreatBtn.disabled = true;
+            } else {
+                indicator.innerText = styles.text;
+                indicator.className = styles.className;
+                if (endBtn) endBtn.disabled = styles.endBtnDisabled;
+
+                const autoBtn = document.getElementById('battle-auto-btn');
+                if (autoBtn) autoBtn.disabled = styles.endBtnDisabled;
+
+                if (retreatBtn) retreatBtn.disabled = styles.retreatBtnDisabled;
+            }
         }
     },
 
@@ -795,7 +826,8 @@ window.View = {
             }
 
             const power = Model.getCastleTotalPower(c);
-            const uniqueUnit = c.uniqueUnit ? Data.SPECIAL_UNITS[c.uniqueUnit].name : '-';
+            const uniqueUnitName = c.uniqueUnit ? Data.SPECIAL_UNITS[c.uniqueUnit].name : '-';
+            const uniqueUnitId = c.uniqueUnit || null;
 
             rows.push({
                 name: c.name,
@@ -803,7 +835,8 @@ window.View = {
                 ownerNameDisplay: ownerNameDisplay,
                 incomeText: incomeText,
                 power: power,
-                uniqueUnit: uniqueUnit
+                uniqueUnitName: uniqueUnitName,
+                uniqueUnitId: uniqueUnitId
             });
         });
 

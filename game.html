@@ -70,6 +70,8 @@
                     </div>
                 </div>
 
+
+
                 <div class="map-stats-container">
                     <div class="flex gap-3">
                         <div class="map-stat-group">
@@ -139,6 +141,12 @@
                     <div id="menu-group" class="flex flex-col gap-4 items-center px-4 h-full hidden py-6">
                         <button onclick="Controller.endStrategicTurn()" class="sidebar-btn-base">ターン終了</button>
                         <button onclick="View.openInfoModal()" class="sidebar-btn-base">情報</button>
+
+                        <!-- Spectator Toggle (Sidebar) -->
+                        <button id="spectator-toggle-btn" onclick="View.toggleSpectatorMode()"
+                            class="sidebar-btn-base bg-gray-800 text-gray-400 border-gray-600">
+                            <span>👁️</span> 観戦: OFF
+                        </button>
                         <div class="flex-1"></div>
                         <button onclick="Controller.saveGame()" class="sidebar-btn-base">セーブ</button>
                         <button onclick="Controller.loadGame()" class="sidebar-btn-base">ロード</button>
@@ -199,7 +207,7 @@
         <!-- Modal Layer -->
         <div id="modal-layer" class="modal-layer hidden">
             <div class="modal-content">
-                <h3 id="modal-title" class="text-4xl font-bold text-white mb-6">Title</h3>
+                <h3 id="modal-title" class="text-4xl font-bold text-white mb-2">Title</h3>
                 <p id="modal-body" class="text-xl text-gray-300 mb-10 leading-relaxed">Content</p>
                 <div id="modal-footer" class="flex justify-center gap-6"></div>
             </div>

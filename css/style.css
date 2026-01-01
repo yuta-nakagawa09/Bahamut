@@ -237,7 +237,8 @@ body {
 }
 
 .btn-modal {
-    padding: 16px 40px;
+    padding: 8px 20px;
+    min-width: 200px;
     background-color: #1d4ed8;
     /* bg-blue-700 */
     border: 2px solid white;
@@ -439,6 +440,27 @@ body {
     justify-content: center;
 }
 
+.card-title {
+    font-size: 2.25rem;
+    /* text-4xl */
+    line-height: 2.5rem;
+    font-weight: 700;
+    /* font-bold */
+    margin-bottom: 16px;
+    /* mb-4 */
+    color: white;
+}
+
+.card-desc {
+    text-align: center;
+    color: #e5e7eb;
+    /* gray-200 */
+    font-size: 1.125rem;
+    /* text-lg */
+    font-weight: 600;
+    /* font-semibold */
+}
+
 /* Map Screen */
 .screen-map {
     height: 100%;
@@ -553,10 +575,9 @@ body {
 /* Base Menu Overlay (Popup inside map) */
 .base-menu-overlay {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    height: 520px;
+    top: 100px;
+    left: 300px;
+    height: 540px;
     width: 680px;
     max-width: 98vw;
     background-color: rgba(17, 24, 39, 0.9);
@@ -650,7 +671,7 @@ body {
 .modal-content {
     background-color: #111827;
     border: 2px solid #4b5563;
-    padding: 48px;
+    padding: 8px;
     max-height: 540px;
     max-width: 672px;
     text-align: center;
@@ -686,69 +707,61 @@ body {
     text-align: center;
 }
 
-/* Army Card (Base Menu) */
-.army-card-base {
-    border-width: 2px;
-    padding: 32px;
-    border-radius: 16px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    margin-bottom: 16px;
-    color: white;
+/* List Panel Base (Container for items) */
+.list-panel-base {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    /* gap-2 */
 }
 
-.army-card-player {
-    background-color: rgba(31, 41, 55, 0.8);
-    /* gray-800/80 */
-    border-color: #374151;
-    /* gray-700 */
-}
-
-.army-card-enemy {
-    background-color: rgba(127, 29, 29, 0.2);
-    /* red-900/20 */
-    border-color: rgba(185, 28, 28, 0.5);
-    /* red-700/50 */
-}
-
-.army-card-header {
+/* Unit & Recruit List Item Base */
+.list-item-base {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 32px;
-    border-bottom: 1px solid #4b5563;
-    /* gray-600 */
-    padding-bottom: 16px;
+    padding: 4px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    pointer-events: auto;
+    position: relative;
+    z-index: 50;
+    gap: 8px;
+    min-height: 60px;
+}
+
+.list-item-icon {
+    font-size: 2.25rem;
+    /* text-4xl */
+    line-height: 2.5rem;
+}
+
+.list-item-name {
+    font-size: 1.25rem;
+    /* text-xl */
+    line-height: 1.75rem;
+    font-weight: 700;
+    color: white;
+}
+
+.list-item-details {
+    font-size: 1.25rem;
+    /* text-xl */
+    line-height: 1.75rem;
+    color: #d1d5db;
+    /* gray-300 */
 }
 
 /* Unit List Item */
 .unit-list-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    /* Composes .list-item-base */
     background-color: rgba(255, 255, 255, 0.05);
-    /* white/5 */
-    padding: 4px;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    /* white/10 */
-    pointer-events: auto;
-    position: relative;
-    z-index: 50;
-    gap: 12px;
-    min-height: 60px;
 }
 
 .unit-info-group {
     display: flex;
     align-items: center;
-    gap: 12px;
-}
-
-.unit-details {
-    font-size: 20px;
-    /* text-xl */
-    color: #d1d5db;
-    /* gray-300 */
+    gap: 8px;
 }
 
 .btn-enhance-hp {
@@ -841,26 +854,12 @@ body {
 
 /* Recruit Item */
 .recruit-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    /* Composes .list-item-base */
     background-color: #111827;
-    padding: 4px;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    pointer-events: auto;
-    position: relative;
-    z-index: 50;
-    gap: 12px;
-    min-height: 60px;
 }
 
 .recruit-item:hover {
     background-color: #374151;
-}
-
-.recruit-item:active {
-    /* transform: translateY(4px); */
 }
 
 .btn-recruit-buy {

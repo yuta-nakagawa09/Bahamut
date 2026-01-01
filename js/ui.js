@@ -43,15 +43,12 @@ window.UI = {
      * @returns {string} HTML文字列
      */
     MasterSelectionCard: (m) => {
-        const colorName = m.colorKey || 'blue';
-        const iconContent = `<img src="${m.image}" class="card-icon" alt="${m.name}">`;
-
         return `
         <div onclick="Controller.createGame('${m.id}')"
-            class="card-base hover:border-${colorName}-500 ${extraClass = ''}">
-            ${iconContent}
-            <div class="text-4xl font-bold mb-4 text-white group-hover:text-${colorName}-400" style="text-shadow: 1px 1px 2px black;">${m.name}</div>
-            <p class="text-center text-gray-200 text-lg font-semibold" style="text-shadow: 1px 1px 1px black;">${m.desc}</p>
+            class="card-base">
+            <img src="${m.image}" class="card-icon" alt="${m.name}">
+            <div class="card-title">${m.name}</div>
+            <p class="card-desc">${m.desc}</p>
         </div>`;
     },
 
@@ -61,40 +58,16 @@ window.UI = {
      * @returns {string} HTML文字列
      */
     MapSelectionCard: (t) => {
-        const iconPath = t.image || 'assets/img/icon_map_continent.png';
-
         return `
         <div onclick="Controller.selectMapAndNext('${t.id}')"
-            class="card-base hover:border-yellow-500">
-            <img src="${iconPath}" class="card-icon" alt="${t.name}">
-            <div class="text-4xl font-bold mb-4 text-[#fbbf24] group-hover:text-yellow-300" style="text-shadow: 1px 1px 2px black;">${t.name}</div>
-            <p class="text-center text-gray-200 text-lg font-semibold" style="text-shadow: 1px 1px 1px black;">${t.desc}</p>
+            class="card-base">
+            <img src="${t.image}" class="card-icon" alt="${t.name}">
+            <div class="card-title">${t.name}</div>
+            <p class="card-desc">${t.desc}</p>
         </div>`;
     },
 
-    /**
-     * 部隊情報カード（BaseMenu等で使用）
-     * @param {Object} unit - 部隊データ
-     * @param {boolean} isPlayer - プレイヤーかどうか
-     * @param {string} factionName - 勢力名
-     * @param {string} extraContent - 追加コンテンツHTML
-     * @returns {string} HTML文字列
-     */
-    ArmyCard: (unit, isPlayer, factionName, extraContent = '') => {
-        const colorClass = isPlayer ? 'text-blue-300' : 'text-red-400';
-        const bgClass = isPlayer ? 'army-card-player' : 'army-card-enemy';
-        return `
-            <div class="army-card-base ${bgClass}">
-                <div class="army-card-header">
-                    <div class="flex items-center gap-6">
-                        <span class="text-6xl">${unit.emoji}</span>
-                        <span class="text-3xl font-bold ${colorClass}">${factionName}</span>
-                    </div>
-                    <span class="text-xl font-bold font-mono">構成: ${unit.army.length} / ${Data.MAX_UNITS}</span>
-                </div>
-                ${extraContent}
-            </div>`;
-    },
+
 
     // -------------------------------------------------------------------------
     // メニュー・ヘッダー関連
@@ -153,11 +126,11 @@ window.UI = {
      */
     UnitListItem: (u, i, enhanceActions = null, onClickOverride = null) => {
         return `
-        <div class="unit-list-item" onclick="${onClickOverride ? onClickOverride : `View.showUnitDetail('${u.id}')`}" style="cursor: pointer;">
+        <div class="unit-list-item list-item-base" onclick="${onClickOverride ? onClickOverride : `View.showUnitDetail('${u.id}')`}" style="cursor: pointer;">
             <div class="unit-info-group">
-                <div class="text-4xl">${u.emoji}</div>
-                <div class="font-bold text-xl">${u.name}</div>
-                <div class="unit-details">
+                <div class="list-item-icon">${u.emoji}</div>
+                <div class="list-item-name">${u.name}</div>
+                <div class="list-item-details">
                     HP:${u.currentHp}/${u.hp} ATK:${u.atk} XP:${u.xp} RANK ${Data.RANKS[u.rank || 0]}</div>
             </div>
             ${enhanceActions ? `
@@ -177,7 +150,7 @@ window.UI = {
      */
     UnitListPanel: (unit, castle, unitListItemHTML) => {
         return `
-            <div class="flex flex-col gap-2">
+            <div class="list-panel-base">
                 ${unit.army.map((u, i) => unitListItemHTML(u, i)).join('')}
             </div>`;
     },
@@ -193,13 +166,13 @@ window.UI = {
      */
     RecruitItem: (ut, activeUnitId, castleId, canAfford, isFull) => {
         return `
-            <div class="recruit-item" onclick="View.showUnitDetail('${ut.id}')" style="cursor: pointer;">
+            <div class="recruit-item list-item-base" onclick="View.showUnitDetail('${ut.id}')" style="cursor: pointer;">
                 <div class="flex items-center gap-3">
-                    <div class="text-4xl">${ut.emoji}</div>
+                    <div class="list-item-icon">${ut.emoji}</div>
                     <div class="flex gap-3">
-                        <div class="text-xl font-bold text-white">${ut.name}
+                        <div class="list-item-name">${ut.name}
                         </div>
-                        <div class="text-xl text-gray-300">
+                        <div class="list-item-details">
                         HP:${ut.hp} / ATK:${ut.atk} / RNG:${ut.range} / MOVE:${ut.move}</div>
                     </div>
                 </div>
@@ -220,7 +193,7 @@ window.UI = {
      */
     RecruitPanel: (options, activeUnit, castle, recruitItemHTML) => {
         return `
-            <div class="flex flex-col gap-2">
+            <div class="list-panel-base">
                 ${options.map(ut => recruitItemHTML(ut, activeUnit, castle)).join('')}
             </div>`;
     },
@@ -436,6 +409,10 @@ window.UI = {
                 <tbody>`;
 
         rows.forEach(row => {
+            const unitDisplay = row.uniqueUnitId
+                ? `<span class="cursor-pointer text-yellow-400 hover:underline" onclick="View.showUnitDetail('${row.uniqueUnitId}')">${row.uniqueUnitName}</span>`
+                : row.uniqueUnitName || '-';
+
             html += `
                 <tr>
                     <td class="font-bold">${row.name}</td>
@@ -443,7 +420,7 @@ window.UI = {
                     <td>${row.ownerNameDisplay}</td>
                     <td>${row.incomeText}</td>
                     <td>${row.power}</td>
-                    <td>${row.uniqueUnit}</td>
+                    <td>${unitDisplay}</td>
                 </tr>`;
         });
 
@@ -507,12 +484,12 @@ window.UI = {
      */
     BaseMenuTabs: (activeTab, onSwitch) => {
         const container = document.createElement('div');
-        container.className = "flex gap-2 w-full"; // Full width container
+        container.className = "flex gap-1 w-full"; // Full width container
 
         const tabs = [
-            { id: 'create', label: '部隊新規' },
-            { id: 'recruit', label: '雇用' },
-            { id: 'enhance', label: '強化' }
+            { id: 'enhance', label: '駐留部隊' },
+            { id: 'create', label: '部隊追加' },
+            { id: 'recruit', label: 'ユニット雇用' }
         ];
 
         tabs.forEach(tab => {
@@ -538,7 +515,7 @@ window.UI = {
      */
     UnitTabs: (allUnits, activeUnit, onSelect) => {
         const container = document.createElement('div');
-        container.className = "flex gap-3 pb-1 mb-1 overflow-x-auto custom-scrollbar";
+        container.className = "flex gap-3 pb-1 mb-1";
 
         allUnits.forEach(u => {
             const isActive = (u === activeUnit);

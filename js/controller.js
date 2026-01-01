@@ -79,7 +79,8 @@ window.Controller = {
                     const u1 = Model.state.mapUnits[i], u2 = Model.state.mapUnits[j];
                     if (u1.owner !== u2.owner && Math.hypot(u1.x - u2.x, u1.y - u2.y) < Data.UI.BATTLE_TRIGGER_PIXELS) {
                         // 戦闘開始処理
-                        const attacker = u1.isMoving ? u1 : (u2.isMoving ? u2 : null);
+                        let attacker = u1.isMoving ? u1 : (u2.isMoving ? u2 : null);
+                        if (!attacker) attacker = u1; // 両方停止(同フレーム到着)の場合はu1を攻撃側とする
                         u1.isMoving = false; u2.isMoving = false;
 
                         const playerFaction = Model.state.factions.find(f => f.isPlayer);
@@ -89,9 +90,17 @@ window.Controller = {
                             Model.state.battleUnitB = (u1.owner === playerFaction.id) ? u2 : u1;
                             this.startBattle();
                         } else {
-                            // CPU同士 -> オート解決
-                            BattleSystem.autoResolve(u1, u2, attacker);
-                            Model.state.globalBattleCooldown = Data.BATTLE.COOLDOWN; // オート戦闘後も少しウェイト (3秒相当)
+                            // CPU同士
+                            if (Model.state.spectateCPUBattles) {
+                                // 観戦モードON -> バトル画面へ (A=Attacker)
+                                Model.state.battleUnitA = attacker; // 攻撃側をAとする (または u1/u2 の順でも良いが、Attacker先行が自然)
+                                Model.state.battleUnitB = (attacker === u1) ? u2 : u1;
+                                this.startBattle();
+                            } else {
+                                // 観戦モードOFF -> オート解決
+                                BattleSystem.autoResolve(u1, u2, attacker);
+                                Model.state.globalBattleCooldown = Data.BATTLE.COOLDOWN; // オート戦闘後も少しウェイト (3秒相当)
+                            }
                         }
                         return;
                     }

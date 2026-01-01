@@ -17,6 +17,12 @@ window.BattleSystem = {
         window.gameState = Model.state;
         View.changeScreen('battle');
         this.initGrid();
+
+        // Check if Side A (Player Slot) is actually AI (Spectator Mode)
+        const playerFaction = Model.state.factions.find(f => f.isPlayer);
+        if (Model.state.battleUnitA.owner !== playerFaction.id) {
+            setTimeout(() => this.runAI('player'), 1000);
+        }
     },
 
     /**
@@ -62,8 +68,13 @@ window.BattleSystem = {
         // console.log(`Battle Click: ${r}, ${c}`);
         const b = Model.state.battle;
 
+        // 手動操作ブロック: 観戦モード(Side AがAI)ならクリック無効
+        const playerFaction = Model.state.factions.find(f => f.isPlayer);
+        if (Model.state.battleUnitA.owner !== playerFaction.id) return;
+
         if (b.turn !== 'player' || !b.active) return;
 
+        // ... (rest of handleClick logic) ...
         const target = b.units.find(u => u.r === r && u.c === c);
 
         // 1. ユニット選択中：移動後の攻撃または待機
@@ -134,6 +145,14 @@ window.BattleSystem = {
         View.updateBattleUI();
         this.checkEnd();
     },
+
+    // ... (attack, checkEnd) ...
+
+    // -------------------------------------------------------------------------
+    // AI Loop Callback Fix
+    // -------------------------------------------------------------------------
+    // Need to update the end of runAI to loop correctly
+
 
     // -------------------------------------------------------------------------
     // アクション (攻撃, 判定)
@@ -323,6 +342,7 @@ window.BattleSystem = {
                         done = true;
                         // 行動後のウェイト（視認性向上）
                         await new Promise(r => setTimeout(r, 600));
+                        if (!Model.state.battle.active) break;
                         break;
                     }
                 }
@@ -398,31 +418,45 @@ window.BattleSystem = {
                     Model.state.battle.movedUnits.add(u);
                     View.updateBattleUI();
                     await new Promise(r => setTimeout(r, 600));
+                    if (!Model.state.battle.active) break;
                 } else if (distAfterMove <= u.range) {
                     // 移動後攻撃
                     View.updateBattleUI();
                     // 移動アニメーションの描画を待つ
                     await new Promise(r => requestAnimationFrame(r));
                     await new Promise(r => setTimeout(r, 600)); // 少し待ってから攻撃
+                    if (!Model.state.battle.active) break;
+
                     this.attack(u, target);
                     await new Promise(r => setTimeout(r, 600));
+                    if (!Model.state.battle.active) break;
                 } else {
                     // 待機
                     Model.state.battle.movedUnits.add(u);
                     View.updateBattleUI();
                     await new Promise(r => setTimeout(r, 600));
+                    if (!Model.state.battle.active) break;
                 }
 
                 // 次のユニットの処理へ行く前に描画更新サイクルを回す
                 await new Promise(r => requestAnimationFrame(r));
+                if (!Model.state.battle.active) break;
             }
 
-            // ターン終了処理
+            // ターン終了処理 (バトル終了時は実行しない)
+            if (!Model.state.battle.active) return;
+
             if (side === 'enemy') {
                 Model.state.battle.turn = 'player';
                 Model.state.battle.movedUnits.clear();
                 View.showMessage("自軍ターン");
                 View.updateBattleUI();
+
+                // 観戦モード(Side AがAI)なら、Side AのAIを実行
+                const playerFaction = Model.state.factions.find(f => f.isPlayer);
+                if (Model.state.battleUnitA && Model.state.spectateCPUBattles && Model.state.battleUnitA.owner !== playerFaction.id) {
+                    setTimeout(() => this.runAI('player'), 1000);
+                }
             } else {
                 // プレイヤーAI終了後は自動でターン終了へ
                 this.endTurn();

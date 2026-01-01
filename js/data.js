@@ -191,16 +191,16 @@ window.Data = {
      */
     FACTION_UNITS: {
         'knight': [
-            { id: 'soldier', name: '兵士', emoji: '🛡️', hp: 40, atk: 14, range: 1, move: 3, cost: 200 },
-            { id: 'paladin', name: '騎士', emoji: '🏇', hp: 60, atk: 20, range: 1, move: 5, cost: 500 }
+            { id: 'soldier', name: '兵士', emoji: '🛡️', hp: 40, atk: 14, range: 1, move: 3, cost: 200, description: '王国の基本歩兵。バランスの取れた能力を持ち、前線を維持するのに適している。' },
+            { id: 'paladin', name: '騎士', emoji: '🏇', hp: 60, atk: 20, range: 1, move: 5, cost: 500, description: '高い機動力と攻撃力を誇る騎兵。平地での戦闘で真価を発揮する。' }
         ],
         'mage': [
-            { id: 'elf', name: 'エルフ', emoji: '🏹', hp: 45, atk: 23, range: 3, move: 3, cost: 300 },
-            { id: 'fairy', name: '妖精', emoji: '🧚', hp: 50, atk: 20, range: 2, move: 4, cost: 250 }
+            { id: 'elf', name: 'エルフ', emoji: '🏹', hp: 45, atk: 23, range: 3, move: 3, cost: 300, description: '森に住む弓の名手。遠距離からの攻撃が得意だが、打たれ弱い。' },
+            { id: 'fairy', name: '妖精', emoji: '🧚', hp: 50, atk: 20, range: 2, move: 4, cost: 250, description: '魔法の力で戦う妖精。空を飛び、地形の影響を受けずに移動できる。' }
         ],
         'demon': [
-            { id: 'imp', name: '小悪魔', emoji: '👿', hp: 28, atk: 18, range: 1, move: 4, cost: 150 },
-            { id: 'dragon', name: '竜', emoji: '🐉', hp: 75, atk: 25, range: 1, move: 6, cost: 1000 }
+            { id: 'imp', name: '小悪魔', emoji: '👿', hp: 28, atk: 18, range: 1, move: 4, cost: 150, description: '素早い動きで敵を翻弄する下級悪魔。コストが安く大量生産に向く。' },
+            { id: 'dragon', name: '竜', emoji: '🐉', hp: 75, atk: 25, range: 1, move: 6, cost: 1000, description: '圧倒的な力を誇る伝説の生物。高いHPと攻撃力で戦場を支配する。' }
         ]
     },
 
@@ -214,7 +214,7 @@ window.Data = {
      */
     MAP_TEMPLATES: [
         {
-            id: 'classic', name: 'バハムート大陸 (Classic)', desc: '標準的なバランスの初期マップです。', image: 'assets/img/icon_map_continent.png', backgroundImage: 'assets/img/map_bg_continent.png',
+            id: 'classic', name: 'バハムート大陸', desc: '標準的なバランスの初期マップです。', image: 'assets/img/icon_map_continent.png', backgroundImage: 'assets/img/map_bg_continent.png',
             castles: [
                 { id: 'c1', name: '王都', x: 375, y: 200, owner: 'player', captureBonus: 0, income: 500, uniqueUnit: null, neighbors: ['c3', 'c7', 'c8'] },
                 { id: 'c2', name: '暗黒城', x: 940, y: 450, owner: 'enemy', captureBonus: 2000, income: 500, uniqueUnit: 'hell-hound', neighbors: ['c5', 'c6', 'c9'] },
@@ -229,7 +229,7 @@ window.Data = {
             ]
         },
         {
-            id: 'islands', name: '群島諸国 (Islands)', desc: '細長いルートで構成された機動力が試されるマップ。', image: 'assets/img/icon_map_islands.png', backgroundImage: 'assets/img/map_bg_islands.png',
+            id: 'islands', name: '群島諸国', desc: '細長いルートで構成された機動力が試されるマップ。', image: 'assets/img/icon_map_islands.png', backgroundImage: 'assets/img/map_bg_islands.png',
             castles: [
                 { id: 'c1', name: '王都', x: 325, y: 220, owner: 'player', captureBonus: 0, income: 500, uniqueUnit: null, neighbors: ['c3', 'c10'] },
                 { id: 'c2', name: '暗黒城', x: 770, y: 320, owner: 'enemy', captureBonus: 2000, income: 500, uniqueUnit: 'hell-hound', neighbors: ['c5', 'c9'] },
@@ -244,7 +244,7 @@ window.Data = {
             ]
         },
         {
-            id: 'ring', name: '環状大陸 (Ring)', desc: '拠点が輪のように繋がった特殊なマップ。', image: 'assets/img/icon_map_ring.png', backgroundImage: 'assets/img/map_bg_ring.png',
+            id: 'ring', name: '環状大陸', desc: '拠点が輪のように繋がった特殊なマップ。', image: 'assets/img/icon_map_ring.png', backgroundImage: 'assets/img/map_bg_ring.png',
             castles: [
                 { id: 'c1', name: '王都', x: 555, y: 135, owner: 'player', captureBonus: 0, income: 500, uniqueUnit: null, neighbors: ['c7', 'c4', 'c8'] },
                 { id: 'c2', name: '暗黒城', x: 470, y: 390, owner: 'enemy', captureBonus: 2000, income: 500, uniqueUnit: 'hell-hound', neighbors: ['c3', 'c9'] },
@@ -267,26 +267,26 @@ window.Data = {
      * 特定の拠点を占領することで雇用可能になるユニークユニットの定義
      */
     SPECIAL_UNITS: {
-        'hell-hound': { id: 'hell-hound', name: 'ケルベロス', emoji: '🐕', hp: 45, atk: 22, range: 1, move: 5, cost: 600, origin: '暗黒城' },
-        'guard': { id: 'guard', name: '重装衛兵', emoji: '💂', hp: 80, atk: 18, range: 1, move: 2, cost: 400, origin: '自由都市' },
-        'crossbow': { id: 'crossbow', name: '弩兵', emoji: '🏹', hp: 35, atk: 22, range: 4, move: 2, cost: 550, origin: '北の砦' },
-        'militia': { id: 'militia', name: '義勇兵', emoji: '🧑‍🌾', hp: 25, atk: 12, range: 1, move: 3, cost: 100, origin: '南の村' },
-        'sorcerer': { id: 'sorcerer', name: '魔導師', emoji: '🧙', hp: 40, atk: 28, range: 3, move: 2, cost: 800, origin: '東の塔' },
-        'ghost': { id: 'ghost', name: '亡霊', emoji: '👻', hp: 25, atk: 22, range: 1, move: 6, cost: 350, origin: '西の廃墟' },
-        'pirate': { id: 'pirate', name: '海賊', emoji: '🏴‍☠️', hp: 50, atk: 24, range: 1, move: 4, cost: 450, origin: '諸島/港' },
-        'dwarf': { id: 'dwarf', name: 'ドワーフ兵', emoji: '⚒️', hp: 70, atk: 26, range: 1, move: 2, cost: 600, origin: '西の砦' },
-        'berserker': { id: 'berserker', name: '狂戦士', emoji: '🪓', hp: 45, atk: 35, range: 1, move: 4, cost: 700, origin: '東の平原' },
-        'fenrir': { id: 'fenrir', name: '魔狼', emoji: '🐺', hp: 55, atk: 24, range: 1, move: 6, cost: 650, origin: '南西の森' },
-        'ninja': { id: 'ninja', name: '忍者', emoji: '🥷', hp: 35, atk: 25, range: 2, move: 5, cost: 700, origin: '隠れ里' },
-        'witch': { id: 'witch', name: '魔女', emoji: '🧙‍♀️', hp: 30, atk: 26, range: 3, move: 3, cost: 650, origin: '魔法の泉' },
-        'skeleton': { id: 'skeleton', name: '骸骨兵', emoji: '💀', hp: 30, atk: 15, range: 1, move: 2, cost: 150, origin: '忘却の地' },
-        'siren': { id: 'siren', name: 'セイレーン', emoji: '🧜‍♀️', hp: 40, atk: 20, range: 2, move: 4, cost: 500, origin: '北の岩礁' },
-        'merman': { id: 'merman', name: 'マーマン', emoji: '🧜‍♂️', hp: 50, atk: 22, range: 1, move: 4, cost: 450, origin: '南珊瑚' },
-        'kraken': { id: 'kraken', name: 'クラーケン', emoji: '🦑', hp: 120, atk: 35, range: 2, move: 2, cost: 1500, origin: '海底神殿' },
-        'thief': { id: 'thief', name: '盗賊', emoji: '🦹', hp: 30, atk: 18, range: 1, move: 5, cost: 300, origin: '商人の島' },
-        'ancient-dragon': { id: 'ancient-dragon', name: '古竜', emoji: '🐲', hp: 150, atk: 40, range: 2, move: 4, cost: 2000, origin: '中央塔' },
-        'golem': { id: 'golem', name: 'ゴーレム', emoji: '🗿', hp: 100, atk: 30, range: 1, move: 2, cost: 900, origin: '関門' },
-        'griffin': { id: 'griffin', name: 'グリフォン', emoji: '🦅', hp: 70, atk: 28, range: 1, move: 6, cost: 850, origin: '離れ小島' }
+        'hell-hound': { id: 'hell-hound', name: 'ケルベロス', emoji: '🐕', hp: 45, atk: 22, range: 1, move: 5, cost: 600, origin: '暗黒城', description: '地獄の番犬。高い攻撃力と移動力を持ち、奇襲攻撃を得意とする。' },
+        'guard': { id: 'guard', name: '重装衛兵', emoji: '💂', hp: 80, atk: 18, range: 1, move: 2, cost: 400, origin: '自由都市', description: '全身を鎧で固めた衛兵。動きは遅いが防御力が高く、拠点の防衛に最適。' },
+        'crossbow': { id: 'crossbow', name: '弩兵', emoji: '🏹', hp: 35, atk: 22, range: 4, move: 2, cost: 550, origin: '北の砦', description: '強力なクロスボウを装備した兵士。長射程を生かして一方的に攻撃できる。' },
+        'militia': { id: 'militia', name: '義勇兵', emoji: '🧑‍🌾', hp: 25, atk: 12, range: 1, move: 3, cost: 100, origin: '南の村', description: '村を守るために立ち上がった農民。能力は低いが、維持費が安く数を揃えやすい。' },
+        'sorcerer': { id: 'sorcerer', name: '魔導師', emoji: '🧙', hp: 40, atk: 28, range: 3, move: 2, cost: 800, origin: '東の塔', description: '古代の魔法を操る賢者。強力な魔法攻撃で敵の防御を貫通する。' },
+        'ghost': { id: 'ghost', name: '亡霊', emoji: '👻', hp: 25, atk: 22, range: 1, move: 6, cost: 350, origin: '西の廃墟', description: 'この世に未練を残す霊魂。物理攻撃を回避しやすく、壁をすり抜けて移動する。' },
+        'pirate': { id: 'pirate', name: '海賊', emoji: '🏴‍☠️', hp: 50, atk: 24, range: 1, move: 4, cost: 450, origin: '諸島/港', description: '荒くれ者の海の男。水辺での戦闘を得意とし、略奪を行うこともある。' },
+        'dwarf': { id: 'dwarf', name: 'ドワーフ兵', emoji: '⚒️', hp: 70, atk: 26, range: 1, move: 2, cost: 600, origin: '西の砦', description: '頑強な体を持つ山の民。斧による一撃は重く、耐久力にも優れる。' },
+        'berserker': { id: 'berserker', name: '狂戦士', emoji: '🪓', hp: 45, atk: 35, range: 1, move: 4, cost: 700, origin: '東の平原', description: '戦いの中に喜びを見出す戦士。防御を捨てた捨て身の攻撃は驚異的な威力を誇る。' },
+        'fenrir': { id: 'fenrir', name: '魔狼', emoji: '🐺', hp: 55, atk: 24, range: 1, move: 6, cost: 650, origin: '南西の森', description: '巨大な狼の魔獣。森の中を疾風のように駆け抜け、獲物に襲いかかる。' },
+        'ninja': { id: 'ninja', name: '忍者', emoji: '🥷', hp: 35, atk: 25, range: 2, move: 5, cost: 700, origin: '隠れ里', description: '闇に紛れて行動する隠密。特殊な訓練を受け、敵の背後に忍び寄る。' },
+        'witch': { id: 'witch', name: '魔女', emoji: '🧙‍♀️', hp: 30, atk: 26, range: 3, move: 3, cost: 650, origin: '魔法の泉', description: '禁断の秘術を操る魔女。彼女の魔法は広範囲の敵に災いをもたらす。' },
+        'skeleton': { id: 'skeleton', name: '骸骨兵', emoji: '💀', hp: 30, atk: 15, range: 1, move: 2, cost: 150, origin: '忘却の地', description: '死霊術によって蘇った骸骨。痛みを感じず、命令に忠実に従う不気味な兵士。' },
+        'siren': { id: 'siren', name: 'セイレーン', emoji: '🧜‍♀️', hp: 40, atk: 20, range: 2, move: 4, cost: 500, origin: '北の岩礁', description: '美しい歌声で船乗りを惑わす海の魔物。水上での戦いを得意とする。' },
+        'merman': { id: 'merman', name: 'マーマン', emoji: '🧜‍♂️', hp: 50, atk: 22, range: 1, move: 4, cost: 450, origin: '南珊瑚', description: '半魚人の戦士。水中を自在に泳ぎ回り、トライデントで敵を突く。' },
+        'kraken': { id: 'kraken', name: 'クラーケン', emoji: '🦑', hp: 120, atk: 35, range: 2, move: 2, cost: 1500, origin: '海底神殿', description: '深海に潜む伝説の怪物。巨大な触手で船ごと敵を粉砕する海の支配者。' },
+        'thief': { id: 'thief', name: '盗賊', emoji: '🦹', hp: 30, atk: 18, range: 1, move: 5, cost: 300, origin: '商人の島', description: '素早さを武器にする盗賊。正面切っての戦闘は苦手だが、偵察や攪乱に役立つ。' },
+        'ancient-dragon': { id: 'ancient-dragon', name: '古竜', emoji: '🐲', hp: 150, atk: 40, range: 2, move: 4, cost: 2000, origin: '中央塔', description: '太古の昔から生き続ける最強の竜。そのブレスは全てを焼き尽くす。' },
+        'golem': { id: 'golem', name: 'ゴーレム', emoji: '🗿', hp: 100, atk: 30, range: 1, move: 2, cost: 900, origin: '関門', description: '魔法で動く岩の巨人。極めて高い防御力を持ち、動く城壁として機能する。' },
+        'griffin': { id: 'griffin', name: 'グリフォン', emoji: '🦅', hp: 70, atk: 28, range: 1, move: 6, cost: 850, origin: '離れ小島', description: '鷲の頭と翼、ライオンの胴体を持つ幻獣。空を飛び、鋭い爪で敵を引き裂く。' }
     }
 };
 window.Data = Data;

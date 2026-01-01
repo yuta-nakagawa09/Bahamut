@@ -38,7 +38,8 @@ window.Model = {
         gameCleared: false,
         battleUnitA: null, // 戦闘開始時のマップ上のユニット参照
         battleUnitB: null,
-        globalBattleCooldown: 0
+        globalBattleCooldown: 0,
+        spectateCPUBattles: false // 観戦モードフラグ
     },
 
     // -------------------------------------------------------------------------
