@@ -238,6 +238,18 @@ window.BattleSystem = {
 
             Model.state.globalBattleCooldown = 30;
             setTimeout(() => {
+                // 勝者（生き残っている方）が移動中だった場合（攻撃側）、目的地へ移動させる（制圧判定のため）
+                const winner = (eUnits.length === 0) ? Model.state.battleUnitA : Model.state.battleUnitB;
+                if (winner && winner.army.length > 0) {
+                    // 移動中だったか判定 (ターゲットとの距離がある程度ある)
+                    const distToTarget = Math.hypot(winner.x - winner.targetX, winner.y - winner.targetY);
+                    if (distToTarget > 10) {
+                        winner.x = winner.targetX;
+                        winner.y = winner.targetY;
+                        // 制圧ロジックはControllerの次のループでjudgeされる
+                    }
+                }
+
                 View.changeScreen('map');
                 // 敵ターン中に戦闘が終わった場合、プレイヤーターンへ移行（復帰）
                 if (Model.state.strategicTurn !== 'player') {
@@ -512,6 +524,15 @@ window.BattleSystem = {
             View.showMessage(`[戦闘] ${n2} が ${n1} を撃破！`);
         } else {
             View.showMessage(`[戦闘] ${n1} と ${n2} は相打ちで全滅...`);
+        }
+
+        // 勝者が攻撃側だった場合、敗者の位置へ移動（制圧のため）
+        if (attacker) {
+            if (u1.army.length === 0 && u2 === attacker) {
+                u2.x = u1.x; u2.y = u1.y; u2.targetX = u1.x; u2.targetY = u1.y;
+            } else if (u2.army.length === 0 && u1 === attacker) {
+                u1.x = u2.x; u1.y = u2.y; u1.targetX = u2.x; u1.targetY = u2.y;
+            }
         }
 
         if (u1.army.length === 0) Model.state.mapUnits = Model.state.mapUnits.filter(u => u !== u1);

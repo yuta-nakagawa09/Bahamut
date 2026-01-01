@@ -151,9 +151,9 @@ window.UI = {
      * @param {Object|null} enhanceActions - 強化アクション（hp, atk）のJSコード文字
      * @returns {string} HTML文字列
      */
-    UnitListItem: (u, i, enhanceActions = null) => {
+    UnitListItem: (u, i, enhanceActions = null, onClickOverride = null) => {
         return `
-        <div class="unit-list-item">
+        <div class="unit-list-item" onclick="${onClickOverride ? onClickOverride : `View.showUnitDetail('${u.id}')`}" style="cursor: pointer;">
             <div class="unit-info-group">
                 <div class="text-4xl">${u.emoji}</div>
                 <div class="font-bold text-xl">${u.name}</div>
@@ -162,8 +162,8 @@ window.UI = {
             </div>
             ${enhanceActions ? `
             <div class="flex flex-row gap-1">
-                <button onclick="${enhanceActions.hp}" class="btn-enhance-hp">HP+(${Data.ENHANCEMENT.HP.COST}${Data.CURRENCY_UNIT})</button>
-                <button onclick="${enhanceActions.atk}" class="btn-enhance-atk">ATK+(${Data.ENHANCEMENT.ATK.COST}${Data.CURRENCY_UNIT})</button>
+                <button onclick="event.stopPropagation(); ${enhanceActions.hp}" class="btn-enhance-hp">HP+(${Data.ENHANCEMENT.HP.COST}${Data.CURRENCY_UNIT})</button>
+                <button onclick="event.stopPropagation(); ${enhanceActions.atk}" class="btn-enhance-atk">ATK+(${Data.ENHANCEMENT.ATK.COST}${Data.CURRENCY_UNIT})</button>
             </div>` : ''}
         </div>`;
     },
@@ -177,8 +177,7 @@ window.UI = {
      */
     UnitListPanel: (unit, castle, unitListItemHTML) => {
         return `
-            <p class="panel-title">部隊編成・強化</p>
-            <div class="flex flex-col gap-3">
+            <div class="flex flex-col gap-2">
                 ${unit.army.map((u, i) => unitListItemHTML(u, i)).join('')}
             </div>`;
     },
@@ -194,21 +193,22 @@ window.UI = {
      */
     RecruitItem: (ut, activeUnitId, castleId, canAfford, isFull) => {
         return `
-            <div class="recruit-item">
+            <div class="recruit-item" onclick="View.showUnitDetail('${ut.id}')" style="cursor: pointer;">
                 <div class="flex items-center gap-3">
                     <div class="text-4xl">${ut.emoji}</div>
                     <div class="flex gap-3">
                         <div class="text-xl font-bold text-white">${ut.name}
                         </div>
                         <div class="text-xl text-gray-300">
-                            HP:${ut.hp} / ATK:${ut.atk} / RNG:${ut.range} / MOVE:${ut.move}</div>
+                        HP:${ut.hp} / ATK:${ut.atk} / RNG:${ut.range} / MOVE:${ut.move}</div>
                     </div>
                 </div>
                 <button onclick="event.stopPropagation(); Controller.recruitUnit('${activeUnitId}', '${ut.id}', '${castleId}')" 
-                    class="btn-buy" 
+                    class="btn-recruit-buy" 
                     ${!canAfford || isFull ? 'disabled' : ''}>${isFull ? "満員" : `${ut.cost}G`}</button>
             </div>`;
     },
+
 
     /**
      * 雇用パネル全体のHTML
@@ -220,8 +220,7 @@ window.UI = {
      */
     RecruitPanel: (options, activeUnit, castle, recruitItemHTML) => {
         return `
-            <p class="panel-title">ユニット雇用</p>
-            <div class="flex flex-col gap-3">
+            <div class="flex flex-col gap-2">
                 ${options.map(ut => recruitItemHTML(ut, activeUnit, castle)).join('')}
             </div>`;
     },
@@ -240,11 +239,11 @@ window.UI = {
         const max = Data.MAX_UNITS;
 
         const btn = document.createElement('button');
-        const stateClass = isActive ? 'tab-btn-active' : 'tab-btn-inactive';
-        btn.className = `tab-btn ${stateClass}`;
+        const stateClass = isActive ? 'active' : 'inactive';
+        btn.className = `unit-tab-btn ${stateClass}`;
 
         btn.innerHTML = `
-            <div class="text-xl font-bold uppercase truncate w-full text-center px-1 mb-1" style="color:${color}">${unit.isMaster ? '主軍' : '部隊'}</div>
+            <div class="text-xl font-bold uppercase truncate w-full text-center px-1 mb-1" style="color:${color}">部隊</div>
             <div class="text-xl font-mono font-bold ${count >= max ? 'text-red-400' : 'text-cyan-400'}">${count}/${max}</div>
             ${isActive ? '<div class="tab-active-indicator">▲</div>' : ''}
         `;
@@ -464,6 +463,39 @@ window.UI = {
         </div>`;
     },
 
+    /**
+     * ユニット詳細確認モーダルのHTML
+     * @param {Object} u - ユニットデータ
+     * @returns {string} HTML文字列
+     */
+    UnitDetailModal: (u) => {
+        return `
+        <div class="modal-content unit-detail-container">
+            <div class="unit-detail-header">
+                <div class="unit-detail-icon">${u.emoji}</div>
+                <div class="unit-detail-title">
+                    <h2>${u.name}</h2>
+                    <div class="text-xl text-gray-400">RANK: ${Data.RANKS[u.rank || 0]} / Cost: ${u.cost}G</div>
+                </div>
+            </div>
+
+            <div class="unit-detail-stats">
+                <div class="stat-row"><span class="stat-label">HP</span><span class="stat-value">${u.hp}</span></div>
+                <div class="stat-row"><span class="stat-label">ATK</span><span class="stat-value">${u.atk}</span></div>
+                <div class="stat-row"><span class="stat-label">RNG</span><span class="stat-value">${u.range}</span></div>
+                <div class="stat-row"><span class="stat-label">MOVE</span><span class="stat-value">${u.move}</span></div>
+            </div>
+
+            <div class="unit-detail-desc">
+                ${u.description || "説明文がありません。"}
+            </div>
+
+            <div class="mt-3 text-center">
+                <button onclick="View.closeModal()" class="btn-base btn-neutral">閉じる</button>
+            </div>
+        </div>`;
+    },
+
     // -------------------------------------------------------------------------
     // 拠点メニュータブ
     // -------------------------------------------------------------------------
@@ -487,23 +519,183 @@ window.UI = {
             const btn = document.createElement('button');
             const isActive = tab.id === activeTab;
 
-            // Base classes
-            let classes = "flex-1 py-2 text-sm font-bold uppercase tracking-wider rounded-t-lg transition-colors duration-200 border-b-2 pointer-events-auto ";
-
-            if (isActive) {
-                // Active styles
-                classes += "bg-gray-800 text-yellow-400 border-yellow-400";
-            } else {
-                // Inactive styles
-                classes += "bg-gray-900 text-gray-500 border-gray-700 hover:bg-gray-800 hover:text-gray-300";
-            }
-
-            btn.className = classes;
+            btn.className = isActive ? 'menu-tab-btn active' : 'menu-tab-btn inactive';
             btn.innerText = tab.label;
             btn.onclick = () => onSwitch(tab.id);
             container.appendChild(btn);
+
         });
 
+        return container;
+    },
+
+    /**
+     * 部隊選択タブ（横スクロール）を生成
+     * @param {Array} allUnits - 全部隊リスト
+     * @param {Object} activeUnit - 選択中の部隊
+     * @param {function} onSelect - (unit) => void
+     * @returns {HTMLElement}
+     */
+    UnitTabs: (allUnits, activeUnit, onSelect) => {
+        const container = document.createElement('div');
+        container.className = "flex gap-3 pb-1 mb-1 overflow-x-auto custom-scrollbar";
+
+        allUnits.forEach(u => {
+            const isActive = (u === activeUnit);
+            const faction = Model.state.factions.find(fx => fx.id === u.owner);
+            const btn = UI.createTabButton(u, isActive, faction, () => onSelect(u));
+            container.appendChild(btn);
+        });
+        return container;
+    },
+
+    /**
+     * 「部隊新規」タブの内容を生成
+     * @param {number} gold - 現在の所持金
+     * @param {number} currentArmies - 現在の部隊数
+     * @param {number} armCost - 部隊作成コスト
+     * @param {number} maxArmies - 最大部隊数
+     * @param {function} onAction - 作成実行時のコールバック
+     * @returns {HTMLElement}
+     */
+    TabContentCreate: (gold, currentArmies, armCost, maxArmies, onAction) => {
+        const container = document.createElement('div');
+        const canCreate = gold >= armCost && currentArmies < maxArmies;
+
+        const createBtn = document.createElement('button');
+        createBtn.className = "btn-create";
+        createBtn.innerHTML = `
+            <span>新規部隊結成</span>
+            <span class="text-sm font-normal text-purple-200">費用: ${armCost}G</span>
+        `;
+        createBtn.disabled = !canCreate;
+        createBtn.onclick = onAction;
+        container.appendChild(createBtn);
+
+        const desc = document.createElement('div');
+        desc.className = "text-center text-gray-400 text-sm mt-2";
+        if (!canCreate) {
+            if (gold < armCost) desc.innerText = "資金不足です";
+            else desc.innerText = "部隊数が上限に達しています";
+        } else {
+            desc.innerText = "新しい部隊をこの拠点に配置します";
+        }
+        container.appendChild(desc);
+
+        return container;
+    },
+
+    /**
+     * 「雇用」タブの内容を生成
+     * @param {Array} allUnits - この拠点の全部隊
+     * @param {Object} activeUnit - 選択中の部隊
+     * @param {Object} castle - 拠点データ
+     * @param {Object} playerFaction - プレイヤー勢力データ
+     * @param {function} onSelectUnit - (unit) => void
+     * @param {function} onRecruit - (ut, activeUnit, castle) => void
+     * @returns {HTMLElement}
+     */
+    TabContentRecruit: (allUnits, activeUnit, castle, playerFaction, onSelectUnit, onRecruit) => {
+        const container = document.createElement('div');
+
+        if (allUnits.length > 0 && activeUnit) {
+            // Unit Tabs
+            container.appendChild(UI.UnitTabs(allUnits, activeUnit, onSelectUnit));
+
+            // Recruit Panel
+            if (activeUnit.owner === playerFaction.id) {
+                const factionUnits = Data.FACTION_UNITS[playerFaction.master.id];
+                let options = [...factionUnits];
+                if (castle.uniqueUnit) {
+                    const spec = Data.SPECIAL_UNITS[castle.uniqueUnit];
+                    if (spec) options.push(spec);
+                }
+
+                const recruitHTML = UI.RecruitPanel(options, activeUnit, castle, (ut, activeUnit, castle) => {
+                    const canAfford = playerFaction.gold >= ut.cost;
+                    const isFull = activeUnit.army.length >= Data.MAX_UNITS;
+                    return UI.RecruitItem(ut, activeUnit.id, castle.id, canAfford, isFull);
+                });
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = recruitHTML;
+                container.appendChild(wrapper);
+            } else {
+                const msg = document.createElement('div');
+                msg.className = "text-center text-red-400 py-4";
+                msg.innerText = "敵軍部隊です（操作不可）";
+                container.appendChild(msg);
+            }
+        } else {
+            const noMsg = document.createElement('div');
+            noMsg.className = "py-12 text-center border-2 border-dashed border-gray-800 rounded-lg text-gray-600 text-xs font-black uppercase tracking-widest italic";
+            noMsg.innerText = "部隊がいません。「部隊新規」で作成してください。";
+            container.appendChild(noMsg);
+        }
+        return container;
+    },
+
+    /**
+     * 「強化」タブの内容を生成
+     * @param {Array} allUnits - この拠点の全部隊
+     * @param {Object} activeUnit - 選択中の部隊
+     * @param {Object} castle - 拠点データ
+     * @param {Object} playerFaction - プレイヤー勢力データ
+     * @param {function} onSelectUnit - (unit) => void
+     * @returns {HTMLElement}
+     */
+    TabContentEnhance: (allUnits, activeUnit, castle, playerFaction, onSelectUnit) => {
+        const container = document.createElement('div');
+
+        if (allUnits.length > 0 && activeUnit) {
+            // Unit Tabs
+            container.appendChild(UI.UnitTabs(allUnits, activeUnit, onSelectUnit));
+
+            // Unit List + Enhance Buttons
+            if (activeUnit.owner === playerFaction.id) {
+                const unitsHTML = UI.UnitListPanel(activeUnit, castle, (u, i) => UI.UnitListItem(u, i, {
+                    hp: `Controller.enhanceUnit('${activeUnit.id}', ${i}, 'hp', '${castle.id}')`,
+                    atk: `Controller.enhanceUnit('${activeUnit.id}', ${i}, 'atk', '${castle.id}')`
+                }, `View.showUnitInstanceDetail('${activeUnit.id}', ${i})`));
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = unitsHTML;
+                container.appendChild(wrapper);
+            } else {
+                const listHtml = UI.EnemyUnitListContainer(activeUnit.army.map((u, i) => UI.UnitListItem(u, i)).join(''));
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = listHtml;
+                container.appendChild(wrapper);
+            }
+        } else {
+            const noMsg = document.createElement('div');
+            noMsg.className = "py-12 text-center border-2 border-dashed border-gray-800 rounded-lg text-gray-600 text-xs font-black uppercase tracking-widest italic";
+            noMsg.innerText = "部隊がいません。";
+            container.appendChild(noMsg);
+        }
+        return container;
+    },
+
+    /**
+     * 敵/中立拠点用のコンテンツ生成
+     * @param {Array} allUnits - 部隊リスト
+     * @param {Object} activeUnit - 選択中の部隊
+     * @param {function} onSelectUnit - 切り替えコールバック
+     * @returns {HTMLElement}
+     */
+    TabContentEnemy: (allUnits, activeUnit, onSelectUnit) => {
+        const container = document.createElement('div');
+        if (activeUnit) {
+            container.appendChild(UI.UnitTabs(allUnits, activeUnit, onSelectUnit));
+
+            const listHtml = UI.EnemyUnitListContainer(activeUnit.army.map((u, i) => UI.UnitListItem(u, i)).join(''));
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = listHtml;
+            container.appendChild(wrapper);
+        } else {
+            const noMsg = document.createElement('div');
+            noMsg.className = "py-12 text-center border-2 border-dashed border-gray-800 rounded-lg text-gray-600 text-xs font-black uppercase tracking-widest italic";
+            noMsg.innerText = "駐留部隊なし";
+            container.appendChild(noMsg);
+        }
         return container;
     }
 };

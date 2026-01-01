@@ -71,8 +71,8 @@ window.Data = {
         DAMAGE_RANDOM: 0.4,
         /** @type {number} 反撃時のダメージ倍率 (通常攻撃の0.7倍など) */
         COUNTER_RATE: 0.7,
-        /** @type {number} ランクアップ時の能力上昇率 (20%) */
-        RANK_UP_RATE: 0.2,
+        /** @type {number} ランクアップ時の能力上昇率 (10%) */
+        RANK_UP_RATE: 0.15,
         /** 
          * 獲得経験値設定
          */
@@ -80,8 +80,8 @@ window.Data = {
             ATTACK: 10,  // 攻撃した時
             KILL: 20,    // 敵を倒した時
             COUNTER: 5,  // 反撃した時
-            AUTO_WIN: 30, // オート戦闘勝利ボーナス
-            AUTO_BASE: 20 // オート戦闘参加基本値
+            AUTO_WIN: 10, // オート戦闘勝利ボーナス
+            AUTO_BASE: 10 // オート戦闘参加基本値
         },
         /** @type {number} オート戦闘時のダメージ倍率 */
         AUTO_DAMAGE_RATE: 0.5,

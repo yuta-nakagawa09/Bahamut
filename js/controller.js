@@ -606,7 +606,7 @@ window.Controller = {
 
         if (targetUnit) {
             Model.state.selectedMapUnit = targetUnit;
-            View.showMessage(`${targetUnit.isMaster ? '主軍' : '部隊'}を選択 (${playerUnits.indexOf(targetUnit) + 1}/${playerUnits.length})`);
+            View.showMessage(`部隊を選択 (${playerUnits.indexOf(targetUnit) + 1}/${playerUnits.length})`);
             return;
         }
 
