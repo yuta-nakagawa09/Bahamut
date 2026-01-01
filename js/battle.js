@@ -433,26 +433,26 @@ window.BattleSystem = {
         u1.army.forEach(u => dmg1 += u.atk);
         u2.army.forEach(u => dmg2 += u.atk);
 
-        u1.army.forEach(u => u.currentHp -= Math.floor(dmg2 / u1.army.length * 0.5));
-        u2.army.forEach(u => u.currentHp -= Math.floor(dmg1 / u2.army.length * 0.5));
+        u1.army.forEach(u => u.currentHp -= Math.floor(dmg2 / u1.army.length * Data.BATTLE.AUTO_DAMAGE_RATE));
+        u2.army.forEach(u => u.currentHp -= Math.floor(dmg1 / u2.army.length * Data.BATTLE.AUTO_DAMAGE_RATE));
 
         u1.army = u1.army.filter(u => u.currentHp > 0);
         u2.army = u2.army.filter(u => u.currentHp > 0);
 
         // 生存者は全回復 & 経験値獲得
         if (u1.army.length > 0) {
-            const bonus = (u2.army.length === 0) ? 30 : 0;
+            const bonus = (u2.army.length === 0) ? Data.BATTLE.XP.AUTO_WIN : 0;
             u1.army.forEach(u => {
                 u.currentHp = u.hp;
-                u.xp = (u.xp || 0) + 20 + bonus;
+                u.xp = (u.xp || 0) + Data.BATTLE.XP.AUTO_BASE + bonus;
                 Model.processRankUp(u);
             });
         }
         if (u2.army.length > 0) {
-            const bonus = (u1.army.length === 0) ? 30 : 0;
+            const bonus = (u1.army.length === 0) ? Data.BATTLE.XP.AUTO_WIN : 0;
             u2.army.forEach(u => {
                 u.currentHp = u.hp;
-                u.xp = (u.xp || 0) + 20 + bonus;
+                u.xp = (u.xp || 0) + Data.BATTLE.XP.AUTO_BASE + bonus;
                 Model.processRankUp(u);
             });
         }

@@ -91,7 +91,7 @@ window.Controller = {
                         } else {
                             // CPU同士 -> オート解決
                             BattleSystem.autoResolve(u1, u2, attacker);
-                            Model.state.globalBattleCooldown = 60; // オート戦闘後も少しウェイト (3秒相当)
+                            Model.state.globalBattleCooldown = Data.BATTLE.COOLDOWN; // オート戦闘後も少しウェイト (3秒相当)
                         }
                         return;
                     }
@@ -419,7 +419,7 @@ window.Controller = {
                     }
 
                     Model.state.battle.active = false;
-                    Model.state.globalBattleCooldown = 60;
+                    Model.state.globalBattleCooldown = Data.BATTLE.COOLDOWN;
                     View.changeScreen('map');
 
                     if (!escaped) {

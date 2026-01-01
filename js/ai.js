@@ -215,23 +215,23 @@ window.StrategicAI = {
         // 資金に余裕がある場合、部隊の強化を行う
         // 条件緩和: 常に最大数(MAX_ARMIES)でなくても、ある程度部隊が揃っていて金があれば強化する
 
-        const isRich = faction.gold >= 800;
-        const hasEnoughArmies = currentUnits.length >= 2; // 少なくとも2部隊はいれば強化検討
+        const isRich = faction.gold >= Data.AI.ENHANCE.RICH_GOLD;
+        const hasEnoughArmies = currentUnits.length >= Data.AI.ENHANCE.MIN_ARMY_COUNT; // 少なくとも2部隊はいれば強化検討
 
-        if ((isRich || (hasEnoughArmies && faction.gold >= 500))) {
+        if ((isRich || (hasEnoughArmies && faction.gold >= Data.AI.ENHANCE.NORMAL_GOLD))) {
             for (const unit of currentUnits) {
                 // ユニット数が最大の部隊、または精鋭部隊(Rank持ちが多いなど)を優先したいが
                 // シンプルに「全ユニットに対してチャンスがある」ようにする
 
                 for (let i = 0; i < unit.army.length; i++) {
-                    if (faction.gold < 200) break; // 資金切れ
+                    if (faction.gold < Data.AI.ENHANCE.MIN_GOLD) break; // 資金切れ
 
                     // 確率で強化実行 (金持ちなら高確率)
-                    const enhanceChance = isRich ? 0.6 : 0.3;
+                    const enhanceChance = isRich ? Data.AI.ENHANCE.CHANCE_RICH : Data.AI.ENHANCE.CHANCE_NORMAL;
 
                     if (Math.random() < enhanceChance) {
                         // 攻撃かHPかランダム
-                        const type = Math.random() < 0.5 ? 'atk' : 'hp';
+                        const type = Math.random() < Data.AI.ENHANCE.TYPE_RATIO_ATK ? 'atk' : 'hp';
                         const cost = (type === 'atk') ? Data.ENHANCEMENT.ATK.COST : Data.ENHANCEMENT.HP.COST;
 
                         if (faction.gold >= cost) {
