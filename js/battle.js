@@ -53,6 +53,7 @@ window.BattleSystem = {
         Model.state.battle.active = true;
 
         View.updateBattleUI();
+        View.updateBattleHeader();
     },
 
     // -------------------------------------------------------------------------
