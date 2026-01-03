@@ -393,36 +393,84 @@ window.Controller = {
      * バトルからの撤退確認モーダルを表示
      */
     showEscapeConfirm() {
-        View.openModal("撤退しますか？", "撤退すると部隊は大きなダメージを受け、本拠地に戻されます。", [
+        View.openModal("撤退しますか？", "撤退すると隣接する本拠地に戻されます。", [
             {
                 label: "撤退する", action: () => {
                     const unit = Model.state.battleUnitA;
+                    const enemyUnit = Model.state.battleUnitB;
                     const faction = Model.state.factions.find(f => f.id === unit.owner);
                     const currentCastle = Model.state.castles.find(c => Math.hypot(c.x - unit.x, c.y - unit.y) < Data.UI.CASTLE_DETECT_RADIUS);
+
+                    // 1. バトル状態を反映 (生存ユニットのみ、HP減維持)
+                    const aliveUnits = Model.state.battle.units.filter(u => u.owner === 'player' && u.currentHp > 0);
+                    unit.army = aliveUnits.map(u => {
+                        const { r, c, owner, ...rest } = u;
+                        rest.currentHp = u.currentHp; // ダメージ維持
+                        return rest;
+                    });
+
+                    // 全滅していたら撤退できない(壊滅)
+                    if (unit.army.length === 0) {
+                        Model.state.mapUnits = Model.state.mapUnits.filter(u => u !== unit);
+                        // 敵(B)は勝利扱い(全回復)
+                        if (enemyUnit) {
+                            enemyUnit.army.forEach(u => u.currentHp = u.hp);
+                            // 相手のいた場所へ移動
+                            enemyUnit.x = unit.x;
+                            enemyUnit.y = unit.y;
+                            enemyUnit.targetX = unit.x;
+                            enemyUnit.targetY = unit.y;
+                        }
+                        Model.state.battle.active = false;
+                        Model.state.globalBattleCooldown = Data.BATTLE.COOLDOWN;
+                        View.changeScreen('map');
+                        View.showMessage("部隊は全滅しました...");
+                        return;
+                    }
+
                     let escaped = false;
+                    const oldX = unit.x;
+                    const oldY = unit.y;
 
                     if (currentCastle && currentCastle.neighbors) {
-                        const potentialRetreats = currentCastle.neighbors
+                        let potentialRetreats = currentCastle.neighbors
                             .map(nid => Model.state.castles.find(c => c.id === nid))
                             .filter(c => c && c.owner === faction.id);
+
+                        // 攻撃元（移動元）がある場合、そこを最優先にする
+                        if (unit.originX !== undefined && unit.originY !== undefined) {
+                            const originCastle = Model.state.castles.find(c => c.x === unit.originX && c.y === unit.originY);
+                            if (originCastle && originCastle.owner === faction.id) {
+                                // 移動元が自軍拠点なら、そこを先頭に持ってくる（あるいは強制する）
+                                potentialRetreats = [originCastle, ...potentialRetreats.filter(c => c !== originCastle)];
+                            }
+                        }
 
                         if (potentialRetreats.length > 0) {
                             const target = potentialRetreats[0];
                             unit.x = target.x;
                             unit.y = target.y;
+
                             unit.targetX = target.x;
                             unit.targetY = target.y;
                             unit.hasActed = true; // 行動済みにする
 
-                            // 撤退時も全回復（仕様都合）
-                            unit.army.forEach(u => u.currentHp = u.hp);
-                            if (Model.state.battleUnitB) {
-                                Model.state.battleUnitB.army.forEach(u => u.currentHp = u.hp);
-                            }
+                            // 成功フラグ
+                            escaped = true;
+                            View.showMessage(`"${target.name}" へ撤退しました`);
 
-                            if (unit.army.length > 0) {
-                                escaped = true;
-                                View.showMessage(`"${target.name}" へ撤退しました`);
+                            // 2. 敵ユニットの移動 (攻撃側だった場合、空いた場所へ入る)
+                            if (enemyUnit) {
+                                // 敵は勝利扱い(全回復 & 死亡復活)
+                                enemyUnit.army.forEach(u => u.currentHp = u.hp); // ※死んだユニットを戻すなら元のarmyデータが必要だが、簡易的にHP回復のみとする(あるいは完全復活ロジックを入れる)
+                                // 基本仕様として戦闘終了時の勝者は全回復ロジックがBattleSystemにあるので、それに準じる
+                                // ここでは生き残っている敵ユニットを全回復させる
+
+                                // 移動
+                                enemyUnit.x = oldX;
+                                enemyUnit.y = oldY;
+                                enemyUnit.targetX = oldX;
+                                enemyUnit.targetY = oldY;
                             }
                         }
                     }
@@ -435,6 +483,15 @@ window.Controller = {
                         // 撤退先なし -> 部隊消滅
                         Model.state.mapUnits = Model.state.mapUnits.filter(u => u !== unit);
                         View.showMessage("撤退先がなく、部隊は壊滅しました...");
+
+                        // 敵がその場に入る
+                        if (enemyUnit) {
+                            enemyUnit.x = oldX;
+                            enemyUnit.y = oldY;
+                            enemyUnit.targetX = oldX;
+                            enemyUnit.targetY = oldY;
+                            enemyUnit.army.forEach(u => u.currentHp = u.hp);
+                        }
                     }
                 }
             },
@@ -587,6 +644,9 @@ window.Controller = {
             }
 
             if (canMove) {
+                // 移動元を記録（撤退時に戻るため）
+                u.originX = u.x;
+                u.originY = u.y;
                 u.targetX = targetCastle.x;
                 u.targetY = targetCastle.y;
                 u.isMoving = true;

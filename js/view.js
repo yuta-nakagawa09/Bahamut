@@ -635,6 +635,35 @@ window.View = {
         // 既存データの再描画
         View.renderBattleGridCore(Model.state.battle.grid);
         View.updateBattleUI();
+        View.updateBattleHeader();
+    },
+
+    /**
+     * バトル画面のヘッダー（対戦勢力名）を更新する
+     */
+    updateBattleHeader() {
+        const u1 = Model.state.battleUnitA;
+        const u2 = Model.state.battleUnitB;
+        // 観戦モードなどで片方がnullの場合も考慮するが、基本はstartBattleでセットされる
+        if (!u1 || !u2) return;
+
+        const f1 = Model.state.factions.find(f => f.id === u1.owner);
+        const f2 = Model.state.factions.find(f => f.id === u2.owner);
+
+        const p1El = document.getElementById('p1-stats');
+        const p2El = document.getElementById('p2-stats');
+
+        if (p1El && f1) {
+            p1El.innerHTML = `<span style="color:${f1.color}">${f1.master.emoji} ${f1.name}</span>`;
+        } else if (p1El) {
+            p1El.innerText = "不明な部隊";
+        }
+
+        if (p2El && f2) {
+            p2El.innerHTML = `<span style="color:${f2.color}">${f2.master.emoji} ${f2.name}</span>`;
+        } else if (p2El) {
+            p2El.innerText = "不明な部隊";
+        }
     },
 
     /**

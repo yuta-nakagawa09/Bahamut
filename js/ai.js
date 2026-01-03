@@ -80,18 +80,93 @@ window.StrategicAI = {
             // if (current === hq && alliesAtHQ.length < Data.AI.DEFENSE.ALLY_THRESHOLD && Math.random() < 0.7) continue;
 
             // 侵攻判断
+            // -----------------------------------------------------------------
+            // 2. 増援ロジック (Reinforce)
+            // 安全な後方から、脅威のある空の前線へ移動する
+            // -----------------------------------------------------------------
+            // 現在地が「安全」（周辺に敵がいない）かチェック
+            const currentCastles = Model.state.castles.filter(c => Math.hypot(c.x - enemy.x, enemy.y - c.y) < 10); // ほぼ真上
+            const atCastle = currentCastles.length > 0 ? currentCastles[0] : null;
+
+            if (atCastle) {
+                // 現在地の周辺に敵がいるか？
+                const isThreatened = Model.state.mapUnits.some(u =>
+                    u.owner !== faction.id &&
+                    Math.hypot(u.x - atCastle.x, u.y - atCastle.y) < Data.AI.DEFENSE.DIST
+                );
+
+                if (!isThreatened && atCastle.neighbors) {
+                    // 安全なら、隣接する「危機にある空き拠点」を探す
+                    const needyNeighbors = atCastle.neighbors
+                        .map(nid => Model.state.castles.find(c => c.id === nid))
+                        .filter(c => {
+                            if (!c || c.owner !== faction.id) return false;
+
+                            // 既に味方がいるか？
+                            const hasAlly = Model.state.mapUnits.some(u =>
+                                u.owner === faction.id &&
+                                Math.hypot(u.x - c.x, u.y - c.y) < Data.UI.UNIT_DETECT_RADIUS
+                            );
+                            if (hasAlly) return false;
+
+                            // 敵に隣接しているか？（脅威があるか）
+                            const hasEnemyNeighbor = c.neighbors.some(nnid => {
+                                const neighbor = Model.state.castles.find(nc => nc.id === nnid);
+                                return neighbor && neighbor.owner !== faction.id && neighbor.owner !== 'neutral';
+                            });
+
+                            return hasEnemyNeighbor;
+                        });
+
+                    if (needyNeighbors.length > 0) {
+                        const target = needyNeighbors[0];
+                        enemy.targetX = target.x;
+                        enemy.targetY = target.y;
+                        enemy.isMoving = true;
+                        View.showMessage(`${faction.name}: 前線増援`);
+                        await this.waitForAction(enemy);
+                        continue;
+                    }
+                }
+
+                // -----------------------------------------------------------------
+                // 3. 侵攻判断 (Invade)
+                // -----------------------------------------------------------------
+                // 防衛優先: 現在地が脅威下にある場合、中立や安全な敵拠点への攻撃（逃亡）はしない
+                // 本当に敵を攻撃する場合のみ許可する（カウンター）
+                if (isThreatened) {
+                    // 攻撃以外の移動は禁止
+                    // ただし、この後のロジックで targets をフィルタリングすることで制御する
+                }
+            }
+
             if (current.neighbors && current.neighbors.length > 0 && Math.random() > Data.AI.INVADE_CHANCE) {
                 // 自軍戦力計算
                 const myPower = enemy.army.reduce((sum, u) => sum + Model.getUnitPower(u), 0);
                 // 弱小部隊かどうかの判定 (概ね初期ユニット2体分以下なら弱小とみなす)
                 const isWeak = myPower < 300;
 
+                // 現在地が脅威下にあるか再取得（変数スコープ都合）
+                const isUnderThreat = atCastle && Model.state.mapUnits.some(u =>
+                    u.owner !== faction.id &&
+                    Math.hypot(u.x - enemy.x, u.y - enemy.y) < Data.AI.DEFENSE.DIST
+                );
+
                 const targets = current.neighbors
                     .map(id => Model.state.castles.find(c => c.id === id))
                     .filter(target => {
                         if (!target) return false;
-                        // 自勢力の拠点は攻撃対象外（移動だけならありだが、ここはInvadeロジックなので）
+                        // 自勢力の拠点は攻撃対象外
                         if (target.owner === faction.id) return false;
+
+                        // 【防衛優先】脅威下にある場合、中立への攻撃はしない
+                        // ただし、拠点に十分な戦力（2部隊以上）があるなら拡大を許可する
+                        const alliesAtBase = Model.state.mapUnits.filter(u =>
+                            u.owner === faction.id &&
+                            Math.hypot(u.x - enemy.x, u.y - enemy.y) < Data.UI.UNIT_DETECT_RADIUS
+                        ).length;
+
+                        if (isUnderThreat && target.owner === 'neutral' && alliesAtBase < 2) return false;
 
                         // 敵拠点の戦力チェック (やみくもな攻撃の防止)
                         // 目標地点にいる敵勢力の部隊を取得
@@ -111,6 +186,11 @@ window.StrategicAI = {
                             if (myPower < maxEnemyPower * 0.7) {
                                 return false;
                             }
+                        } else {
+                            // 敵部隊がいない場合でも、脅威下なら「敵領土」への深入りも避けるべきだが、
+                            // 「敵部隊への攻撃」ならカウンターとして成立するのでOKとする。
+                            // ただし、単なる空き地への移動なら防衛放棄になる可能性がある。
+                            // ここでは「中立不可」だけで一旦十分とする。
                         }
                         return true;
                     })
@@ -189,13 +269,35 @@ window.StrategicAI = {
                 .filter(c => c.owner === faction.id);
 
             if (spawnPoints.length > 0) {
-                // 本拠地優先、なければランダム
-                let spawn = spawnPoints.find(c => c.id === faction.hqId);
-                // 本拠地に既に部隊がいる場合でも、本拠地優先なら spawn は設定される
-                // もし本拠地以外も含めてランダムにしたい場合はロジック調整が必要だが、
-                // 基本的には本拠地防衛・出撃が重要なので本拠地優先で良い。
+                // スポーン地点の優先度付け
+                // 1. 敵に隣接していて（脅威）、かつ部隊がいない拠点 (緊急防衛)
+                // 2. 本拠地 (HQ)
+                // 3. その他
 
-                if (!spawn) spawn = spawnPoints[Math.floor(Math.random() * spawnPoints.length)];
+                spawnPoints.sort((a, b) => {
+                    const getPriority = (c) => {
+                        // 部隊が既にいるか？
+                        const hasUnit = Model.state.mapUnits.some(u =>
+                            u.owner === faction.id &&
+                            Math.hypot(u.x - c.x, u.y - c.y) < Data.UI.UNIT_DETECT_RADIUS
+                        );
+
+                        // 敵隣接チェック
+                        const hasEnemyNeighbor = c.neighbors && c.neighbors.some(nid => {
+                            const n = Model.state.castles.find(nc => nc.id === nid);
+                            return n && n.owner !== faction.id && n.owner !== 'neutral';
+                        });
+
+                        // 優先度スコア計算
+                        if (!hasUnit && hasEnemyNeighbor) return 100; // 最優先：空の前線
+                        if (c.id === faction.hqId) return 50;         // 次点：HQ
+                        return 10;                                    // その他
+                    };
+
+                    return getPriority(b) - getPriority(a);
+                });
+
+                let spawn = spawnPoints[0];
 
                 // Controller経由だとUI依存があるので、Model経由で直接作成する
                 const newUnit = Model.createNewArmy(faction.id, spawn.x, spawn.y);

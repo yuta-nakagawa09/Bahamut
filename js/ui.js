@@ -28,7 +28,7 @@ window.UI = {
      */
     createModalButton: (label, onclick, extraClass = '') => {
         const btn = document.createElement('button');
-        btn.className = `btn-modal ${extraClass}`;
+        btn.className = `btn-base btn-modal ${extraClass}`;
         btn.innerText = label;
         btn.onclick = onclick;
         return btn;
@@ -135,8 +135,8 @@ window.UI = {
             </div>
             ${enhanceActions ? `
             <div class="flex flex-row gap-1">
-                <button onclick="event.stopPropagation(); ${enhanceActions.hp}" class="btn-enhance-hp">HP+(${Data.ENHANCEMENT.HP.COST}${Data.CURRENCY_UNIT})</button>
-                <button onclick="event.stopPropagation(); ${enhanceActions.atk}" class="btn-enhance-atk">ATK+(${Data.ENHANCEMENT.ATK.COST}${Data.CURRENCY_UNIT})</button>
+                <button onclick="event.stopPropagation(); ${enhanceActions.hp}" class="btn-enhance-base btn-enhance-hp">HP+(${Data.ENHANCEMENT.HP.COST}${Data.CURRENCY_UNIT})</button>
+                <button onclick="event.stopPropagation(); ${enhanceActions.atk}" class="btn-enhance-base btn-enhance-atk">ATK+(${Data.ENHANCEMENT.ATK.COST}${Data.CURRENCY_UNIT})</button>
             </div>` : ''}
         </div>`;
     },
@@ -450,9 +450,9 @@ window.UI = {
         <div class="modal-content unit-detail-container">
             <div class="unit-detail-header">
                 <div class="unit-detail-icon">${u.emoji}</div>
-                <div class="unit-detail-title">
-                    <h2>${u.name}</h2>
-                    <div class="text-xl text-gray-400">RANK: ${Data.RANKS[u.rank || 0]} / Cost: ${u.cost}G</div>
+                <div>
+                    <h2 class="list-item-name">${u.name}</h2>
+                    <div class="list-item-details">RANK: ${Data.RANKS[u.rank || 0]} / Cost: ${u.cost}G</div>
                 </div>
             </div>
 

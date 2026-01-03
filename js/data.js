@@ -192,11 +192,11 @@ window.Data = {
     FACTION_UNITS: {
         'knight': [
             { id: 'soldier', name: '兵士', emoji: '🛡️', hp: 40, atk: 14, range: 1, move: 3, cost: 200, description: '王国の基本歩兵。バランスの取れた能力を持ち、前線を維持するのに適している。' },
-            { id: 'paladin', name: '騎士', emoji: '🏇', hp: 60, atk: 20, range: 1, move: 5, cost: 500, description: '高い機動力と攻撃力を誇る騎兵。平地での戦闘で真価を発揮する。' }
+            { id: 'paladin', name: '騎士', emoji: '🏇', hp: 65, atk: 20, range: 1, move: 5, cost: 500, description: '高い機動力と攻撃力を誇る騎兵。平地での戦闘で真価を発揮する。' }
         ],
         'mage': [
-            { id: 'elf', name: 'エルフ', emoji: '🏹', hp: 45, atk: 23, range: 3, move: 3, cost: 300, description: '森に住む弓の名手。遠距離からの攻撃が得意だが、打たれ弱い。' },
-            { id: 'fairy', name: '妖精', emoji: '🧚', hp: 50, atk: 20, range: 2, move: 4, cost: 250, description: '魔法の力で戦う妖精。空を飛び、地形の影響を受けずに移動できる。' }
+            { id: 'elf', name: 'エルフ', emoji: '🏹', hp: 55, atk: 15, range: 3, move: 3, cost: 300, description: '森に住む弓の名手。遠距離からの攻撃が得意だが、打たれ弱い。' },
+            { id: 'fairy', name: '妖精', emoji: '🧚', hp: 45, atk: 15, range: 2, move: 4, cost: 250, description: '魔法の力で戦う妖精。空を飛び、地形の影響を受けずに移動できる。' }
         ],
         'demon': [
             { id: 'imp', name: '小悪魔', emoji: '👿', hp: 28, atk: 18, range: 1, move: 4, cost: 150, description: '素早い動きで敵を翻弄する下級悪魔。コストが安く大量生産に向く。' },
@@ -216,9 +216,9 @@ window.Data = {
         {
             id: 'classic', name: 'バハムート大陸', desc: '標準的なバランスの初期マップです。', image: 'assets/img/icon_map_continent.png', backgroundImage: 'assets/img/map_bg_continent.png',
             castles: [
-                { id: 'c1', name: '王都', x: 375, y: 200, owner: 'player', captureBonus: 0, income: 500, uniqueUnit: null, neighbors: ['c3', 'c7', 'c8'] },
-                { id: 'c2', name: '暗黒城', x: 940, y: 450, owner: 'enemy', captureBonus: 2000, income: 500, uniqueUnit: 'hell-hound', neighbors: ['c5', 'c6', 'c9'] },
-                { id: 'c6', name: '東の塔', x: 920, y: 260, owner: 'enemy2', captureBonus: 800, income: 300, uniqueUnit: 'sorcerer', neighbors: ['c2', 'c4', 'c9'] },
+                { id: 'c1', name: '王都', x: 375, y: 200, owner: 'player', captureBonus: 0, income: 5000, uniqueUnit: null, neighbors: ['c3', 'c7', 'c8'] },
+                { id: 'c2', name: '暗黒城', x: 940, y: 450, owner: 'enemy', captureBonus: 2000, income: 5000, uniqueUnit: 'hell-hound', neighbors: ['c5', 'c6', 'c9'] },
+                { id: 'c6', name: '東の塔', x: 920, y: 260, owner: 'enemy2', captureBonus: 800, income: 5000, uniqueUnit: 'sorcerer', neighbors: ['c2', 'c4', 'c9'] },
                 { id: 'c3', name: '自由都市', x: 530, y: 280, owner: 'neutral', captureBonus: 500, income: 400, uniqueUnit: 'guard', neighbors: ['c1', 'c4', 'c5', 'c9'] },
                 { id: 'c4', name: '北の砦', x: 880, y: 80, owner: 'neutral', captureBonus: 350, income: 200, uniqueUnit: 'crossbow', neighbors: ['c3', 'c6', 'c8'] },
                 { id: 'c5', name: '南の村', x: 620, y: 450, owner: 'neutral', captureBonus: 200, income: 150, uniqueUnit: 'militia', neighbors: ['c2', 'c3', 'c10'] },
